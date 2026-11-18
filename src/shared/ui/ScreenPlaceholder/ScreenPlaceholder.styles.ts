@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native';
-import { color, fontFamily } from '@/shared/theme';
+import { color, fontFamily, fontSize } from '@/shared/theme';
 
-// Temporary layout; spacing and type scale tokens arrive in M1.
+// Temporary placeholder layout; spacing tokens arrive with the design system in M1.
 export const styles = StyleSheet.create({
   root: {
     flex: 1,
@@ -9,6 +9,14 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: color.bg,
   },
-  title: { color: color.text, fontFamily: fontFamily.titleBold, fontSize: 28 },
-  detail: { color: color.text, fontFamily: fontFamily.body, fontSize: 16 },
+  title: {
+    color: color.text,
+    fontFamily: fontFamily.titleBold,
+    fontSize: fontSize.display,
+  },
+  detail: {
+    color: color.text,
+    fontFamily: fontFamily.body,
+    fontSize: fontSize.body,
+  },
 });
