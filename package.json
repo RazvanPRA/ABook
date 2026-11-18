@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
+    "emu": "powershell -NoProfile -ExecutionPolicy Bypass -File .claude/scripts/run-android.ps1",
+    "emu:rebuild": "powershell -NoProfile -ExecutionPolicy Bypass -File .claude/scripts/run-android.ps1 -ForceBuild -ResetCache",
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "format": "prettier --write .",
