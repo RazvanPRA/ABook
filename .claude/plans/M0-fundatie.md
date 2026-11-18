@@ -155,6 +155,14 @@ npm i @reduxjs/toolkit react-redux zod i18next react-i18next lucide-react-native
 - **Teste:** navigatorul randează tab-ul Bibliotecă; `navigate('Book', { id })` ajunge pe ecranul de detalii.
 
 ### 6. Providers, fonturi, splash, i18n
+**Făcut** (2026-11-19). `npm run check` e verde, cu 40 de teste. Verificat pe emulator: splash cu logo chihlimbar pe `#111316`, apoi „Biblioteca mea” în Space Grotesk Bold.
+- Fonturile vin din surse oficiale (OFL): Inter v4.1 (`rsms/inter`, Regular + SemiBold) și Space Grotesk (`floriankarsten/space-grotesk`). Space Grotesk **nu are SemiBold static**, așa că folosim Medium (500) și Bold (700). Licențele sunt în `assets/licenses/`.
+- Fișierele poartă numele PostScript (verificate din tabela `name`), deci `fontFamily` e identic pe Android și iOS. Le leagă `react-native-asset` (`react-native.config.js`).
+- Testul `__tests__/fonts` verifică faptul că fiecare `fontFamily` există în `assets/fonts`, în Android și în `UIAppFonts`.
+- Splash-ul e generat de `react-native-bootsplash` din `assets/brand/splash-logo.svg` (iconița Lucide `file-headphone`, ISC). E inițializat în `MainActivity`/`SceneDelegate` și ascuns la `NavigationContainer.onReady`.
+- În `shared/theme` există deja `fontFamily` și culorile `bg`/`text`. Restul token-urilor vin în M1.
+- **Pentru M1:** după splash, bara de stare are iconițe închise pe fundal închis. Trebuie `StatusBar` cu `barStyle="light-content"`.
+
 - `src/shared/i18n/ro.json` (titlurile tab-urilor și ale ecranelor placeholder) și `src/app/providers/I18nProvider.tsx`; niciun text hard-codat.
 - `src/app/providers/AppProviders.tsx` compune `GestureHandlerRootView`, `SafeAreaProvider`, `I18nProvider` și `NavigationContainer` (cu `linking` și o temă întunecată provizorie). `StoreProvider` și `ThemeProvider` se adaugă în M1 și M2, ca sloturi.
 - Fonturi:
