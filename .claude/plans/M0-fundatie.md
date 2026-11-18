@@ -188,7 +188,19 @@ npm i @reduxjs/toolkit react-redux zod i18next react-i18next lucide-react-native
 - **Verificare:** build Android trece; proprietățile apar în fișierele native.
 
 ### 8. `.claude/scripts/run-android.ps1`
-**Scris deja** (2026-11-18). Sintaxa e verificată, iar fără proiect iese corect cu codul 1. Rămâne de verificat cu proiectul real, după pasul 2. Scriptul din `techspeak` e tot pentru RN CLI, deci l-am copiat și am schimbat puțin:
+**Făcut** (2026-11-19). Scriptul e verificat în toate modurile, cu codul de ieșire 0 în fiecare caz:
+
+| Caz | Rezultat |
+| --- | --- |
+| A. `-ForceBuild -ResetCache` | Metro repornit cu cache curat, build în 25 s, total 48 s |
+| B. fără parametri, fără schimbări native | fără build, total 12 s |
+| C. `-SkipBuild` | fără build, total 13 s |
+| D. `-EmulatorOnly` | emulator + Metro, total 7 s |
+| E. emulator oprit | lock-uri orfane șterse, fereastra din afara ecranului mutată, boot în 2 s (snapshot), total 19 s |
+
+Modificări după versiunea inițială: JDK ≤ 20 doar pentru build (pasul 2), acordarea `ACCESS_LOCAL_NETWORK` în debug (pasul 2), `force-stop` înainte de reinstalare (pasul 7). Scripturile npm sunt `npm run emu` (cu argumente după `--`) și `npm run emu:rebuild`.
+
+Scriptul din `techspeak` e tot pentru RN CLI, deci l-am copiat și am schimbat puțin:
 
 | În techspeak | În ABook |
 | --- | --- |
