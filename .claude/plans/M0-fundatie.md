@@ -173,6 +173,15 @@ npm i @reduxjs/toolkit react-redux zod i18next react-i18next lucide-react-native
 - **Teste:** render pe `AppProviders` cu un copil; tab-urile afișează cele 3 etichete în română.
 
 ### 7. Setări native directe
+**Făcut** (2026-11-19). `npm run check` e verde, cu 48 de teste. Am verificat manifestele unite de Gradle (`processDebugMainManifest` / `processReleaseMainManifest`):
+- **Release:** nicio permisiune de rețea sau de stocare partajată. A rămas doar `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`, internă, cu semnătură.
+- **Debug:** `INTERNET` (`src/debug`), plus `ACCESS_LOCAL_NETWORK` și `SYSTEM_ALERT_WINDOW`, venite din dev support-ul RN.
+- Am scos `READ/WRITE_EXTERNAL_STORAGE` (aduse de o librărie) din `main`, deci din ambele variante: PDF-ul vine prin selectorul de documente.
+- iOS: `UIBackgroundModes` = `audio`.
+- AsyncStorage: nimic de setat, pentru că v3 nu mai are `AsyncStorage_db_size_in_MB` (vezi pasul 3).
+- Testul `__tests__/native` fixează aceste reguli în manifestele sursă și în `Info.plist`.
+- `run-android.ps1` oprește aplicația înainte de reinstalare. Altfel rămânea pe ecran un dialog ANR vechi („no focused window”) peste instanța nouă. Pornirea curată în debug a durat 2,45 s.
+
 - `android/gradle.properties`: `AsyncStorage_db_size_in_MB`. **Întâi** verific în documentația versiunii de AsyncStorage instalate dacă proprietatea se mai numește așa (v2/v3 pot diferi). Dacă nu se mai aplică, notez în `PLAN.md` și păstrez riscul pentru M2.
 - `ios/ABook/Info.plist`: `UIBackgroundModes` = `audio`.
 - `AndroidManifest.xml`: fără permisiunea `INTERNET` în build-ul de release. Rămâne în `src/debug/` pentru Metro, ca garanție pentru „fără rețea la rulare”.
