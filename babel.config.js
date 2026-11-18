@@ -9,5 +9,7 @@ module.exports = {
         alias: { '@': './src' },
       },
     ],
+    // Reanimated 4: the worklets plugin must stay last
+    'react-native-worklets/plugin',
   ],
 };

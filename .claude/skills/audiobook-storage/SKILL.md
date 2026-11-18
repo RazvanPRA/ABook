@@ -28,8 +28,8 @@ Build keys only through `storage/keys.ts` helpers (`bookKey(id, 'meta')`, `chapt
 ## Hard rules
 
 1. Every value has a zod schema in its feature's `model/schemas.ts`. Validate on read; an invalid value is logged and treated as missing, never thrown to the UI.
-2. One serialized value stays under ~256 KB. Split larger chapters into parts. Android AsyncStorage has a small default total size; raise `AsyncStorage_db_size_in_MB` in `android/gradle.properties` and check the limits of the installed version.
-3. Batch: use `multiGet` / `multiSet` / `multiRemove`. Never loop single `getItem` calls.
+2. One serialized value stays under ~256 KB. Split larger chapters into parts. AsyncStorage v3 on Android uses Room/SQLite (no 6 MB total cap, no `AsyncStorage_db_size_in_MB`), but a row larger than ~2 MB fails to read through `CursorWindow`, so the 256 KB rule stays.
+3. Batch: use `getMany` / `setMany` / `removeMany` (AsyncStorage v3; the older names `multiGet` / `multiSet` / `multiRemove` in this document mean these). Never loop single `getItem` calls.
 4. Import write order: file -> `meta` (`processing`) -> chunks as each chapter completes -> `toc` -> `meta` (`ready`). On boot, resume or mark `failed` any book left in `processing`.
 5. Progress writes: throttle to at most one per 3 s while playing; flush immediately on pause, chapter change and `AppState` -> `background`. Settings: debounce 500 ms.
 6. Delete a book: `multiRemove` every key with its prefix (enumerate via `getAllKeys` filtered by prefix), then delete the file. Leave no orphan keys.
