@@ -215,6 +215,7 @@ Scriptul din `techspeak` e tot pentru RN CLI, deci l-am copiat și am schimbat p
 - **Verificare:** prima rulare face build și deschide aplicația. A doua rulare, fără schimbări native, doar repornește aplicația. Rularea cu `-ForceBuild -ResetCache` funcționează.
 
 ### 9. `CLAUDE.md`
+**Făcut** (2026-11-19). Conține sursele de adevăr, regulile obligatorii, comenzile, structura și straturile, plus capcanele descoperite în M0 (JDK, TTS, AsyncStorage 3, Testing Library v14, ESLint 9, fonturi, splash, manifest, commit din PowerShell).
 - Un fișier scurt în rădăcină, care trimite la `.claude/PROMPT.md`, `.claude/PLAN.md` și `.claude/plans/`.
 - Regulile principale:
   - React Native CLI, **fără Expo**;
