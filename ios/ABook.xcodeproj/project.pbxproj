@@ -12,6 +12,12 @@
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		761780EF2CA45674006654EF /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EE2CA45674006654EF /* SceneDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		40F41048D8EE4BB38DC9193B /* Inter-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5C029E1AA5C94471AD172070 /* Inter-Regular.ttf */; };
+		830581F7ACF146C29019BA3B /* Inter-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C01ECC01F7924AB88C65DE2B /* Inter-SemiBold.ttf */; };
+		4DDE503ABE7942DE80908084 /* SpaceGrotesk-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 295B1B1D23134C54A32497B6 /* SpaceGrotesk-Bold.ttf */; };
+		14646DAF74794C3B9E0D7301 /* SpaceGrotesk-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5D8F11BDDFCB44348E31ADD8 /* SpaceGrotesk-Medium.ttf */; };
+		271595018E4F487EB31C011C /* BootSplash.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CB2667519A844F7F8997B9E0 /* BootSplash.storyboard */; };
+		65D2306CF2B94C6D8496E474 /* Colors.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2FE0495F09F74D6FBC64193E /* Colors.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,6 +32,12 @@
 		761780EE2CA45674006654EF /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SceneDelegate.swift; path = ABook/SceneDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = ABook/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		5C029E1AA5C94471AD172070 /* Inter-Regular.ttf */ = {isa = PBXFileReference; name = "Inter-Regular.ttf"; path = "../assets/fonts/Inter-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		C01ECC01F7924AB88C65DE2B /* Inter-SemiBold.ttf */ = {isa = PBXFileReference; name = "Inter-SemiBold.ttf"; path = "../assets/fonts/Inter-SemiBold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		295B1B1D23134C54A32497B6 /* SpaceGrotesk-Bold.ttf */ = {isa = PBXFileReference; name = "SpaceGrotesk-Bold.ttf"; path = "../assets/fonts/SpaceGrotesk-Bold.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		5D8F11BDDFCB44348E31ADD8 /* SpaceGrotesk-Medium.ttf */ = {isa = PBXFileReference; name = "SpaceGrotesk-Medium.ttf"; path = "../assets/fonts/SpaceGrotesk-Medium.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		CB2667519A844F7F8997B9E0 /* BootSplash.storyboard */ = {isa = PBXFileReference; name = "BootSplash.storyboard"; path = "ABook/BootSplash.storyboard"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
+		2FE0495F09F74D6FBC64193E /* Colors.xcassets */ = {isa = PBXFileReference; name = "Colors.xcassets"; path = "ABook/Colors.xcassets"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = folder.assetcatalog; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -49,6 +61,8 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
+				CB2667519A844F7F8997B9E0 /* BootSplash.storyboard */,
+				2FE0495F09F74D6FBC64193E /* Colors.xcassets */,
 			);
 			name = ABook;
 			sourceTree = "<group>";
@@ -77,6 +91,7 @@
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
+				8406E0013AE44621B5E4D353 /* Resources */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -99,6 +114,18 @@
 			);
 			path = Pods;
 			sourceTree = "<group>";
+		};
+		8406E0013AE44621B5E4D353 /* Resources */ = {
+			isa = "PBXGroup";
+			children = (
+				5C029E1AA5C94471AD172070 /* Inter-Regular.ttf */,
+				C01ECC01F7924AB88C65DE2B /* Inter-SemiBold.ttf */,
+				295B1B1D23134C54A32497B6 /* SpaceGrotesk-Bold.ttf */,
+				5D8F11BDDFCB44348E31ADD8 /* SpaceGrotesk-Medium.ttf */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+			path = "";
 		};
 /* End PBXGroup section */
 
@@ -162,6 +189,12 @@
 			files = (
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
+				40F41048D8EE4BB38DC9193B /* Inter-Regular.ttf in Resources */,
+				830581F7ACF146C29019BA3B /* Inter-SemiBold.ttf in Resources */,
+				4DDE503ABE7942DE80908084 /* SpaceGrotesk-Bold.ttf in Resources */,
+				14646DAF74794C3B9E0D7301 /* SpaceGrotesk-Medium.ttf in Resources */,
+				271595018E4F487EB31C011C /* BootSplash.storyboard in Resources */,
+				65D2306CF2B94C6D8496E474 /* Colors.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

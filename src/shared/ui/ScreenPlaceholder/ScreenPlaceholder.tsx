@@ -11,8 +11,10 @@ export function ScreenPlaceholder({
 }: ScreenPlaceholderProps) {
   return (
     <View style={styles.root} testID={testID}>
-      <Text accessibilityRole="header">{title}</Text>
-      {detail ? <Text>{detail}</Text> : null}
+      <Text accessibilityRole="header" style={styles.title}>
+        {title}
+      </Text>
+      {detail ? <Text style={styles.detail}>{detail}</Text> : null}
     </View>
   );
 }

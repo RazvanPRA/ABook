@@ -1,2 +1,3 @@
-// Public API of shared/theme. Filled in later milestones.
-export {};
+export { color } from './colors';
+export { fontFamily } from './fonts';
+export type { FontFamily } from './fonts';
