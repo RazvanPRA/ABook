@@ -51,6 +51,14 @@ Fiecare pas se încheie cu un commit pe `m0-fundatie`. De la pasul 4 încolo, fi
 - **Verificare:** `git status` curat.
 
 ### 2. Schelet React Native CLI
+**Făcut** (2026-11-18). Ce am constatat:
+- RN 0.88.1 cere JDK între 17 și 20 (`react-native doctor`). Scriptul folosește automat JDK 17.
+- Template-ul a generat `com/com.abook/`; am mutat fișierele în `com/abook/`. Am setat `rootProject.name` la `ABook` și numele afișat la „Audiobook PDF”.
+- TS 6 marchează `baseUrl` ca depreciat, așa că `paths` e folosit fără el.
+- `doctor` raportează „Android SDK N/A”, deși build-tools 37 e instalat și build-ul trece. E o eroare de detecție a lui `doctor`.
+- Build-ul de debug primește `ACCESS_LOCAL_NETWORK` de la dev support-ul RN (Android 17 îl cere la rulare). `run-android.ps1` îl acordă pe emulator.
+- Primul build a durat 135 s. A doua rulare a scriptului nu face build și durează 9 s.
+
 - `npx @react-native-community/cli@latest init ABook --package-name com.abook --skip-git-init`, generat într-un folder temporar (rădăcina nu e goală), apoi mutat în rădăcină. Rămân `README.md` și `.claude/`, iar `.gitignore` vine din template.
 - Verific în `android/gradle.properties` că `newArchEnabled=true`, și îl activez și pe iOS.
 - Afișez numele „Audiobook PDF”: `android/app/src/main/res/values/strings.xml` și `CFBundleDisplayName` în `Info.plist`.
