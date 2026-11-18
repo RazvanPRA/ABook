@@ -48,7 +48,8 @@ param(
   [string]$Gpu = '',
   [switch]$ResetCache,
   [string]$JavaHome = '',
-  [int]$MaxJavaMajor = 21,
+  # RN 0.88 doctor: JDK >= 17 <= 20
+  [int]$MaxJavaMajor = 20,
   [int]$MetroPort = 8081,
   [int]$BootTimeoutSeconds = 420
 )
@@ -379,8 +380,16 @@ if ($reason) {
   Write-Host "  BUILD OK ($([int]$bw.Elapsed.TotalSeconds)s)" -ForegroundColor Green
 } else {
   Step 7 'No build (nothing native changed) -> restarting the app'
-  & $adb -s $serial shell am start -S -W -n "$package/$activity" 2>$null | Out-Null
 }
+
+# The DEBUG build gets android.permission.ACCESS_LOCAL_NETWORK from React Native's dev support (Metro);
+# on Android 17+ it is a runtime permission and its dialog would cover the app. Grant it on the emulator
+# only (ABook itself requests no permissions) and (re)start the app so it opens without the dialog.
+$requested = "$(& $adb -s $serial shell dumpsys package $package 2>$null)"
+if ($requested -match 'android\.permission\.ACCESS_LOCAL_NETWORK') {
+  & $adb -s $serial shell pm grant $package android.permission.ACCESS_LOCAL_NETWORK 2>$null | Out-Null
+}
+& $adb -s $serial shell am start -S -W -n "$package/$activity" 2>$null | Out-Null
 
 # ---------------------------------------------------------------- 8. Verification
 # ABook asks for no runtime permissions at startup (the PDF picker uses the system UI), so the app must be on top.
