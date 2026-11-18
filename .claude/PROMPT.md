@@ -35,7 +35,7 @@ Pornim de la **React Native CLI** (`@react-native-community/cli`), cu ultima ver
 | Fișiere | `@dr.pogodin/react-native-fs` | PDF-urile stau pe disc, nu în AsyncStorage; citire base64 pe bucăți |
 | Alegere fișier | `@react-native-documents/picker` | `types.pdf`, copiere locală (`keepLocalCopy`) |
 | Extragere text | `react-native-webview` + `pdfjs-dist` împachetat local | Singura variantă robustă offline; munca grea rămâne în WebView, nu pe firul JS |
-| Voce | `react-native-tts`, în spatele interfeței `TtsEngine` | TTS de sistem, voci românești; se poate înlocui cu un modul nativ propriu (TurboModule) fără să atingi feature-urile |
+| Voce | TurboModule propriu `AbookTts` (Android `TextToSpeech`, iOS `AVSpeechSynthesizer`), în spatele interfeței `TtsEngine` | TTS de sistem, voci românești; `react-native-tts` nu compilează cu Gradle 9 (verificat în M0) |
 | Liste | `@shopify/flash-list` | Biblioteca și textul din player rămân fluide la sute de elemente |
 | Animații, gesturi | `react-native-reanimated`, `react-native-gesture-handler` | Animații pe firul UI (evidențierea frazei, butoane) |
 | Slider | `@react-native-community/slider` | Glisorul de pagină, viteza și tonul |
@@ -53,10 +53,12 @@ Ce nu folosești:
 - `redux-persist`, pentru că persistența trece prin repositories.
 - Librării PDF native care necesită rețea sau servicii externe.
 - Vreo librărie UI completă (de tip kit), pentru că primitivele se construiesc pe tokens.
-
 - Expo și orice pachet `expo-*` (inclusiv prin `install-expo-modules`).
+- `react-native-tts` (neîntreținut; nu compilează cu Gradle 9).
 
-Pentru redare în fundal pe iOS adaugi `UIBackgroundModes: ["audio"]` direct în `ios/<App>/Info.plist` și verifici pe un dispozitiv real. Dacă `react-native-tts` se oprește cu ecranul blocat sau nu merge pe New Architecture, scrii un TurboModule propriu (Android `TextToSpeech`, iOS `AVSpeechSynthesizer`) în spatele `TtsEngine`.
+Pentru redare în fundal pe iOS adaugi `UIBackgroundModes: ["audio"]` direct în `ios/<App>/Info.plist`, iar `AbookTts` setează `AVAudioSession` pe `playback`. Verifici pe un dispozitiv real.
+
+AsyncStorage este v3 (Room/SQLite pe Android), cu API-ul `getMany` / `setMany` / `removeMany`. Unde textul de mai jos spune `multiGet` / `multiSet` / `multiRemove`, folosești echivalentele v3, prin adaptorul `keyValueStore`.
 
 ## 3. Arhitectură
 
@@ -78,7 +80,7 @@ src/
   services/
     pdf/                       PdfTextExtractor (interfață) + WebViewPdfExtractor
     text/                      curățare text, eliminare antete/subsoluri, segmentare în fraze, împărțire în capitole
-    tts/                       TtsEngine (interfață) + RnTtsEngine
+    tts/                       TtsEngine (interfață) + NativeTtsEngine (peste TurboModule-ul AbookTts)
   repositories/
     BookRepository.ts          interfață + LocalBookRepository (AsyncStorage + FS)
     ProgressRepository.ts

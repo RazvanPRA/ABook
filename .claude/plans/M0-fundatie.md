@@ -68,6 +68,12 @@ Fiecare pas se încheie cu un commit pe `m0-fundatie`. De la pasul 4 încolo, fi
 - **Verificare:** `npx tsc --noEmit` trece; `npx react-native doctor` fără erori pe Android.
 
 ### 3. Dependențe (toate cele native, o singură dată)
+**Rezultat** (2026-11-18):
+- **Spike `react-native-tts`: EȘUAT.** Biblioteca nu compilează, pentru că `build.gradle` folosește `jcenter()`, care a fost eliminat în Gradle 9 (RN 0.88 folosește Gradle 9.4.1). Am scos-o. Vocea devine un **TurboModule propriu** (`AbookTts`: Android `TextToSpeech`, iOS `AVSpeechSynthesizer`) în M5, în spatele `TtsEngine`.
+- **AsyncStorage 3.1.1:** folosește Room/SQLite și are un API nou (`getMany` / `setMany` / `removeMany`, `getAllKeys`, `createAsyncStorage(name)`), fără `multiGet` și fără proprietatea `AsyncStorage_db_size_in_MB`, deci limita de ~6 MB din v1 nu mai există. Regula de ~256 KB per valoare rămâne, din cauza limitei de 2 MB a `CursorWindow` la citire. Pasul 7 nu mai are nimic de setat pentru AsyncStorage.
+- **`pdfjs-dist` 6.5.438:** are `legacy/build/pdf.mjs` și `pdf.worker.mjs`.
+- Toate versiunile sunt fixate exact în `package.json`, iar `.npmrc` are `save-exact=true`.
+
 Instalez acum toate librăriile native, ca build-ul nativ să se facă rar și scriptul să nu mai recompileze la fiecare milestone.
 
 ```

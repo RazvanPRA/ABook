@@ -9,7 +9,7 @@ Applies together with `modular-architecture` and `audiobook-storage`.
 
 ## Engine contract
 
-`services/tts/TtsEngine.ts` exposes `listVoices(lang)`, `speak(text, { voiceId, rate, pitch, onStart, onDone, onError })`, `stop()` and `isSpeaking()`. `RnTtsEngine` (over `react-native-tts`) is the default implementation. A custom TurboModule implementation (Android `TextToSpeech`, iOS `AVSpeechSynthesizer`) may replace it in `app/dependencies.ts`, and no feature changes. No Expo packages. Tests use `FakeTtsEngine`, which completes utterances on demand.
+`services/tts/TtsEngine.ts` exposes `listVoices(lang)`, `speak(text, { voiceId, rate, pitch, onStart, onDone, onError })`, `stop()` and `isSpeaking()`. `NativeTtsEngine` is the implementation, over the app's own TurboModule `AbookTts` (Codegen spec `specs/NativeAbookTts.ts`; Android `TextToSpeech`, iOS `AVSpeechSynthesizer` with an `AVAudioSession` `playback` category). Do not use `react-native-tts`: it does not build with Gradle 9 (verified in M0). It is wired in `app/dependencies.ts`; features see only `TtsEngine`. No Expo packages. Tests use `FakeTtsEngine`, which completes utterances on demand.
 
 ## Core model
 

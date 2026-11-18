@@ -104,7 +104,7 @@ Branch de lucru: `dev`. Fiecare milestone se închide printr-un commit (sau PR s
 
 ## M5 – Voce și player  *(pasul 8, skill `tts-playback-engine`)*
 
-- `services/tts`: `TtsEngine`, `RnTtsEngine` (peste `react-native-tts`) și `FakeTtsEngine` pentru teste.
+- `services/tts`: `TtsEngine`, `NativeTtsEngine` (peste TurboModule-ul propriu `AbookTts`, cu spec Codegen în `specs/NativeAbookTts.ts`) și `FakeTtsEngine` pentru teste.
 - `features/player`:
   - sesiunea de redare cu stările `idle | loading | playing | paused | ended | error`;
   - token de generație; cache LRU cu cel mult 3 capitole și prefetch la 80% din capitol;
@@ -131,7 +131,7 @@ Branch de lucru: `dev`. Fiecare milestone se închide printr-un commit (sau PR s
 
 - Măsurători în build de release pe un Android de gamă medie: pornire < 1,5 s, 60 fps la derulare, firul JS liber la import, memorie (cel mult 3 capitole, PDF niciodată întreg în JS).
 - Verificare cu TalkBack/VoiceOver, contrast, font mărit.
-- Redare în fundal pe iOS pe un dispozitiv real; dacă `react-native-tts` se oprește, se trece la un TurboModule propriu doar în `dependencies.ts`.
+- Redare în fundal pe iOS pe un dispozitiv real; TurboModule-ul `AbookTts` configurează sesiunea audio pentru redare în fundal.
 - Comparare cu machetele, pentru toate cele 6 ecrane și toate stările.
 - Bifarea *Definition of done* din PROMPT (secțiunea finală).
 
@@ -142,9 +142,9 @@ Branch de lucru: `dev`. Fiecare milestone se închide printr-un commit (sau PR s
 | Risc | Când se verifică | Plan B |
 | --- | --- | --- |
 | pdf.js legacy + worker inclus local într-un WebView pe Android | spike la începutul M3b | build separat al worker-ului, încărcat ca blob |
-| Limita totală AsyncStorage pe Android | M0 (`gradle.properties`), verificat în M2 | limită mai mare; dacă nu ajunge, textul capitolelor se mută în fișiere |
-| `react-native-tts` (ultima versiune: iunie 2024) pe New Architecture / RN 0.88 | spike în M0 (build) și M5 (redare) | TurboModule propriu (`TextToSpeech` / `AVSpeechSynthesizer`) în spatele `TtsEngine` |
-| `react-native-tts` cu ecranul blocat (iOS) | M5, pe dispozitiv | același TurboModule, cu sesiune audio configurată |
+| Limita AsyncStorage pe Android | **Rezolvat în M0:** v3.1.1 folosește Room/SQLite, fără limita de 6 MB | păstrăm valorile sub ~256 KB (limita de 2 MB a `CursorWindow` la citire) |
+| `react-native-tts` | **Confirmat în M0:** nu compilează cu Gradle 9 (`jcenter()`), deci a fost scos | **M5: TurboModule propriu** `AbookTts` (Android `TextToSpeech`, iOS `AVSpeechSynthesizer`) în spatele `TtsEngine` |
+| Redare cu ecranul blocat (iOS) | M5/M7, pe dispozitiv | `AVAudioSession` cu categoria `playback` în TurboModule |
 | pdf.js ca asset local în RN CLI (fără bundler de asset-uri Expo) | spike la începutul M3b | HTML în `android/app/src/main/assets` + bundle iOS, sau HTML inline generat la build |
 | Voci `ro-RO` lipsă pe emulator | M5 | testare cu `en-US` + starea „nicio voce” |
 | Machete: 5 din 6 ecrane sunt în `.claude/design/` (lipsește Biblioteca cu cărți) | înainte de M4 | se cere macheta lipsă sau se derivă din componentele existente (card, `ProgressBar`, `BookCover`) |
