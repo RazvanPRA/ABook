@@ -94,6 +94,15 @@ npm i @reduxjs/toolkit react-redux zod i18next react-i18next lucide-react-native
 - **Verificare:** `cd android && gradlew assembleDebug` trece.
 
 ### 4. Calitate: TypeScript, ESLint, Prettier, Jest
+**Făcut** (2026-11-19). `npm run check` (typecheck, lint, Prettier, Jest) e verde, cu 20/20 teste, dintre care 19 sunt santinele de lint. Abateri față de plan:
+- **ESLint 9.39** cu flat config (`eslint.config.js`), peste `@react-native/eslint-config/flat`. Fără pachetul `typescript-eslint`: pluginul `@typescript-eslint` e deja inclus de configul RN, iar al doilea ar fi fost o definiție duplicată. Regulile `no-explicit-any` și `no-non-null-assertion` sunt setate explicit.
+- `eslint-plugin-ft-flow` (venit din configul RN) cade pe ESLint 9 (`getAllComments`). Nu folosim Flow, așa că i-am scos regulile.
+- `eslint-plugin-boundaries` 7.4 folosește regula `boundaries/dependencies` cu `policies`. Între feature-uri, importurile sunt permise doar spre `index.ts` (`fileInternalPath`) sau în interiorul aceluiași feature (`captured.feature`). Spre repositories, feature-urile au voie doar la importuri de tip.
+- `import/no-cycle` merge cu `disableScc: true`: optimizarea SCC cade pe fișiere care nu există pe disc.
+- Santinelele dau configul direct prin `overrideConfig`, pentru că ESLint 9 îl încarcă prin `import()` dinamic, nesuportat de VM-ul Jest. Fișierele-țintă se creează temporar în `__lint-fixtures__` și se șterg la final.
+- Tipurile Node (`@types/node`) se încarcă doar în testul de lint (`/// <reference types="node" />`); codul aplicației nu le vede.
+- Am creat deja aici scheletul `src/` cu `index.ts`, din pasul 5, ca santinelele să aibă ținte reale.
+
 - **Scripturi** în `package.json`: `typecheck` (`tsc --noEmit`), `lint` (`eslint .`), `format`, `test` (`jest`), `check` (toate trei).
 - **ESLint** (flat config: `@react-native/eslint-config` + `typescript-eslint` strict + `eslint-config-prettier`):
   - `@typescript-eslint/no-explicit-any`, `no-non-null-assertion`: `error`;
