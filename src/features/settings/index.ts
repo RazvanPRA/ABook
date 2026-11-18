@@ -1,2 +1,1 @@
-// Public API of features/settings. Filled in later milestones.
-export {};
+export { SettingsScreen } from './screens/SettingsScreen';

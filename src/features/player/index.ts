@@ -1,2 +1,1 @@
-// Public API of features/player. Filled in later milestones.
-export {};
+export { PlayerScreen } from './screens/PlayerScreen';

@@ -1,0 +1,22 @@
+{
+  "tabs": {
+    "library": "Bibliotecă",
+    "player": "Ascultă",
+    "settings": "Setări"
+  },
+  "library": {
+    "title": "Biblioteca mea"
+  },
+  "player": {
+    "title": "Ascultă"
+  },
+  "settings": {
+    "title": "Setări"
+  },
+  "import": {
+    "title": "Importă PDF"
+  },
+  "book": {
+    "title": "Detalii carte"
+  }
+}

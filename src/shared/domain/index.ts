@@ -1,2 +1,2 @@
-// Public API of shared/domain. Filled in later milestones.
-export {};
+export type { BookId } from './ids';
+export { toBookId } from './ids';

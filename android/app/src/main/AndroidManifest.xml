@@ -22,6 +22,13 @@
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
+        <!-- Deep links: abook://library, abook://book/<id> (src/app/navigation/linking.ts) -->
+        <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="abook" />
+        </intent-filter>
       </activity>
     </application>
 </manifest>

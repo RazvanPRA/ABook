@@ -1,16 +1,15 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { DarkTheme, NavigationContainer } from '@react-navigation/native';
+import { linking, RootNavigator } from './navigation';
+import { AppProviders } from './providers/AppProviders';
 
-// Placeholder root. Providers, navigation, fonts and i18n are wired in M0 steps 5-6.
+// DarkTheme is temporary; navigation colors come from the theme tokens in M1.
 export function App() {
   return (
-    <SafeAreaProvider>
-      <View style={styles.root} testID="app-root" />
-    </SafeAreaProvider>
+    <AppProviders>
+      <NavigationContainer linking={linking} theme={DarkTheme}>
+        <RootNavigator />
+      </NavigationContainer>
+    </AppProviders>
   );
 }
-
-const styles = StyleSheet.create({
-  root: { flex: 1 },
-});
