@@ -360,6 +360,9 @@ if ($SkipBuild -and -not $installed) { Fail 5 "-SkipBuild, but $package is not i
 if ($reason) {
   $buildCmd = 'npx react-native run-android'
   Step 7 "Build: $buildCmd ($reason) -> log: $buildLog"
+  # Stop the running app first: reinstalling under a live activity leaves a stale ANR dialog
+  # ("isn't responding ... no focused window") on top of the new instance.
+  & $adb -s $serial shell am force-stop $package 2>$null | Out-Null
   # The RN CLI runs "gradlew.bat" without a path; with this variable set, cmd.exe does not search the current directory.
   Remove-Item Env:NoDefaultCurrentDirectoryInExePath -ErrorAction SilentlyContinue
   $bw = [Diagnostics.Stopwatch]::StartNew()
