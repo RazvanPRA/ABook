@@ -1,2 +1,1 @@
-// Public API of shared/i18n. Filled in later milestones.
-export {};
+export { i18n, DEFAULT_LANGUAGE } from './i18n';

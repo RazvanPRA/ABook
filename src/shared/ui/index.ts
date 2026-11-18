@@ -1,2 +1,2 @@
-// Public API of shared/ui. Filled in later milestones.
-export {};
+export { ScreenPlaceholder } from './ScreenPlaceholder';
+export type { ScreenPlaceholderProps } from './ScreenPlaceholder';

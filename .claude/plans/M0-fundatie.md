@@ -134,6 +134,14 @@ npm i @reduxjs/toolkit react-redux zod i18next react-i18next lucide-react-native
 - **Verificare:** `npm run check` verde.
 
 ### 5. Structura `src/` și navigația
+**Făcut** (2026-11-19). `npm run check` e verde, cu 27 de teste. Verificat pe emulator: tab-urile Bibliotecă / Ascultă / Setări, `abook://book/test-1` deschide „Detalii carte” cu id-ul, iar `abook://settings` deschide tab-ul Setări.
+- **Mutat din pasul 6:** `ro.json` cu chei tipizate (`i18next.d.ts`), `i18n` sincron, `I18nProvider` și `AppProviders`, pentru că etichetele tab-urilor nu pot fi hard-codate.
+- `BookScreen` primește `bookId` ca prop. Adaptorul `BookRoute` din `app/navigation` citește parametrul rutei, așa că feature-urile nu importă tipuri de navigație. `ReactNavigation.RootParamList` e declarat global pentru `useNavigation()`.
+- `BookId` (tip branded) e în `shared/domain`, iar `ScreenPlaceholder` (temporar) e în `shared/ui`.
+- **Nativ:** intent-filter `abook://` (Android), `CFBundleURLTypes` (iOS) și `RNScreensFragmentFactory` în `MainActivity` (recomandat de `react-native-screens`).
+- **Teste:** în Testing Library v14, `fireEvent.press` e asincron și trebuie așteptat cu `await`. Butoanele din bottom-tabs nu au rolul `tab`.
+- **Vizual, până la M1:** textul placeholder e negru pe fundal negru și tab-urile nu au iconițe. Se rezolvă cu tokens și cu `BottomTabBar`.
+
 - Folderele din PROMPT §3, fiecare cu un `index.ts` minim, ca regulile `boundaries` să aibă ce verifica:
   - `src/features/{library,import,book,player,settings}` (fiecare cu un `screens/` placeholder);
   - `src/services/{pdf,text,tts}`, `src/repositories`, `src/storage/migrations`;

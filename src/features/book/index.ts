@@ -1,2 +1,2 @@
-// Public API of features/book. Filled in later milestones.
-export {};
+export { BookScreen } from './screens/BookScreen';
+export type { BookScreenProps } from './screens/BookScreen';

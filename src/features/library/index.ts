@@ -1,2 +1,1 @@
-// Public API of features/library. Filled in later milestones.
-export {};
+export { LibraryScreen } from './screens/LibraryScreen';
