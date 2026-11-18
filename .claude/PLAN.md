@@ -34,7 +34,9 @@ Branch de lucru: `dev`. Fiecare milestone se închide printr-un commit (sau PR s
 
 ---
 
-## M0 – Fundație și unelte  *(PROMPT pasul 1)*
+## M0 – Fundație și unelte  *(PROMPT pasul 1)* — ✅ încheiat 2026-11-19
+
+Rezultatele, abaterile și capcanele sunt în `.claude/plans/M0-fundatie.md` și în `CLAUDE.md`.
 
 **Obiectiv:** un proiect React Native CLI care pornește pe emulator, cu toată infrastructura de calitate activă. Detalii: `.claude/plans/M0-fundatie.md`.
 

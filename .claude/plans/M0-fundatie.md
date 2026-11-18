@@ -224,20 +224,37 @@ Scriptul din `techspeak` e tot pentru RN CLI, deci l-am copiat și am schimbat p
   - convenția de branch-uri: `m<N>-<nume>` din `dev`.
 
 ### 10. Închidere
-- `npm run check` verde, apoi `run-android.ps1` deschide aplicația cu tab-urile Bibliotecă / Player / Setări.
-- Bifez checklist-ul din `modular-architecture` §10 și scriu rezumatul: unități noi, unități refolosite, `arch-exception` (niciuna așteptată).
-- PR `m0-fundatie` → `dev`, doar la cerere.
+**Făcut** (2026-11-19). `npm run check` e verde, cu 48 de teste în 6 suite, iar `npm run emu` deschide aplicația cu tab-urile Bibliotecă / Ascultă / Setări.
+- Verificarea de la închidere a găsit `fontSize: 28/16` scrise direct în `ScreenPlaceholder`, deci o încălcare a regulii „fără magic numbers”. Am reparat-o cu `shared/theme/typography.ts` (`fontSize.display` / `fontSize.body`, din PROMPT §7).
+- Dependența indirectă `@expo/config-plugins` vine de la `react-native-bootsplash`, pentru pluginul său opțional pentru Expo. Am verificat că nu ajunge în aplicație: bundle-ul JS (8,4 MB) are 0 referințe la `expo`/`@expo`, iar build-ul nativ nu o folosește. O accept ca excepție documentată. Lint-ul interzice oricum orice import `expo*` din codul nostru.
+
+#### Checklist `modular-architecture` §10
+- [x] Niciun fișier nu depășește limitele. Cel mai mare are 33 de linii (`TabsNavigator.tsx`), iar limitele sunt impuse de ESLint.
+- [x] Fără importuri în sus sau în interiorul altui feature și fără cicluri. Le impune `boundaries`, iar 19 santinele o dovedesc.
+- [x] Fără markup sau logică duplicată. Ecranele placeholder refolosesc `ScreenPlaceholder`.
+- [x] Fără texte, culori sau mărimi hard-codate: textele sunt în `ro.json`, culorile și mărimile în `shared/theme`.
+- [x] Unitățile noi sunt în stratul corect și exportate prin `index.ts`.
+- [x] Teste adăugate și verzi.
+- [x] `typecheck`, `lint` și `test` trec.
+
+#### Rezumat (conform skill-ului)
+- **Unități noi:**
+  - `app`: `App`, `AppProviders`, `I18nProvider`, `RootNavigator`, `TabsNavigator`, `BookRoute`, `linking`, tipurile de navigație;
+  - `features`: `LibraryScreen`, `PlayerScreen`, `SettingsScreen`, `ImportScreen`, `BookScreen`;
+  - `shared`: `ScreenPlaceholder`, `BookId`/`toBookId`, `i18n` + `ro.json`, `color`, `fontFamily`, `fontSize`.
+- **Refolosite:** `ScreenPlaceholder`, în toate cele 5 ecrane.
+- **`arch-exception`:** niciuna.
 
 ## Definition of done – M0
 
-- [ ] Proiect RN CLI 0.88, New Architecture, zero dependențe `expo*` (verificat de lint și de `npm ls`)
-- [ ] Aplicația pornește pe `Pixel_10_Pro_XL` printr-o singură comandă (`run-android.ps1`)
-- [ ] 3 tab-uri + `Import` (modal) și `Book` (`{ id }`), cu `ParamList` tipate și deep links
-- [ ] Fonturile Inter și Space Grotesk se încarcă, iar splash-ul dispare doar după montare
-- [ ] Toate textele vin din `ro.json`
-- [ ] `typecheck`, `lint` și `test` verzi; testele de santinelă dovedesc că `boundaries` și interdicțiile sunt active
-- [ ] Toate dependențele native sunt instalate și compilate; spike-ul `react-native-tts` are rezultat notat
-- [ ] `CLAUDE.md` scris, iar `.claude/` e în commit
+- [x] Proiect RN CLI 0.88.1, New Architecture (`newArchEnabled=true`, `RCTNewArchEnabled`), zero dependențe directe `expo*` (lint + `npm ls`). Excepția indirectă e descrisă mai sus și nu ajunge în aplicație.
+- [x] Aplicația pornește pe `Pixel_10_Pro_XL` printr-o singură comandă (`npm run emu`), verificat în 5 moduri.
+- [x] 3 tab-uri + `Import` (modal) și `Book` (`{ id }`), cu `ParamList` tipate și deep links verificate pe emulator.
+- [x] Fonturile Inter și Space Grotesk se încarcă, iar splash-ul dispare doar după montare (test + emulator).
+- [x] Toate textele vin din `ro.json`, cu chei tipizate.
+- [x] `typecheck`, `lint` și `test` sunt verzi, iar testele de santinelă dovedesc că `boundaries` și interdicțiile sunt active.
+- [x] Toate dependențele native sunt instalate și compilate. Spike-ul `react-native-tts` a eșuat (Gradle 9), iar soluția e TurboModule-ul propriu din M5.
+- [x] `CLAUDE.md` e scris, iar `.claude/` e în commit.
 
 ## Riscuri M0
 
