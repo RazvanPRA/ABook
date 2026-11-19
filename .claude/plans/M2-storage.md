@@ -57,6 +57,14 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 - **Tests:** a shared contract suite run against both implementations (AsyncStorage through its official jest mock); the key builders and parsers, including ids that contain `:`-free UUIDs only (a malformed id is rejected by `bookIdFromKey`).
 - Lint sentinel: a key literal `'abk:...'` outside `storage/keys.ts` is reported (a `no-restricted-syntax` rule on string literals starting with `abk:`) — only if it stays cheap; otherwise noted as a review rule.
 
+**Done** (2026-11-19). Findings:
+- **AsyncStorage 3.x:** the default export is the `legacy` database (the jest mock does `createAsyncStorage('legacy')` too). It's kept as decided. `getMany` already returns every requested key, with `null` for missing ones. The adapter skips the native call for empty batches.
+- **Namespace guard:** `assertNamespaced` (in `keys.ts`) throws on any key outside `abk:` in `getMany` / `setMany` / `removeMany`, in both the adapter and the fake, and `getAllKeys` hides foreign keys. A typo in a key fails loudly instead of writing next to the data.
+- **Keys:** besides the planned helpers, `chapterPartsPrefix(id, n)` ends with `:p:`, so the parts of chapter 1 never match chapter 10. `bookIdFromKey` validates the id with `bookIdSchema`, so a malformed id gives `null`.
+- **Fake:** `InMemoryKeyValueStore` in `src/storage/testing/` records every call (`calls`, for write order and batch counts), offers `failNext(op)` (the call is recorded, then rejects before any change) and `snapshot()`. The constructor accepts foreign keys, to simulate other data in the same database.
+- **Contract:** one suite with `describe.each` over the fake and the adapter (on the package's official jest mock, `@react-native-async-storage/async-storage/jest`, with `clearAllMockStorages`). Both behave identically.
+- **Lint:** the key rule was cheap, so it's in. Both the hex rule and the key rule use `no-restricted-syntax`, and in flat config a later block **replaces** the rule's options for the files it matches, so a naive second block would have switched the hex rule off. There are three blocks now: `src` (hex + keys), `shared/theme` (keys only), `storage/keys.ts` (hex only). The selectors catch both string literals and template literals that start with `abk:`. Two new sentinels prove it, including that the hex rule still applies in `keys.ts`. Tests are exempt, so they may assert literal keys.
+
 ### 4. `FileStore`
 - Interface: `ensureDir(path)`, `copy(from, to)`, `exists(path)`, `size(path)`, `remove(path)` (idempotent), `booksDir()`, `bookPdfPath(id)`. M3 adds base64 chunk reading for the extractor.
 - `reactNativeFsFileStore.ts` over `@dr.pogodin/react-native-fs`; `InMemoryFileStore` in `storage/testing/`.

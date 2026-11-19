@@ -147,6 +147,27 @@ describe('tokens and size limits', () => {
     expect(await ruleIds('src/shared/theme/sentinel.ts', code)).toEqual([]);
   });
 
+  it('rejects storage key literals outside storage/keys.ts', async () => {
+    const literal = "export const k = 'abk:settings';\n";
+    const template =
+      'export const k = (id: string) => `abk:book:${id}:meta`;\n';
+    for (const file of [
+      'src/repositories/sentinel.ts',
+      'src/shared/theme/sentinel.ts',
+    ]) {
+      expect(await ruleIds(file, literal)).toContain('no-restricted-syntax');
+      expect(await ruleIds(file, template)).toContain('no-restricted-syntax');
+    }
+    expect(await ruleIds('src/storage/keys.ts', template)).toEqual([]);
+  });
+
+  it('keeps the hex rule in storage/keys.ts', async () => {
+    const code = "export const c = '#F0B13C';\n";
+    expect(await ruleIds('src/storage/keys.ts', code)).toContain(
+      'no-restricted-syntax',
+    );
+  });
+
   it('rejects more than 3 parameters', async () => {
     const code =
       'export const f = (a: number, b: number, c: number, d: number) => a + b + c + d;\n';
