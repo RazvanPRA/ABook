@@ -128,6 +128,12 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 - `AppDependencies` interface in `repositories/index.ts` (`bookRepository`, `progressRepository`, `settingsRepository`).
 - **Tests:** round-trip, missing, corrupt, partial settings.
 
+**Done** (2026-11-19). Findings:
+- **Structure:** `repositories/progress/` and `repositories/settings/`, each with an interface + a `createLocal*Repository({ kv })` factory, like `book/`. `AppDependencies` lives in `repositories/AppDependencies.ts` and is exported from `repositories/index.ts`.
+- **Progress:** `getProgress` → `null` when missing or invalid. `getBookmarks` → `[]` (missing or invalid), so the UI doesn't need a separate case. `saveBookmarks` replaces the whole list. Writes are validated (duplicate bookmark ids or page 0 throw before writing). The throttle stays for M5, as decided.
+- **Settings (`settingsFromStored`):** a separate pure function, because step 9 reads `abk:settings` in the same `getMany` as the metas and must interpret it the same way. Missing → a **copy** of the defaults (`DEFAULT_SETTINGS` is frozen, and an object from the store must stay mutable for Immer/RTK). Unreadable, an array, a scalar or `null` → defaults + log. Partly invalid → each field is validated on its own (`settingsSchema.shape[field]`), and the valid ones stay over the defaults, so a corrupt voice id doesn't reset the chosen speed. The log names the rejected fields. A field missing from an older version is filled from the defaults, and an unknown field (from a newer app) is dropped.
+- **Lint:** in tests, `@typescript-eslint/no-unused-vars` doesn't accept `_`-prefixed variables in rest destructuring (only parameters), so omitting a field is done with `delete` on a copy.
+
 ### 9. Boot snapshot and `bootstrap.ts`
 - `repositories/loadBootSnapshot.ts`: `getAllKeys` → one `getMany` (`books`, `settings`, every `meta`) → `{ books: BookMeta[]; settings: Settings }` in library order. Ids listed without valid `meta` are dropped from the order (logged); `meta` keys not listed are left for the orphan sweep.
 - `app/bootstrap.ts`: `runMigrations` → `loadBootSnapshot` → mark `processing` books `failed` (one `setMany`) → sweep orphans (keys of ids that are neither listed nor have `meta`, plus their files) → return the snapshot. Each stage is a separate function; failure policy as in Decisions.
