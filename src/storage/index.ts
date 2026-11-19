@@ -13,3 +13,5 @@ export {
 export type { BookKeyName, RootKeyName } from './keys';
 export type { Entries, KeyValueStore } from './KeyValueStore';
 export { createAsyncStorageKeyValueStore } from './asyncStorageKeyValueStore';
+export type { FileStore } from './FileStore';
+export { createReactNativeFsFileStore } from './reactNativeFsFileStore';

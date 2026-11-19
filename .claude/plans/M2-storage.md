@@ -71,6 +71,13 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 - Mock of `@dr.pogodin/react-native-fs` in `jest.setup.js`, if the package has none.
 - **Tests:** the same contract suite on the fake and on the adapter (with the mock); removing a missing file doesn't throw; `bookPdfPath` lands in `DocumentDirectoryPath/books/{id}.pdf`.
 
+**Done** (2026-11-19). Findings:
+- **No mock in the package**, and importing `@dr.pogodin/react-native-fs` calls `RNFS.getConstants()` on the native module at load time, so any test that imports the adapter (and, in step 10, `App` through `dependencies.ts`) would crash. `jest.setup.js` now has an in-memory mock with the native semantics the app relies on: `unlink` and `stat` reject on a missing path, `unlink` deletes a directory recursively, `copyFile` needs an existing source and parent directory, `mkdir` creates the parents. Files are stored as sizes only. Tests seed it with `__writeFile` and clear it with `__reset` (`jest.requireMock`).
+- **Interface:** besides the planned methods, `list(dir)` (entry names, `[]` for a missing directory) for the orphan-file sweep in step 9. `size` returns `null` for a missing file instead of rejecting, and `remove` checks `exists` first, because the native `unlink` rejects. Paths are absolute, without `file://`.
+- **Adapter:** `createReactNativeFsFileStore(fs = RNFS)` takes the narrow `FsApi` subset (`Pick<typeof RNFS, …>`), so it can be injected. `copy` doesn't create the parent: the repository calls `ensureDir(booksDir())` explicitly, and the contract proves a copy into a missing directory rejects.
+- **Fake:** `InMemoryFileStore` (sizes in a map) records the writes (`ensureDir`, `copy`, `remove`) for write-order checks next to the key-value fake, and offers `failNext`, `addFile` (the picked PDF) and `filePaths()`. It duplicates the jest mock's logic in TypeScript; they serve different purposes (typed test double vs. module mock), so I kept both.
+- **For M3:** on Android, the picker returns `content://` URIs. Whether `copyFile` reads them directly, or the picker's `keepLocalCopy` is needed first, is checked on the emulator in M3c.
+
 ### 5. Migrations
 - `storage/migrations/types.ts` (`Migration = { version: number; migrate: (entries: Entries) => Entries }`), `001-initial.ts` (0 → 1: nothing to transform, establishes the version), `index.ts` (ordered list), `runMigrations(kv, migrations)`.
 - The runner reads `abk:schemaVersion`; with nothing pending it touches nothing else. Otherwise: `getAllKeys` + `getMany` of all `abk:*`, applies the pure migrations in order, writes only the diff (`setMany` for changed, `removeMany` for removed) and `schemaVersion` last, so a crash means re-running from the old version.
