@@ -28,6 +28,7 @@ npm run emu -- -SkipBuild | -EmulatorOnly | -ForceBuild | -ResetCache
 npm run emu:rebuild    # forced build + cleared Metro cache
 npx react-native-asset # after adding a font to assets/fonts
 npm run pdf:webview    # regenerate the PDF WebView page (also on postinstall and in check)
+npm run dev:pdfs -- --push [--samples]  # test PDFs → .dev-pdfs/ → the app's files/dev-pdfs (abook://dev/pdf)
 ```
 
 The PDF WebView page (`src/services/pdf/webview/generated/`, 2.4 MB, gitignored) is generated from `src/services/pdf/webview/page` + `pdfjs-dist` by `scripts/build-pdf-webview.js`. Metro, tsc and Jest need it; a test fails when it is stale.

@@ -215,6 +215,61 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 - Also open the real samples: `Microservices_Patterns.pdf` (522 p.) and `The.Clean.Coder…pdf` (6.0 MB, the most chunks). After cleanup, the licence watermark, the running headers and the page numbers (Roman and Arabic) are gone.
 - **Check:** the whole PDF extracts without a red screen or a freeze; password and corrupt PDFs give the typed errors.
 
+**Done** (2026-11-19), on `emulator-5554`, debug build with Metro. **Partly met:** extraction, errors and watermark removal pass; running headers that change from chapter to chapter remain, so step 11a is proposed below.
+
+**Test PDFs:** `npm run dev:pdfs` (`scripts/make-dev-pdfs.js` + `scripts/dev-pdfs/pdfWriter.js`, no dependency) writes them to `.dev-pdfs/` (gitignored):
+- `ion-320.pdf`: 320 pages, running title, page numbers, `Capitolul N` every 20 pages, hyphenated line ends, dialogue, „…”.
+- `protejat-parola-abook.pdf`: standard security handler, RC4 40-bit, revision 2, written by hand with Node's `md5`; user password `abook`.
+- `scanat-6.pdf`: images only.
+- `corupt-trunchiat.pdf` (the first 30 KB) and `corupt-nu-e-pdf.pdf` (plain text).
+
+`-- --push` copies the PDFs into the debug app's `files/dev-pdfs/` through `/data/local/tmp` + `run-as`, and `--samples` adds the real PDFs from `../Book-PDF`. All were first checked with the repo's pdf.js in Node: `PasswordException` without a password and with a wrong one, the text with `abook`. WinAnsi Helvetica has no ă ș ț, so the generated text drops their diacritics; the real Romanian sample covers them. The script's test checks the xref offsets, that only the protected file is encrypted, RC4 against the RFC 6229 vector, the hyphenation and WinAnsi.
+
+**The dev screen:** `abook://dev/pdf` (`app/dev/pdf`) lists `files/dev-pdfs` and runs `runPdfProbe`:
+- open, then batches of 5, then the step 2–3 cleanup;
+- metrics, plus what the cleanup removed from the chosen page;
+- band lines still repeating on ≥ 50% of the whole book;
+- a JS-thread ticker and per-request bridge timings (`instrumentTransport`).
+
+`?file=<name>&page=<n>` runs a file and shows a page with no tapping, so emulator scripts don't depend on scrolling.
+
+**Results** (debug build; release numbers in M7):
+
+| PDF | Result |
+| --- | --- |
+| `ion-320.pdf` (1.8 MB) | 320 pages, open 3.6–5 s (WebView boot included), extraction 9.3–9.7 s (33 pages/s), cleanup 0.27 s; title and author read; 2 header signatures (title + page number) |
+| `Microservices_Patterns.pdf` (5.4 MB, 11 chunks) | 522 pages, outline 22 entries, extraction 21–25 s (20–24 pages/s); the **licence watermark is removed on every checked page** (it is the one header found in the 20-page sample); no band line repeats on ≥ 50% after cleanup |
+| `The.Clean.Coder…pdf` (6.0 MB, 13 chunks) | 244 pages, outline 23 entries, ~9–12 s; Roman (`xi`, `xix`) and Arabic page numbers removed; no repeated header in the sample (the running headers change per chapter) |
+| `Clean_Architecture_Notite.pdf` | 3 pages; the footer with the page number removed on all 3; diacritics intact |
+| `protejat-parola-abook.pdf` | `password` |
+| `corupt-trunchiat.pdf`, `corupt-nu-e-pdf.pdf` | `corrupt` (`Invalid PDF structure.`) |
+| `scanat-6.pdf` | opens, 6 pages, **0 lines**: step 14's scanned rule has exactly this to detect |
+
+**Findings:**
+
+- **Not met: running headers that change by chapter or section.** Two cases stay in the cleaned text and TTS would read them on most pages:
+  - `Microservices_Patterns.pdf`: `72 CHAPTER 3 Interprocess communication…` on even pages and `71Overview of interprocess…` on odd pages (the page number glued to the section title);
+  - `Clean Coder`: `CHAPTER 1 PROFESSIONALISM`, `SOME BACKGROUND ON PRACTICING`.
+
+  None repeats on 50% of the 20-page sample or of the whole book. This needs per-chapter detection, which step 11a proposes.
+- **The JS thread stays free:** the longest gap of a 50 ms timer was 260–680 ms, at WebView boot (2.4 MB `source` prop) or when the result renders, never during extraction. No red screen and no freeze on any file.
+- **Where the time goes (bridge timings):**
+  - a 512 KB chunk takes 150–380 ms round trip, a 5-page `get-pages` 140–200 ms, of which RN spends ~5 ms receiving (zod + settle);
+  - so ~85% of the round trip is the bridge itself (`evaluateJavascript` in, `ReactNativeWebView.postMessage` out) plus the page's work. The spike's 145 pages/s measured the page's loop only, without round trips.
+  - A visible full-screen WebView measured the same as the 1×1 one, so Chromium doesn't throttle the hidden one.
+  - If release builds are still slow (M7), keep one batch in flight ahead.
+- **Re-rendering per batch doubled the extraction time** (19.7 s → 9.7 s for 320 pages once removed). The first version re-rendered the screen on every batch, plus a `setTimeout(0)` yield and a 50 ms ticker that re-rendered the whole screen. The ticker is now its own component.
+  - For step 13: awaiting the bridge already yields the JS thread, so no extra yield between batches; progress goes to the store at most every few batches, and only the import screen subscribes to it.
+- **First boot in a debug build:** the `import()` of the 2.4 MB HTML module goes through Metro, so the first open after a reload was slow enough to hit the 20 s boot timeout once (`boot: WebView did not start`); later opens took 2–6 s. A release bundle has the module inline, and M7 measures it.
+- **Privacy:** the watermark carries the owner's name and email. The emulator scripts redacted it from every output, and nothing here quotes it.
+- **Tests:** 840 in 78 suites.
+
+#### 11a. Running headers that change by chapter (proposed, after step 11)
+- In `services/text`, two more header rules, both applied per chapter (the pipeline cleans a chapter at a time):
+  - a band line whose leading or trailing number is the printed page number: the offset `page − number` most common on the chapter's pages (`72 CHAPTER 3 …`, `71Overview…`);
+  - band lines repeated on ≥ 50% of a chapter's pages and on ≥ 3 pages (`CHAPTER 1 PROFESSIONALISM`).
+- **Check:** with `abook://dev/pdf`, no running header left on the pages checked in step 11, and no body line lost on them.
+
 ### M3c – `features/import`
 
 #### 12. Import state machine

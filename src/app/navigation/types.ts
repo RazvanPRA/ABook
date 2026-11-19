@@ -15,6 +15,8 @@ export type RootStackParamList = {
   DevUi: undefined;
   /** Storage inspector (seed, delete, stats); registered only in __DEV__ builds. */
   DevStorage: undefined;
+  /** Extractor check (speed, JS-thread gaps, cleaned text); registered only in __DEV__ builds. */
+  DevPdf: { file?: string; page?: string } | undefined;
 };
 
 // Global typing: useNavigation() / navigation.navigate() are typed everywhere without importing app/.
