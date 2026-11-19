@@ -25,7 +25,7 @@ export function App({ services = getAppServices() }: AppProps) {
   }, []);
 
   return (
-    <AppProviders store={store}>
+    <AppProviders store={store} services={services}>
       {ready && (
         <NavigationContainer
           linking={linking}

@@ -3,18 +3,23 @@ import { StatusBar, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { color, ThemeProvider } from '@/shared/theme';
+import type { AppServices } from '../dependencies';
 import type { AppStore } from '../store';
 import { I18nProvider } from './I18nProvider';
+import { ServicesProvider } from './ServicesProvider';
 import { StoreProvider } from './StoreProvider';
 
-/** Composition of app-wide providers: state outside, UI context inside. */
+/** Composition of app-wide providers: state and services outside, UI context inside. */
 export function AppProviders({
   store,
+  services,
   children,
-}: PropsWithChildren<{ store: AppStore }>) {
+}: PropsWithChildren<{ store: AppStore; services: AppServices }>) {
   return (
     <StoreProvider store={store}>
-      <UiProviders>{children}</UiProviders>
+      <ServicesProvider services={services}>
+        <UiProviders>{children}</UiProviders>
+      </ServicesProvider>
     </StoreProvider>
   );
 }

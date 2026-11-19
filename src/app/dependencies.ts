@@ -15,6 +15,8 @@ import {
 /** Everything the app wires: what features get (`AppDependencies`) plus what only `app/` uses. */
 export interface AppServices extends AppDependencies {
   bootRepository: BootRepository;
+  /** The raw stores, for dev tools in `app/dev` only (abook://dev/storage). */
+  stores: BookStores;
 }
 
 /** The only place where implementations are bound to interfaces (PROMPT §3). */
@@ -28,6 +30,7 @@ export const createAppServices = (
   progressRepository: createLocalProgressRepository(stores),
   settingsRepository: createLocalSettingsRepository(stores),
   bootRepository: createLocalBootRepository(stores),
+  stores,
 });
 
 let appServices: AppServices | undefined;
