@@ -41,6 +41,23 @@ describe('RootNavigator', () => {
     expect(screen.getByText('book-42')).toBeOnTheScreen();
   });
 
+  it('opens the dev UI catalog with every section (dev builds)', async () => {
+    const ref = await renderNavigator();
+    await act(async () => ref.navigate('DevUi'));
+    expect(await screen.findByTestId('screen-dev-ui')).toBeOnTheScreen();
+    for (const section of [
+      'Tipografie și iconițe',
+      'Butoane',
+      'Chips, comutatoare, glisoare',
+      'Coperți, progres, rânduri',
+      'Header-e și stare goală',
+    ]) {
+      expect(screen.getByRole('header', { name: section })).toBeOnTheScreen();
+    }
+    await fireEvent.press(screen.getByRole('button', { name: 'Redă' }));
+    expect(screen.getByRole('button', { name: 'Pauză' })).toBeOnTheScreen();
+  });
+
   it('opens Import as a screen of the root stack', async () => {
     const ref = await renderNavigator();
     await act(async () => ref.navigate('Import'));
@@ -57,6 +74,10 @@ describe('linking', () => {
       name: 'Book',
       params: { id: 'abc' },
     });
+  });
+
+  it('maps dev/ui to the catalog in dev builds', () => {
+    expect(route('dev/ui')).toMatchObject({ name: 'DevUi' });
   });
 
   it('maps tab paths into the Tabs navigator', () => {

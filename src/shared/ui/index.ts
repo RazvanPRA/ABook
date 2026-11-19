@@ -14,7 +14,7 @@ export { ChipGroup } from './ChipGroup';
 export type { ChipGroupProps, ChipOption } from './ChipGroup';
 export { EmptyState } from './EmptyState';
 export type { EmptyStateProps } from './EmptyState';
-export { Icon } from './Icon';
+export { Icon, icons } from './Icon';
 export type { IconName, IconProps } from './Icon';
 export { IconButton } from './IconButton';
 export type { IconButtonProps, IconButtonVariant } from './IconButton';
