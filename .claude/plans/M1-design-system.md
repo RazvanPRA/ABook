@@ -110,6 +110,8 @@ Fiecare pas se încheie cu `npm run check` verde și un commit separat; secțiun
 - Adaptor în `app/navigation/TabBarAdapter.tsx` care mapează `BottomTabBarProps` → `items` (iconițele `book`, `headphones`, `sliders-horizontal`), folosit în `TabsNavigator` prin `tabBar`.
 - **Teste:** în `RootNavigator.test.tsx`, apăsarea pe „Setări” schimbă tab-ul și elementul activ are `selected`. (Notă: acum tab-urile **vor avea** rolul `tab`, deci se actualizează capcana din `CLAUDE.md`.)
 
+**Făcut** (2026-11-19). Ce am constatat: `BottomTabBar` nu folosește tipuri React Navigation, iar `TabBarAdapter` (în `app/navigation`) emite `tabPress` cu `canPreventDefault` înainte de `navigate`, ca tab bar-ul implicit. `tabBar` primește o funcție definită la nivel de modul (`renderTabBar`), ca să nu se creeze o componentă nouă la fiecare randare. Fiecare tab e un `BottomTabBarItem` memoizat, cu rol `tab` și `selected`. Containerul are rolul `tablist`. Eticheta tab-ului e limitată la 1.4×. Testele găsesc acum tab-urile cu `getByRole('tab')`.
+
 ### 10. `shared/utils`: formatare
 - `formatBytes.ts` (`1,2 MB`, `8,9 MB`, `512 KB`), `formatDuration.ts` (`~ 1 h 52 min`, `12 min`, `< 1 min`), `formatPercent.ts` (`41%`, clamp 0–100). Unitățile și sufixele vin din `ro.json` (`format.*`) sau sunt parametri, ca funcțiile să rămână pure.
 - **Teste** table-driven: 0, limite de unitate, rotunjire, valori negative/NaN.
