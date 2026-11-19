@@ -15,7 +15,8 @@ export interface KeyValueCall {
 export class InMemoryKeyValueStore implements KeyValueStore {
   readonly calls: KeyValueCall[] = [];
   private readonly data = new Map<string, string>();
-  private readonly pendingFailures = new Set<KeyValueOperation>();
+  /** Per operation: how many calls still succeed before the failing one. */
+  private readonly pendingFailures = new Map<KeyValueOperation, number>();
 
   constructor(initial: Entries = {}) {
     Object.entries(initial).forEach(([key, value]) =>
@@ -23,9 +24,12 @@ export class InMemoryKeyValueStore implements KeyValueStore {
     );
   }
 
-  /** The next call of `operation` rejects without changing anything. */
-  failNext(operation: KeyValueOperation): void {
-    this.pendingFailures.add(operation);
+  /**
+   * A later call of `operation` rejects without changing anything: the next one, or the one after
+   * `skip` successful calls (e.g. `skip: 1` fails the second `setMany`).
+   */
+  failNext(operation: KeyValueOperation, { skip = 0 } = {}): void {
+    this.pendingFailures.set(operation, skip);
   }
 
   /** Current content, for assertions. Includes keys outside the namespace. */
@@ -60,8 +64,15 @@ export class InMemoryKeyValueStore implements KeyValueStore {
   private record(operation: KeyValueOperation, keys: readonly string[]): void {
     this.calls.push({ operation, keys: [...keys] });
     assertNamespaced(keys);
-    if (this.pendingFailures.delete(operation)) {
-      throw new Error(`Simulated ${operation} failure`);
+    const remaining = this.pendingFailures.get(operation);
+    if (remaining === undefined) {
+      return;
     }
+    if (remaining > 0) {
+      this.pendingFailures.set(operation, remaining - 1);
+      return;
+    }
+    this.pendingFailures.delete(operation);
+    throw new Error(`Simulated ${operation} failure`);
   }
 }

@@ -84,6 +84,15 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 - A stored version newer than the app knows (downgrade): logged, no writes.
 - **Tests:** empty store → version 1; already current → zero writes; two fake migrations applied in order; a crash before the version write → re-run produces the same result; downgrade; each real migration has its own test.
 
+**Done** (2026-11-19). Findings:
+- **Idempotence is part of the contract.** The data diff (`setMany`, then `removeMany`) and the version write are separate calls, so a crash in between re-runs the steps on data they have already partly rewritten. Every migration must give `migrate(migrate(x)) = migrate(x)`. The rule is in the `Migration` doc comment, and the crash test proves the re-run ends identical to a clean run.
+- **Migrations never see `abk:schemaVersion`;** the runner owns it. A key left out of a migration's result is deleted.
+- **`MigrationOutcome`:** `current` (the only read is the version: one `getMany`), `migrated`, `newer` (downgrade) and `invalid`. The last two make no writes and are logged. Bootstrap continues in both, and the data is read with the current schemas (an invalid value = missing). Treating an invalid version as 0 would have re-run every migration on already migrated data, so the runner refuses instead.
+- **Parsing the version:** `/^\d+$/`, not `Number()`, because `Number('')` and `Number(' ')` are 0.
+- **The list is checked:** versions must be exactly 1, 2, 3…, otherwise `runMigrations` throws (a programming error, caught by the tests). `CURRENT_SCHEMA_VERSION = MIGRATIONS.length`.
+- **`001-initial`** returns a copy of the entries. On existing data it writes only `abk:schemaVersion` (the data diff is empty).
+- **Fake:** `failNext(op, { skip })` lets `skip` calls through before the failing one, to crash precisely on the version write (the second `setMany`). There's a contract test for it.
+
 ### 6. Read/write helpers and chapter splitting (`repositories/`)
 - `readJson.ts` (validate + log + `null`), `serialize.ts`.
 - `chapterChunking.ts`: `splitChapterChunk(chunk, maxBytes)` → parts that keep `sentences` and `sentencePages` aligned; `joinChapterParts(parts)`. Pure, ≤ 40 lines per function. A single sentence over the limit is a programming error (M3 caps sentences at ~400 characters) and throws.

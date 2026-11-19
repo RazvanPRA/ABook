@@ -91,6 +91,15 @@ describe('InMemoryKeyValueStore test helpers', () => {
     expect(store.snapshot()).toEqual({ [BOOKS]: '[]' });
   });
 
+  it('can let some calls through before failing', async () => {
+    const store = new InMemoryKeyValueStore();
+    store.failNext('setMany', { skip: 1 });
+    await store.setMany({ [BOOKS]: '[]' });
+    await expect(store.setMany({ [SETTINGS]: '{}' })).rejects.toThrow();
+    await store.setMany({ [SETTINGS]: '{}' });
+    expect(store.snapshot()).toEqual({ [BOOKS]: '[]', [SETTINGS]: '{}' });
+  });
+
   it('records the calls in order', async () => {
     const store = new InMemoryKeyValueStore();
     await store.setMany({ [BOOKS]: '[]' });

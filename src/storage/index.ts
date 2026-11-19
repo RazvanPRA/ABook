@@ -15,3 +15,9 @@ export type { Entries, KeyValueStore } from './KeyValueStore';
 export { createAsyncStorageKeyValueStore } from './asyncStorageKeyValueStore';
 export type { FileStore } from './FileStore';
 export { createReactNativeFsFileStore } from './reactNativeFsFileStore';
+export {
+  CURRENT_SCHEMA_VERSION,
+  MIGRATIONS,
+  runMigrations,
+} from './migrations';
+export type { Migration, MigrationOutcome } from './migrations';
