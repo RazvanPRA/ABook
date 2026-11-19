@@ -68,11 +68,13 @@ Results, deviations and pitfalls are in `.claude/plans/M1-design-system.md` and 
 
 ## M2 – Data and storage  *(step 3, `audiobook-storage` skill)*
 
+Details: `.claude/plans/M2-storage.md`.
+
 - `shared/domain`: `BookId`, `PageNumber`, `SentenceIndex` and the zod schemas for `BookMeta`, `Chapter`, `ChapterChunk`, `Progress`, `Bookmark`, `Settings`.
-- `storage/keys.ts`, `keyValueStore.ts` (multiGet/multiSet/multiRemove, `abk:` namespacing), `fileStore.ts` (the `File`/`Directory` API).
+- `storage/keys.ts`, `keyValueStore.ts` (AsyncStorage 3.x `getMany`/`setMany`/`removeMany`/`getAllKeys`, `abk:` namespacing), `fileStore.ts` (over `@dr.pogodin/react-native-fs`).
 - `storage/migrations/` (`001-initial.ts`) and the migration runner.
 - `repositories/`: `BookRepository`, `ProgressRepository`, `SettingsRepository`, each as interface + `Local*` implementation. They include splitting chapters over 256 KB into `ch:{n}:p:{k}` and deletion by prefix.
-- `app/dependencies.ts`, `app/bootstrap.ts` (migrations, then a single `multiGet` for `books` + `meta` + `settings`, then marking books left `processing`) and `StoreProvider` with RTK.
+- `app/dependencies.ts`, `app/bootstrap.ts` (migrations, then `getAllKeys` + a single `getMany` for `books` + every `meta` + `settings`, then marking books left `processing`) and `StoreProvider` with RTK.
 
 **Tests:** with in-memory `KeyValueStore` and `FileStore`: write order on import, resume after crash, deletion without orphan keys, corrupt values, oversized chapters, each migration.
 **Done when:** bootstrap hydrates the store from a fake storage in tests and from a real one on the emulator.
