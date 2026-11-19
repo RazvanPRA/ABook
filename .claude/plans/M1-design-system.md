@@ -116,6 +116,13 @@ Fiecare pas se încheie cu `npm run check` verde și un commit separat; secțiun
 - `formatBytes.ts` (`1,2 MB`, `8,9 MB`, `512 KB`), `formatDuration.ts` (`~ 1 h 52 min`, `12 min`, `< 1 min`), `formatPercent.ts` (`41%`, clamp 0–100). Unitățile și sufixele vin din `ro.json` (`format.*`) sau sunt parametri, ca funcțiile să rămână pure.
 - **Teste** table-driven: 0, limite de unitate, rotunjire, valori negative/NaN.
 
+**Făcut** (2026-11-19). Ce am constatat:
+- **Funcții pure:** unitățile vin ca parametru (`ByteUnits`, `DurationUnits`), iar șirurile stau în `ro.json` → `format.bytes` / `format.duration`. Testele le citesc chiar de acolo. Feature-urile le vor lua cu `t('format.bytes', { returnObjects: true })`.
+- **„~” și „rămase”:** prefixul și sufixul aparțin propoziției din feature (de ex. `player.remaining: "~ {{duration}} rămase"`), nu formatter-ului. Așa `formatDuration` dă „1 h 52 min”, „2 h”, „12 min”, „< 1 min”.
+- **`formatDecimal`:** virgulă zecimală, fără „,0” la coadă, fără `Intl`.
+- **`formatBytes`:** promovează unitatea după rotunjire (1023,6 KB → „1 MB”, nu „1024 KB”). B și KB sunt întregi, MB și GB au o zecimală.
+- **`formatPercent`:** primește un raport între 0 și 1, ca `ProgressBar`, și refolosește `clamp`.
+
 ### 11. Catalog vizual (doar `__DEV__`) și verificare pe emulator
 - `src/app/dev/UiCatalogScreen.tsx`, înregistrat în `RootNavigator` doar când `__DEV__`, deep link `abook://dev/ui`: toate primitivele în toate variantele, pentru comparare cu machetele.
 - **Verificare:** `npm run emu`, apoi `adb shell am start -d abook://dev/ui`; capturi comparate cu `01-biblioteca-goala.png`, `03-detalii-carte.png`, `05-setari.png` (tab bar, butoane, chips, switch, slider, copertă, empty state). TalkBack pornit pe catalog: fiecare control își anunță rolul și eticheta în română.
