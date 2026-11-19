@@ -182,9 +182,13 @@ describe('tokens and size limits', () => {
       (_, i) => `  const v${i} = ${i};`,
     ).join('\n');
     const code = `export function f() {\n${body}\n  return v0;\n}\n`;
-    expect(await ruleIds('src/services/text/sentinel.ts', code)).toContain(
-      'max-lines-per-function',
-    );
+    for (const file of [
+      'src/services/text/sentinel.ts',
+      'src/repositories/sentinel.ts',
+      'src/storage/sentinel.ts',
+    ]) {
+      expect(await ruleIds(file, code)).toContain('max-lines-per-function');
+    }
   });
 
   it('rejects any and non-null assertions', async () => {

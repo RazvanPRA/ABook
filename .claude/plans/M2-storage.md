@@ -98,6 +98,15 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 - `chapterChunking.ts`: `splitChapterChunk(chunk, maxBytes)` → parts that keep `sentences` and `sentencePages` aligned; `joinChapterParts(parts)`. Pure, ≤ 40 lines per function. A single sentence over the limit is a programming error (M3 caps sentences at ~400 characters) and throws.
 - **Tests:** a chunk under the limit stays one part; 1 MB of Romanian text → parts each < 256 KB that join back identically; part boundaries never split a sentence; the oversized-sentence case.
 
+**Done** (2026-11-19). Findings:
+- **`limits.ts`:** `MAX_VALUE_BYTES = 256 × 1024`, in UTF-8 bytes, shared by the splitter and `serialize`.
+- **`readJson(raw, schema, key)`:** generic over `z.ZodType`, returns `z.output<S> | null`. Missing (`null` / `undefined`, as from `getMany`) → `null` silently. Unparsable JSON or an invalid shape → `null` + `logger.warn` with the key (and `z.prettifyError` for schema issues). It never throws.
+- **`serialize(key, value)`:** besides `JSON.stringify`, it refuses a value over the limit (a programming error, since chapters are split before). So rule 2 of the storage skill is guarded on every write, not only for chapters.
+- **`splitChapterChunk`:** a greedy split with a per-sentence cost that is an upper bound (the escaped string's bytes + the page's digits + 2 commas), so the parts are proven ≤ the limit without re-serializing each one, and a chapter over the limit always yields ≥ 2 parts (it matches the manifest's `parts ≥ 2`). A chapter that fits is returned as is (`[chunk]`). A sentence that can't fit alone, or a chunk with fewer pages than sentences, throws.
+- **Tests:** 5,000 sentences of Creangă (> 1 MB) → ≥ 5 parts, each ≤ 256 KB, joined back identically; a custom limit; ASCII vs. diacritics at the same character count (bytes are measured, not characters); `serialize` refuses a value under the limit in characters but over it in bytes.
+- **Lint:** `src/repositories/**` and `src/storage/**` now have the service limits (≤ 200 lines per file, ≤ 40 per function). The existing code already fit, and the sentinel covers both folders.
+- The helpers stay internal to `repositories/` (not exported from `index.ts`).
+
 ### 7. `BookRepository` + `LocalBookRepository`
 - Interface in `repositories/BookRepository.ts`; implementation in `LocalBookRepository.ts` (over `KeyValueStore` + `FileStore`), split into units if it grows past 200 lines (`deleteBook.ts`, `chapterStore.ts`).
 - Operations in import order: `storePdf(id, sourceUri)` → `createBook(meta)` (`meta` `processing` + append to `books`) → `saveChapter(id, n, chunk)` (split when needed) → `saveToc(id, chapters)` → `updateMeta(id, patch)` (`ready`, `processedPages`, `failed`). Reading: `listBooks()`, `getMeta`, `getToc`, `getChapter(id, n)` (whole or from parts).

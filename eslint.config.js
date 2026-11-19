@@ -185,6 +185,8 @@ module.exports = [
       'src/services/**/*.ts',
       'src/features/*/services/**/*.ts',
       'src/shared/utils/**/*.ts',
+      'src/repositories/**/*.ts',
+      'src/storage/**/*.ts',
     ],
     ignores: TEST_FILES,
     rules: {
