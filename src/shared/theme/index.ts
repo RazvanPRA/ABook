@@ -1,4 +1,13 @@
 export { color } from './colors';
+export type { ColorToken } from './colors';
 export { fontFamily } from './fonts';
 export type { FontFamily } from './fonts';
-export { fontSize } from './typography';
+export { type } from './typography';
+export type { TypeVariant } from './typography';
+export { space } from './spacing';
+export { radius } from './radius';
+export { size } from './sizes';
+export type { IconSize } from './sizes';
+export { duration, opacity } from './motion';
+export { contrastRatio, relativeLuminance } from './contrast';
+export { pickCoverColor } from './coverColor';
