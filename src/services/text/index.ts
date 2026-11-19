@@ -10,3 +10,5 @@ export { joinHyphenatedWords } from './joinHyphenatedWords';
 export { normalizeDiacritics } from './normalizeDiacritics';
 export { normalizeWhitespace } from './normalizeWhitespace';
 export { expandLigatures } from './expandLigatures';
+export { segmentSentences } from './segmentSentences';
+export type { Sentence } from './segmentSentences';

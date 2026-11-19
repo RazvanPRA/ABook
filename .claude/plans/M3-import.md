@@ -69,6 +69,14 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 - `segmentSentences(text)` on `.` `!` `?` `…` followed by space + uppercase or a dialogue dash; not after the abbreviations (dl., dna., d-na, nr., pag., p., vol., cap., etc., ș.a., ș.a.m.d., prof., dr.) or initials (`I. L. Caragiale`); „…” quotes and `?!` stay with their sentence. The abbreviation list is a constant in its own file.
 - **Tests:** dialogue with `—` and `–`, nested quotes, abbreviations at the end of a real sentence, initials, numbers (`3.5`, `1.000`), ellipsis mid-sentence, empty / whitespace-only text.
 
+**Done** (2026-11-19). Findings:
+
+- **Output is `{ text, start }[]`, not `string[]`:** `start` is the sentence's offset in the input, so step 6 can give each sentence the page where it starts (`sentencePages`) from the page offsets of the joined text. Sentences are trimmed; blank ranges produce nothing.
+- **Rule:** a candidate is `[.!?…]+`, then closing quotes/brackets (`” " » ’ ' ) ]`, kept with the sentence), then whitespace. It is a boundary only when the next character, after opening quotes (`„ « “`) or a dialogue dash (`— – -`), is an **uppercase letter**. That one rule covers the narrator tag (`— Vino! — strigă mama.` stays one sentence), the lowercase continuation after quotes (`„Vino!” zise el.`) and the mid-sentence ellipsis, and refuses digits (`nota 3. 4 oameni`).
+- **Abbreviations** (`abbreviations.ts`): the word before a **single** period, with opening punctuation stripped (`(n.r.`) and lowercased, is checked against a set: the skill's list plus common Romanian ones (`d-lui`, `ing.`, `str.`, `art.`, `î.Hr.`, months…) and a few English ones for `en-US` books (`Mr.`, `Mrs.`, `e.g.`). Any single letter counts as an initial (`I. L. Caragiale`, `p.`). After `...` or `?.` there is no abbreviation check (`etc... Apoi` splits). Accepted cost: a real sentence ending in an abbreviation or an initial (`reviste etc. Apoi`, `vitamina C. Apoi`) isn't split; `Capitolul I. Începutul` merges too, but chapter headings are found on lines before segmentation (step 6).
+- **Lint:** `max-params` (3) made the boundary a `Candidate { at, punctuation, next }` object, and the sentence builder returns `Sentence[]` (0 or 1) instead of pushing into a passed array.
+- **Tests:** 616 in 59 suites; `services/text` 100%.
+
 #### 5. Long sentences
 - `splitLongSentence(sentence, maxChars = 400)`: cut at the `;` or `,` closest to the middle, recursively; if there is none, at the space closest to the middle; never mid-word. Every part ≤ `maxChars` (the M2 chapter splitter relies on it).
 - **Tests:** 401 / 399 characters, only commas, no punctuation, one giant word, idempotence on short sentences.
