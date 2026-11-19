@@ -5,3 +5,5 @@ export { formatDecimal } from './formatDecimal';
 export { formatDuration } from './formatDuration';
 export type { DurationUnits } from './formatDuration';
 export { formatPercent } from './formatPercent';
+export { logger } from './logger';
+export { utf8ByteLength } from './utf8ByteLength';

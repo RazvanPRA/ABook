@@ -42,6 +42,15 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 - `shared/utils`: `utf8ByteLength.ts` (pure, no `TextEncoder` dependency in Hermes) and `logger.ts`.
 - **Tests:** table-driven valid/invalid samples for every schema; `DEFAULT_SETTINGS` passes its own schema; `utf8ByteLength` with ASCII, `ăîșțâ`, emoji (surrogate pairs), empty string.
 
+**Done** (2026-11-19). Findings:
+- **Brands from zod:** `.transform(toBookId)` (and `toPageNumber`, …) instead of zod's `.brand()`. The inferred output is exactly the existing `BookId = string & { __brand }`, while `.brand()` would produce `string & z.$brand<…>`, a different type that wouldn't mix with `toBookId`. `BookId` is `z.uuid()`, so ids like `'book-1'` (used in M1's `BookCover` tests) are fine for components but rejected on read from storage.
+- **Invariants in schemas:** `processedPages ≤ pageCount` (with `pageCount: 0` allowed while `processing`), `startPage ≤ endPage`, `sentences` / `sentencePages` of equal length, toc indexes exactly `0..n-1`, no duplicate ids in `abk:books` or in the bookmarks.
+- **`ch:{n}`** is `chapterEntrySchema = ChapterChunk | { parts ≥ 2 }`, as decided above.
+- **Settings:** rate 0.75–2.0, pitch 0.5–2.0, `fontScale` with `z.literal([0, 1, 2])` (zod 4 accepts an array). `DEFAULT_SETTINGS` is frozen: voice `null`, rate and pitch 1, all toggles on, `fontScale` 1.
+- **`utf8ByteLength`:** a manual UTF-16 → UTF-8 count (Hermes doesn't guarantee `TextEncoder`), checked against `Buffer.byteLength` on Romanian text with cedillas, curly quotes and emoji. A lone surrogate counts as 3 bytes (U+FFFD).
+- **`logger`:** `console.warn` with the `[abook]` prefix only in `__DEV__`, the only logging entry point.
+- **Jest:** any file under `__tests__/` is a suite, so the raw sample values live in `shared/domain/__fixtures__/rawValues.ts`. The hex lint rule also applies to test files, so the fixture's `coverColor` is a placeholder string.
+
 ### 3. `storage/keys.ts` and `KeyValueStore`
 - `keys.ts`: `NAMESPACE = 'abk:'`, `rootKey('books' | 'settings' | 'schemaVersion')`, `bookKey(id, 'meta' | 'toc' | 'progress' | 'bookmarks')`, `chapterKey(id, n, part?)`, `bookPrefix(id)`, `isMetaKey(key)` / `bookIdFromKey(key)`. The only place where keys are concatenated.
 - `KeyValueStore` interface (`getMany`, `setMany`, `removeMany`, `getAllKeys`), the adapter `asyncStorageKeyValueStore.ts` (sees only `abk:*` keys in `getAllKeys`) and `InMemoryKeyValueStore` in `src/storage/testing/`, with fault injection (`failNext('setMany')`) for crash tests.
