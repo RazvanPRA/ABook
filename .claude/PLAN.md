@@ -54,7 +54,7 @@ Rezultatele, abaterile și capcanele sunt în `.claude/plans/M0-fundatie.md` și
 
 ## M1 – Design system  *(pasul 2)*
 
-**Obiectiv:** toate primitivele, construite pe tokens și testate, înainte de orice ecran.
+**Obiectiv:** toate primitivele, construite pe tokens și testate, înainte de orice ecran. Detalii: `.claude/plans/M1-design-system.md`.
 
 - `shared/theme`: tokens (culori, `space`, `radius`, `type`) din PROMPT §7, plus `ThemeProvider` și `useTheme`.
 - `shared/ui`: `Button` (primary/secondary/ghost/danger), `IconButton`, `Chip`, `ChipGroup`, `Card`, `ProgressBar`, `Switch`, `ListRow`, `Slider`, `BookCover` (culoare deterministă din id), `BottomTabBar`, `ScreenHeader`, `EmptyState`.
