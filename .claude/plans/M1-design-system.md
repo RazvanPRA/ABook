@@ -88,6 +88,16 @@ Fiecare pas se încheie cu `npm run check` verde și un commit separat; secțiun
 - `ScreenHeader`: variante `large` (titlu display „Biblioteca mea” / „Setări” + acțiune dreapta) și `compact` (back, supratitlu + titlu centrat, acțiune dreapta — macheta Player/Detalii); safe-area sus; titlul cu rol `header` și `maxFontSizeMultiplier` 1.4.
 - **Teste:** render, slot-uri, clamp la `ProgressBar`, culoare determinist la `BookCover`, acțiunea din `EmptyState`, back din `ScreenHeader`.
 
+**Făcut** (2026-11-19). Ce am constatat:
+- **Conflict plan ↔ skill:** `BookCover` primește `accessibilityLabel` deja tradus, nu „compus din i18n”, pentru că skill-ul §3 interzice cheile i18n în primitive. A câștigat skill-ul; eticheta o compune feature-ul (M4).
+- **`clamp`** e în `shared/utils` (prima unitate de acolo). Îl folosesc `useProgressBar` și, la pasul 10, `formatPercent`.
+- **`Card`:** `padded={false}` păstrează doar padding-ul orizontal, pentru listele cu rânduri și separatoare (Setări). Raza e `radius.cardLg` (20), ca în machete.
+- **`ListRow`:** `tone` (`default | muted | active`) acoperă stările capitolelor din „Detalii carte” fără prop-uri de culoare și rămâne la 7 props. Rândul apăsabil își ia eticheta din textul copiilor.
+- **`BookCover`:** e `React.memo` (va sta în liste). `sm` arată inițiala titlului, `lg` autorul sus și titlul jos. Fundalurile sunt precalculate per culoare.
+- **`ScreenHeader`:** `compact` folosește `bodyStrong` pentru titlu, cu `maxFontSizeMultiplier` 1.4 explicit. Safe area vine din `useScreenHeader` (memoizat pe `top`). Când lipsește butonul de back, slotul stâng rămâne gol, ca titlul să stea centrat.
+- **`EmptyState`:** acțiunea e un `Pick<ButtonProps>`, randat ca `Button size="lg"`.
+- **Lint:** `memo(function BookCover…)` declanșează `no-shadow`, așa că funcția internă se numește `BookCoverView`.
+
 ### 8. `Slider`
 - Wrapper peste `@react-native-community/slider` cu culori din tokens (`accent` / `border`), `label`, `valueLabel` (ex. „1.0×”, „Normal” — macheta Setări), `step`, `onChange` / `onComplete`; `accessibilityLabel` + `accessibilityValue`.
 - Mock în `jest.setup.js` pentru slider (componentă nativă).
