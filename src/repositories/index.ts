@@ -7,6 +7,8 @@ export type {
   BookStores,
   StoredPdf,
 } from './book';
+export { createLocalBootRepository } from './boot';
+export type { BootRepository, BootSnapshot, OrphanSweep } from './boot';
 export { createLocalProgressRepository } from './progress';
 export type { ProgressRepository } from './progress';
 export { createLocalSettingsRepository } from './settings';
