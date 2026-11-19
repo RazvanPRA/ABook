@@ -6,3 +6,7 @@ export {
 } from './detectRepeatedHeaders';
 export { stripRepeatedHeaders } from './stripRepeatedHeaders';
 export { stripPageNumbers } from './stripPageNumbers';
+export { joinHyphenatedWords } from './joinHyphenatedWords';
+export { normalizeDiacritics } from './normalizeDiacritics';
+export { normalizeWhitespace } from './normalizeWhitespace';
+export { expandLigatures } from './expandLigatures';
