@@ -81,21 +81,25 @@ Results, deviations and pitfalls are in `.claude/plans/M2-storage.md` and in `CL
 
 ## M3 – Text and PDF import  *(steps 4–5, `pdf-import-pipeline` skill)*
 
+Steps, decisions and findings: `.claude/plans/M3-import.md` (branch `m3-import`).
+
 **M3a – `services/text`** (pure functions, one per file): `stripRepeatedHeaders`, `stripPageNumbers`, `joinHyphenatedWords`, `normalizeDiacritics`, `segmentSentences`, `splitLongSentence`, `detectChapters`.
 **Tests:** table-driven with Romanian samples: dialogue, abbreviations, hyphens, cedillas, sentences > 400 characters, empty text. Target: 100% coverage.
 
 **M3b – `services/pdf`**
 - `PdfTextExtractor` (interface) and `WebViewPdfExtractor`.
-- `services/pdf/webview/`: HTML + legacy `pdfjs-dist` with the worker inlined, as a local asset.
+- `services/pdf/webview/`: HTML + legacy `pdfjs-dist` with the worker inlined, as a local asset. pdfjs-dist 6.5 is ESM only (`pdf.mjs`, `pdf.worker.mjs`), so a build step produces the self-contained HTML (decided by the spike).
 - The `{ type, requestId, payload }` protocol, zod-validated on both sides, with base64 in 512 KB chunks, batches of 5 pages, timeout and cancellation.
+- The extractor gets a `readChunk` function (over a new `FileStore.readBase64`, bound in `dependencies.ts`), so `services/pdf` never touches the file system.
 - `PdfExtractorHost`, mounted once and hidden, with no network access.
 
 **M3c – `features/import`**
 - State machine `idle | copying | opening | extracting | saving | ready | failed | cancelled`.
 - Picker with a 100 MB limit, fingerprint for duplicates (`@noble/hashes`), resume from `processedPages`.
 - Edge cases: scanned PDF, password-protected, corrupt, cancellation.
-- Import screen: file card, steps with status, title/author/language form.
+- Import screen: file card, steps with status, title/author/language form. Needs the new `TextField` and `Select` primitives in `shared/ui`.
 - The book becomes playable after the first chapter.
+- Boot resumes `processing` books from `processedPages` (replaces M2's "mark `failed`", except for books that can't be resumed).
 
 **Tests:** the state machine with a fake `PdfTextExtractor`, for every failure case.
 **Done when:** a real 300+ page PDF imports on the emulator without the UI freezing.
@@ -147,7 +151,8 @@ Results, deviations and pitfalls are in `.claude/plans/M2-storage.md` and in `CL
 
 | Risk | When it's checked | Plan B |
 | --- | --- | --- |
-| Legacy pdf.js + locally inlined worker in a WebView on Android | spike at the start of M3b | separate worker build, loaded as a blob |
+| Legacy pdf.js + locally inlined worker in a WebView on Android (pdfjs-dist 6.5 ships only ESM `.mjs`) | spike at the start of M3b (M3 step 7) | separate worker build, loaded as a blob |
+| Header/footer detection needs all pages, but import saves chapter by chapter | M3 step 2 | statistics on a sample window (first ~20 pages), recomputed the same way on resume |
 | AsyncStorage limit on Android | **Solved in M0:** v3.1.1 uses Room/SQLite, without the 6 MB limit | we keep values under ~256 KB (the 2 MB `CursorWindow` read limit) |
 | A deep link that arrives **during** bootstrap is lost (the `NavigationContainer` mounts after hydration; a cold start with the link works) | **Found in M2** (emulator); to be solved in M4, when real links matter | mount the container from the start and gate only its content, or keep the URL until it's ready |
 | `react-native-tts` | **Confirmed in M0:** doesn't compile with Gradle 9 (`jcenter()`), so it was removed | **M5: custom TurboModule** `AbookTts` (Android `TextToSpeech`, iOS `AVSpeechSynthesizer`) behind `TtsEngine` |
