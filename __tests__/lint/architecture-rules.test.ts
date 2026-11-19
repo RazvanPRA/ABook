@@ -178,6 +178,42 @@ describe('tokens and size limits', () => {
   });
 });
 
+describe('max 7 props per component (local/max-props)', () => {
+  const UI_FILE = 'src/shared/ui/Sentinel/Sentinel.types.ts';
+  const members = (n: number) =>
+    Array.from({ length: n }, (_, i) => `  p${i}: string;`).join('\n');
+  const params = (n: number) =>
+    Array.from({ length: n }, (_, i) => `p${i}`).join(', ');
+
+  it('rejects an interface with 8 props', async () => {
+    const code = `export interface SentinelProps {\n${members(8)}\n}\n`;
+    expect(await ruleIds(UI_FILE, code)).toContain('local/max-props');
+  });
+
+  it('rejects 8 props spread over an intersection of literals', async () => {
+    const code = `export type SentinelProps = {\n${members(4)}\n} & {\n${members(4).replace(/p/g, 'q')}\n};\n`;
+    expect(await ruleIds(UI_FILE, code)).toContain('local/max-props');
+  });
+
+  it('rejects a component destructuring 8 props', async () => {
+    const code = `export function Sentinel({ ${params(8)} }: Record<string, string>) {\n  return [${params(8)}];\n}\n`;
+    expect(
+      await ruleIds('src/shared/ui/Sentinel/Sentinel.tsx', code),
+    ).toContain('local/max-props');
+  });
+
+  it('allows 7 props, rest elements and non-Props types', async () => {
+    const ok = [
+      `export interface SentinelProps {\n${members(7)}\n}\n`,
+      `export interface SentinelOptions {\n${members(9)}\n}\n`,
+      `export const Sentinel = ({ ${params(7)}, ...rest }: Record<string, string>) => [${params(7)}, rest];\n`,
+    ];
+    for (const code of ok) {
+      expect(await ruleIds(UI_FILE, code)).not.toContain('local/max-props');
+    }
+  });
+});
+
 describe('circular imports', () => {
   it('rejects a cycle between two files', async () => {
     const dir = FIXTURE_DIRS[1] as string;

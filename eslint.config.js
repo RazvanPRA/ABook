@@ -7,6 +7,9 @@
 const rnConfig = require('@react-native/eslint-config/flat');
 const boundaries = require('eslint-plugin-boundaries');
 const importPlugin = require('eslint-plugin-import');
+const maxProps = require('./eslint-rules/max-props');
+
+const localPlugin = { rules: { 'max-props': maxProps } };
 
 const TS_FILES = ['**/*.ts', '**/*.tsx'];
 const SRC_FILES = ['src/**/*.{ts,tsx}'];
@@ -126,6 +129,13 @@ module.exports = [
       'max-depth': ['error', 4],
       'react/jsx-max-depth': ['error', { max: 4 }],
     },
+  },
+  // ≤ 7 props per component (skill §2); local rule in eslint-rules/max-props.js
+  {
+    files: SRC_FILES,
+    ignores: TEST_FILES,
+    plugins: { local: localPlugin },
+    rules: { 'local/max-props': ['error', { max: 7 }] },
   },
   {
     files: ['src/**/components/**/*.tsx', 'src/shared/ui/**/*.tsx'],

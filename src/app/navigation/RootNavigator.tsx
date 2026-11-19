@@ -5,6 +5,7 @@ import {
 } from '@react-navigation/native-stack';
 import { BookScreen } from '@/features/book';
 import { ImportScreen } from '@/features/import';
+import { UiCatalogScreen } from '../dev/UiCatalogScreen';
 import { TabsNavigator } from './TabsNavigator';
 import type { RootStackParamList } from './types';
 
@@ -27,6 +28,9 @@ export function RootNavigator() {
         options={{ presentation: 'modal' }}
       />
       <Stack.Screen name="Book" component={BookRoute} />
+      {__DEV__ ? (
+        <Stack.Screen name="DevUi" component={UiCatalogScreen} />
+      ) : null}
     </Stack.Navigator>
   );
 }
