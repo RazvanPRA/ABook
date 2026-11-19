@@ -5,6 +5,7 @@ import {
 } from '@react-navigation/native-stack';
 import { BookScreen } from '@/features/book';
 import { ImportScreen } from '@/features/import';
+import { StorageDebugScreen } from '../dev/storage/StorageDebugScreen';
 import { UiCatalogScreen } from '../dev/UiCatalogScreen';
 import { TabsNavigator } from './TabsNavigator';
 import type { RootStackParamList } from './types';
@@ -29,7 +30,10 @@ export function RootNavigator() {
       />
       <Stack.Screen name="Book" component={BookRoute} />
       {__DEV__ ? (
-        <Stack.Screen name="DevUi" component={UiCatalogScreen} />
+        <>
+          <Stack.Screen name="DevUi" component={UiCatalogScreen} />
+          <Stack.Screen name="DevStorage" component={StorageDebugScreen} />
+        </>
       ) : null}
     </Stack.Navigator>
   );

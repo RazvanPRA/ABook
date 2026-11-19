@@ -15,6 +15,19 @@ const TS_FILES = ['**/*.ts', '**/*.tsx'];
 const SRC_FILES = ['src/**/*.{ts,tsx}'];
 const TEST_FILES = ['**/__tests__/**', '**/*.test.{ts,tsx,js}'];
 
+const THEME_FILES = 'src/shared/theme/**';
+const KEYS_FILE = 'src/storage/keys.ts';
+const HEX_SELECTOR = {
+  selector: 'Literal[value=/^#[0-9a-fA-F]{3,8}$/]',
+  message: 'Use theme tokens (src/shared/theme), not hex colors.',
+};
+const KEY_MESSAGE =
+  'Build storage keys with the helpers in src/storage/keys.ts, not string literals.';
+const KEY_SELECTORS = [
+  { selector: 'Literal[value=/^abk:/]', message: KEY_MESSAGE },
+  { selector: 'TemplateElement[value.raw=/^abk:/]', message: KEY_MESSAGE },
+];
+
 const STORAGE_MODULES = [
   '@react-native-async-storage/async-storage',
   '@dr.pogodin/react-native-fs',
@@ -172,6 +185,8 @@ module.exports = [
       'src/services/**/*.ts',
       'src/features/*/services/**/*.ts',
       'src/shared/utils/**/*.ts',
+      'src/repositories/**/*.ts',
+      'src/storage/**/*.ts',
     ],
     ignores: TEST_FILES,
     rules: {
@@ -210,19 +225,24 @@ module.exports = [
     rules: { 'no-restricted-imports': ['error', { patterns: EXPO_PATTERNS }] },
   },
 
-  // No hex colors outside the theme tokens
+  // No hex colors outside the theme tokens; no storage key literals outside storage/keys.ts.
+  // Both use no-restricted-syntax, and a later block replaces the rule's options, so each block
+  // lists exactly the selectors that apply to its files.
   {
     files: SRC_FILES,
-    ignores: ['src/shared/theme/**', ...TEST_FILES],
+    ignores: [THEME_FILES, KEYS_FILE, ...TEST_FILES],
     rules: {
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: 'Literal[value=/^#[0-9a-fA-F]{3,8}$/]',
-          message: 'Use theme tokens (src/shared/theme), not hex colors.',
-        },
-      ],
+      'no-restricted-syntax': ['error', HEX_SELECTOR, ...KEY_SELECTORS],
     },
+  },
+  {
+    files: [THEME_FILES],
+    ignores: TEST_FILES,
+    rules: { 'no-restricted-syntax': ['error', ...KEY_SELECTORS] },
+  },
+  {
+    files: [KEYS_FILE],
+    rules: { 'no-restricted-syntax': ['error', HEX_SELECTOR] },
   },
 
   // Layers and dependency direction (skill §3) + no circular imports

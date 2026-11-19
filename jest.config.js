@@ -10,6 +10,11 @@ const ESM_PACKAGES = [
   'lucide-react-native',
   'uuid',
   '@noble',
+  // Redux Toolkit / React Redux: Jest resolves them (and their deps) to their ESM builds
+  'immer',
+  'reselect',
+  'redux(-thunk)?',
+  'react-redux',
 ];
 
 module.exports = {

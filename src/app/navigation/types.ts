@@ -13,6 +13,8 @@ export type RootStackParamList = {
   Book: { id: BookId };
   /** Visual catalog of the shared/ui primitives; registered only in __DEV__ builds. */
   DevUi: undefined;
+  /** Storage inspector (seed, delete, stats); registered only in __DEV__ builds. */
+  DevStorage: undefined;
 };
 
 // Global typing: useNavigation() / navigation.navigate() are typed everywhere without importing app/.

@@ -66,13 +66,15 @@ Results, deviations and pitfalls are in `.claude/plans/M1-design-system.md` and 
 **Tests:** render, interaction and accessibility state for each primitive; a test that tokens have contrast ≥ 4.5:1.
 **Done when:** every primitive in the list exists and is tested, and the real tab bar replaces the default one.
 
-## M2 – Data and storage  *(step 3, `audiobook-storage` skill)*
+## M2 – Data and storage  *(step 3, `audiobook-storage` skill)* — ✅ done 2026-11-19
+
+Results, deviations and pitfalls are in `.claude/plans/M2-storage.md` and in `CLAUDE.md`. Storage inspector: `abook://dev/storage` (debug build only).
 
 - `shared/domain`: `BookId`, `PageNumber`, `SentenceIndex` and the zod schemas for `BookMeta`, `Chapter`, `ChapterChunk`, `Progress`, `Bookmark`, `Settings`.
-- `storage/keys.ts`, `keyValueStore.ts` (multiGet/multiSet/multiRemove, `abk:` namespacing), `fileStore.ts` (the `File`/`Directory` API).
+- `storage/keys.ts`, `keyValueStore.ts` (AsyncStorage 3.x `getMany`/`setMany`/`removeMany`/`getAllKeys`, `abk:` namespacing), `fileStore.ts` (over `@dr.pogodin/react-native-fs`).
 - `storage/migrations/` (`001-initial.ts`) and the migration runner.
 - `repositories/`: `BookRepository`, `ProgressRepository`, `SettingsRepository`, each as interface + `Local*` implementation. They include splitting chapters over 256 KB into `ch:{n}:p:{k}` and deletion by prefix.
-- `app/dependencies.ts`, `app/bootstrap.ts` (migrations, then a single `multiGet` for `books` + `meta` + `settings`, then marking books left `processing`) and `StoreProvider` with RTK.
+- `app/dependencies.ts`, `app/bootstrap.ts` (migrations, then `getAllKeys` + a single `getMany` for `books` + every `meta` + `settings`, then marking books left `processing`) and `StoreProvider` with RTK.
 
 **Tests:** with in-memory `KeyValueStore` and `FileStore`: write order on import, resume after crash, deletion without orphan keys, corrupt values, oversized chapters, each migration.
 **Done when:** bootstrap hydrates the store from a fake storage in tests and from a real one on the emulator.
@@ -147,6 +149,7 @@ Results, deviations and pitfalls are in `.claude/plans/M1-design-system.md` and 
 | --- | --- | --- |
 | Legacy pdf.js + locally inlined worker in a WebView on Android | spike at the start of M3b | separate worker build, loaded as a blob |
 | AsyncStorage limit on Android | **Solved in M0:** v3.1.1 uses Room/SQLite, without the 6 MB limit | we keep values under ~256 KB (the 2 MB `CursorWindow` read limit) |
+| A deep link that arrives **during** bootstrap is lost (the `NavigationContainer` mounts after hydration; a cold start with the link works) | **Found in M2** (emulator); to be solved in M4, when real links matter | mount the container from the start and gate only its content, or keep the URL until it's ready |
 | `react-native-tts` | **Confirmed in M0:** doesn't compile with Gradle 9 (`jcenter()`), so it was removed | **M5: custom TurboModule** `AbookTts` (Android `TextToSpeech`, iOS `AVSpeechSynthesizer`) behind `TtsEngine` |
 | Playback with the screen locked (iOS) | M5/M7, on a device | `AVAudioSession` with the `playback` category in the TurboModule |
 | pdf.js as a local asset in RN CLI (no Expo asset bundler) | spike at the start of M3b | HTML in `android/app/src/main/assets` + iOS bundle, or inline HTML generated at build time |
