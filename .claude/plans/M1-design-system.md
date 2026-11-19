@@ -1,183 +1,182 @@
 # M1 – Design system
 
-Branch: `m1-design-system`. Referințe: `PLAN.md` (M1), `PROMPT.md` §7 (tokens, ecrane) și §8 (accesibilitate), skill-ul `modular-architecture` §2, §4–§6, §10, machetele din `.claude/design/`.
+Branch: `m1-design-system`. References: `PLAN.md` (M1), `PROMPT.md` §7 (tokens, screens) and §8 (accessibility), the `modular-architecture` skill §2, §4–§6, §10, the mockups in `.claude/design/`.
 
-## Obiectiv
+## Goal
 
-Toate token-urile din PROMPT §7 și toate primitivele din `shared/ui`, construite doar pe tokens, cu accesibilitatea în contract și testate. Tab bar-ul propriu (iconițe Lucide, accent chihlimbar) înlocuiește pe cel implicit. Niciun ecran real încă.
+All the tokens from PROMPT §7 and all the primitives in `shared/ui`, built only on tokens, with accessibility in the contract and tested. The custom tab bar (Lucide icons, amber accent) replaces the default one. No real screen yet.
 
-## Presupuneri
+## Assumptions
 
-- M0 se aduce în `dev` printr-un merge local (`m0-schelet-rn` → `dev`, fast-forward), iar `m1-design-system` pornește din `dev`. Fără push.
-- O singură temă (întunecată). `ThemeProvider` există pentru contract și teste, dar token-urile sunt constante statice, folosite direct în `*.styles.ts` (`StyleSheet.create`), fără re-creare de stiluri la randare.
-- Primitivele „extra” față de lista din PROMPT, necesare ca să nu se dubleze tipografia și iconițele: `AppText` (variante `display | title | body | bodyStrong | caption | overline`) și `Icon` (wrapper Lucide cu mărimi și culori din tokens). Le semnalez ca adăugiri, nu ca abateri.
-- Formatarea numerelor se face manual, cu virgulă zecimală românească („1,2 MB”), fără să depindem de suportul `Intl` din Hermes.
-- `Select` (vocea), bara de stocare segmentată, mini-playerul și controalele playerului nu intră în M1: sunt compoziții de feature (M5/M6) peste primitive.
+- M0 is brought into `dev` through a local merge (`m0-schelet-rn` → `dev`, fast-forward), and `m1-design-system` starts from `dev`. No push.
+- A single (dark) theme. `ThemeProvider` exists for the contract and tests, but the tokens are static constants, used directly in `*.styles.ts` (`StyleSheet.create`), with no style re-creation on render.
+- "Extra" primitives compared to the PROMPT list, needed so typography and icons aren't duplicated: `AppText` (variants `display | title | body | bodyStrong | caption | overline`) and `Icon` (Lucide wrapper with sizes and colors from tokens). I report them as additions, not deviations.
+- Number formatting is done by hand, with the Romanian decimal comma ("1,2 MB"), without relying on `Intl` support in Hermes.
+- `Select` (the voice), the segmented storage bar, the mini-player and the player controls are not part of M1: they are feature compositions (M5/M6) on top of the primitives.
 
-## Pași
+## Steps
 
-Fiecare pas se încheie cu `npm run check` verde și un commit separat; secțiunea pasului se completează cu „**Făcut** (data). Ce am constatat: …”.
+Each step ends with a green `npm run check` and a separate commit; the step's section is completed with "**Done** (date). Findings: …".
 
-### 1. Branch și skill-uri
-- Merge local M0 în `dev`, apoi `git switch -c m1-design-system`.
-- Încarc `modular-architecture` (structura componentei, limite, §6 reutilizare, §10 DoD).
-- **Verificare:** `git log dev` conține `d983cd1`.
+### 1. Branch and skills
+- Local merge of M0 into `dev`, then `git switch -c m1-design-system`.
+- Load `modular-architecture` (component structure, limits, §6 reuse, §10 DoD).
+- **Check:** `git log dev` contains `d983cd1`.
 
-**Făcut** (2026-11-19). Ce am constatat: planul M1 s-a comis pe `m0-schelet-rn` (`c007736`), iar `dev` a avansat prin fast-forward. `git switch` a rescris tot working copy-ul cu CRLF, din cauza `core.autocrlf=true` din configul global Git, iar `prettier --check` a picat pe 43 de fișiere neatinse. Fix-ul durabil e `* text=auto eol=lf` în `.gitattributes` (intră în commitul pasului 2). `Set-Content` din PS 5.1 pune BOM în mesajul de commit, așa că fișierul de mesaj se scrie cu tool-ul Write.
+**Done** (2026-11-19). Findings: the M1 plan was committed on `m0-schelet-rn` (`c007736`), and `dev` advanced by fast-forward. `git switch` rewrote the whole working copy with CRLF, because of `core.autocrlf=true` in the global Git config, and `prettier --check` failed on 43 untouched files. The durable fix is `* text=auto eol=lf` in `.gitattributes` (goes into the step 2 commit). `Set-Content` in PS 5.1 puts a BOM in the commit message, so the message file is written with the Write tool.
 
-### 2. Tokens complete în `shared/theme`
-- `colors.ts`: toată paleta din PROMPT §7 (`bg`, `surface`, `surfaceRaised`, `border`, `divider`, `tabBar`, `text`, `textMuted`, `textRead`, `accent`, `onAccent`, `success`, `successBg`, `danger`, `dangerBorder`, `info`, `cover[]`).
-- `spacing.ts`: `space` (4, 8, 12, 16, 20, 24) + aliasuri semantice (`screenPadding: 20`, `cardGap: 16`).
-- `radius.ts`: 6, 8, 12, 14, 16, 20, `pill`, cu aliasuri (`coverSm`, `input`, `button`, `card`).
-- `typography.ts`: înlocuiește `fontSize` cu `type.{display,title,body,bodyStrong,caption,overline}` (familie, mărime, `lineHeight`, `letterSpacing`, `textTransform`), păstrând exportul folosit de `ScreenPlaceholder` sau migrându-l.
+### 2. Complete tokens in `shared/theme`
+- `colors.ts`: the whole palette from PROMPT §7 (`bg`, `surface`, `surfaceRaised`, `border`, `divider`, `tabBar`, `text`, `textMuted`, `textRead`, `accent`, `onAccent`, `success`, `successBg`, `danger`, `dangerBorder`, `info`, `cover[]`).
+- `spacing.ts`: `space` (4, 8, 12, 16, 20, 24) + semantic aliases (`screenPadding: 20`, `cardGap: 16`).
+- `radius.ts`: 6, 8, 12, 14, 16, 20, `pill`, with aliases (`coverSm`, `input`, `button`, `card`).
+- `typography.ts`: replaces `fontSize` with `type.{display,title,body,bodyStrong,caption,overline}` (family, size, `lineHeight`, `letterSpacing`, `textTransform`), keeping the export used by `ScreenPlaceholder` or migrating it.
 - `sizes.ts`: `touchTarget: 44`, `playButton: 76`, `icon.{sm,md,lg}`, `tabBarHeight`, `maxFontScaleHeader: 1.4`.
 - `motion.ts`: `duration.highlight: 150`, `opacity.highlight: 0.18`, `opacity.disabled`.
-- `contrast.ts`: `relativeLuminance` și `contrastRatio` (funcții pure, WCAG 2.x).
-- `coverColor.ts`: `pickCoverColor(id: BookId)` — hash determinist (djb2) modulo `color.cover.length`.
-- **Teste:** contrast ≥ 4.5:1 pentru `text`, `textMuted`, `textRead`, `danger`, `success`, `accent` pe `bg` și `surface`, și `onAccent` pe `accent`; `pickCoverColor` stabil și distribuit pe toate cele 3 culori; tokens fără valori `undefined`.
+- `contrast.ts`: `relativeLuminance` and `contrastRatio` (pure functions, WCAG 2.x).
+- `coverColor.ts`: `pickCoverColor(id: BookId)` — deterministic hash (djb2) modulo `color.cover.length`.
+- **Tests:** contrast ≥ 4.5:1 for `text`, `textMuted`, `textRead`, `danger`, `success`, `accent` on `bg` and `surface`, and `onAccent` on `accent`; `pickCoverColor` stable and distributed over all 3 colors; tokens without `undefined` values.
 
-**Făcut** (2026-11-19). Ce am constatat: toate perechile trec de 4.5:1, inclusiv `textRead` / `textMuted` / `info` pe `tabBar`, `text` și `textMuted` pe `surfaceRaised`, `success` pe `successBg` și `text` pe cele 3 culori de copertă. Riscul despre `textRead` nu s-a confirmat. Exportul se numește `type` (ca în PROMPT), iar TS îl acceptă în `import { type }`. Tokens în plus față de plan: `radius.coverLg` / `cardLg`, `size.buttonLg`, `progressBar`, `coverSm` / `coverLg`, `emptyStateIcon`, `switch`, `opacity.pressed`. `type.title` folosește Space Grotesk Bold, pentru că SemiBold nu există. djb2 e scris fără operatori pe biți (regula `no-bitwise` din configul RN).
+**Done** (2026-11-19). Findings: all pairs pass 4.5:1, including `textRead` / `textMuted` / `info` on `tabBar`, `text` and `textMuted` on `surfaceRaised`, `success` on `successBg` and `text` on the 3 cover colors. The `textRead` risk didn't materialize. The export is called `type` (as in PROMPT), and TS accepts it in `import { type }`. Tokens beyond the plan: `radius.coverLg` / `cardLg`, `size.buttonLg`, `progressBar`, `coverSm` / `coverLg`, `emptyStateIcon`, `switch`, `opacity.pressed`. `type.title` uses Space Grotesk Bold, because SemiBold doesn't exist. djb2 is written without bitwise operators (the `no-bitwise` rule from the RN config).
 
-### 3. `ThemeProvider`, `useTheme`, integrarea în app
-- `shared/theme/ThemeProvider.tsx` + `useTheme()` (context cu obiectul `theme`; aruncă eroare în afara providerului).
-- `AppProviders`: adaug `ThemeProvider`. `NavigationContainer` primește o temă derivată din tokens (`navigationTheme.ts` în `app/navigation`), în locul temei provizorii.
-- `StatusBar barStyle="light-content"` cu fundal `color.bg` (notat în M0 pasul 6).
-- `ScreenPlaceholder` trece pe noile tokens (rezolvă textul negru pe negru din M0).
-- **Teste:** `useTheme` întoarce token-urile; aruncă în afara providerului; `App` randează cu providerul.
+### 3. `ThemeProvider`, `useTheme`, integration into the app
+- `shared/theme/ThemeProvider.tsx` + `useTheme()` (context with the `theme` object; throws outside the provider).
+- `AppProviders`: add `ThemeProvider`. `NavigationContainer` gets a theme derived from tokens (`navigationTheme.ts` in `app/navigation`), instead of the provisional theme.
+- `StatusBar barStyle="light-content"` with a `color.bg` background (noted in M0 step 6).
+- `ScreenPlaceholder` switches to the new tokens (fixes the black-on-black text from M0).
+- **Tests:** `useTheme` returns the tokens; throws outside the provider; `App` renders with the provider.
 
-**Făcut** (2026-11-19). Ce am constatat: în RN 0.88 `StatusBar` nu mai are `backgroundColor` (edge-to-edge pe Android), deci e doar `barStyle="light-content"`, iar fundalul îl dă `GestureHandlerRootView`, cu `color.bg`. `theme.ts` adună toate token-urile într-un obiect, iar `ThemeProvider` îl expune prin context. Stilurile rămân statice. `navigationTheme` păstrează fonturile din `DarkTheme` și are un test propriu. `renderHook` e asincron în Testing Library v14, iar eroarea din afara providerului se prinde cu `await expect(async () => …).rejects`.
+**Done** (2026-11-19). Findings: in RN 0.88 `StatusBar` no longer has `backgroundColor` (edge-to-edge on Android), so it's just `barStyle="light-content"`, and the background comes from `GestureHandlerRootView`, with `color.bg`. `theme.ts` gathers all tokens into one object, and `ThemeProvider` exposes it through context. Styles stay static. `navigationTheme` keeps the fonts from `DarkTheme` and has its own test. `renderHook` is async in Testing Library v14, and the error outside the provider is caught with `await expect(async () => …).rejects`.
 
-### 4. Regulă ESLint locală „max 7 props”
-- Plugin local în `eslint.config.js` (`local/max-props`): numără membrii tipului `*Props` din `*.types.ts` / parametrul destructurat al componentei; prag 7 (skill §2).
-- Santinelă nouă în `__tests__/lint/architecture-rules.test.ts` (fixture cu 8 props → eroare, 7 → ok).
-- **Verificare:** `npm run lint` raportează fixture-ul; restul codului trece.
+### 4. Local ESLint rule "max 7 props"
+- Local plugin in `eslint.config.js` (`local/max-props`): counts the members of the `*Props` type in `*.types.ts` / the component's destructured parameter; threshold 7 (skill §2).
+- New sentinel in `__tests__/lint/architecture-rules.test.ts` (fixture with 8 props → error, 7 → ok).
+- **Check:** `npm run lint` reports the fixture; the rest of the code passes.
 
-**Făcut** (2026-11-19). Ce am constatat: regula stă în `eslint-rules/max-props.js` și e înregistrată ca plugin `local` pe `src/**`, fără teste. Numără membrii proprii ai interfețelor și tipurilor `*Props`, inclusiv suma literalelor dintr-o intersecție. Tipurile referite sau extinse nu se expandează, așa că `extends PressableProps` nu se adună la număr. Numără și proprietățile parametrului destructurat al unei funcții PascalCase, fără `...rest`. Cele 4 santinele (interfață cu 8 props, intersecție 4 + 4, destructurare cu 8 props, cazurile permise) folosesc `lintText`, deci nu e nevoie de fixture pe disc.
+**Done** (2026-11-19). Findings: the rule lives in `eslint-rules/max-props.js` and is registered as the `local` plugin on `src/**`, without tests. It counts the own members of `*Props` interfaces and types, including the sum of the literals in an intersection. Referenced or extended types aren't expanded, so `extends PressableProps` doesn't add to the count. It also counts the properties of the destructured parameter of a PascalCase function, without `...rest`. The 4 sentinels (interface with 8 props, 4 + 4 intersection, destructuring with 8 props, the allowed cases) use `lintText`, so no on-disk fixture is needed.
 
-### 5. Fundații: `AppText` și `Icon`
-- Structura fiecărei primitive (skill §4): `shared/ui/<Nume>/{<Nume>.tsx, .styles.ts, .types.ts, use<Nume>.ts (doar dacă are logică), <Nume>.test.tsx, index.ts}`, exportată din `shared/ui/index.ts`.
-- `AppText`: `variant`, `color` (cheie de token, nu hex), `maxFontSizeMultiplier` implicit 1.4 pentru `display`/`title`; `accessibilityRole="header"` opțional.
-- `Icon`: `name` dintr-o hartă tipizată de iconițe Lucide folosite în machete (`book`, `headphones`, `sliders-horizontal`, `plus`, `play`, `pause`, `check`, `circle`, `chevron-left`, `chevron-down`, `more-horizontal`, `bookmark`, `moon`, `rotate-ccw`, `rotate-cw`, `skip-back`, `skip-forward`, `file-headphone`, `search`, `settings`), `size` din `sizes.icon`, `color` din tokens. Decorativă implicit (`accessible={false}`).
-- **Teste:** variantă → stil corect; limita de font scaling; iconița randează și e ascunsă de accesibilitate.
+### 5. Foundations: `AppText` and `Icon`
+- The structure of each primitive (skill §4): `shared/ui/<Name>/{<Name>.tsx, .styles.ts, .types.ts, use<Name>.ts (only if it has logic), <Name>.test.tsx, index.ts}`, exported from `shared/ui/index.ts`.
+- `AppText`: `variant`, `color` (token key, not hex), `maxFontSizeMultiplier` defaulting to 1.4 for `display`/`title`; optional `accessibilityRole="header"`.
+- `Icon`: `name` from a typed map of the Lucide icons used in the mockups (`book`, `headphones`, `sliders-horizontal`, `plus`, `play`, `pause`, `check`, `circle`, `chevron-left`, `chevron-down`, `more-horizontal`, `bookmark`, `moon`, `rotate-ccw`, `rotate-cw`, `skip-back`, `skip-forward`, `file-headphone`, `search`, `settings`), `size` from `sizes.icon`, `color` from tokens. Decorative by default (`accessible={false}`).
+- **Tests:** variant → correct style; the font scaling limit; the icon renders and is hidden from accessibility.
 
-**Făcut** (2026-11-19). Ce am constatat: în Jest, `lucide-react-native` se rezolvă la `dist/esm/*.mjs`, iar transformul preset-ului RN (doar `.js` / `.ts`) îl sare, deși pachetul e în `ESM_PACKAGES`. Soluția e un `moduleNameMapper` spre `dist/cjs/lucide-react-native.js`. În Lucide 1.75, `MoreHorizontal` se numește `Ellipsis`, iar în app se păstrează numele `more-horizontal`. Am adăugat `trash`, `upload`, `download` și `x` pentru Detalii și Setări. `AppText` extinde `TextProps` (fără `style` tipografic): `style` rămâne doar pentru layout, iar stilurile de culoare sunt precalculate per token. `Icon` primește `filled` (triunghiul de play plin). E ascunsă de accesibilitate (`accessible={false}` + `no-hide-descendants`), iar testul o găsește doar cu `includeHiddenElements`. `ScreenPlaceholder` folosește acum `AppText`.
+**Done** (2026-11-19). Findings: in Jest, `lucide-react-native` resolves to `dist/esm/*.mjs`, and the RN preset transform (only `.js` / `.ts`) skips it, even though the package is in `ESM_PACKAGES`. The fix is a `moduleNameMapper` to `dist/cjs/lucide-react-native.js`. In Lucide 1.75, `MoreHorizontal` is called `Ellipsis`, and the app keeps the name `more-horizontal`. I added `trash`, `upload`, `download` and `x` for Details and Settings. `AppText` extends `TextProps` (without typographic `style`): `style` is only for layout, and color styles are precomputed per token. `Icon` gets `filled` (the filled play triangle). It's hidden from accessibility (`accessible={false}` + `no-hide-descendants`), and the test finds it only with `includeHiddenElements`. `ScreenPlaceholder` now uses `AppText`.
 
-### 6. Primitive interactive: `Button`, `IconButton`, `Chip`, `ChipGroup`, `Switch`
-- `Button`: variante `primary | secondary | ghost | danger`, `size` (`md`, `lg` pentru CTA-uri pill ca „Importă primul PDF” / „Continuă de la pagina 34”), `icon` opțional, `loading`, `disabled`; `accessibilityRole="button"`, `accessibilityState={{ disabled, busy }}`, `minHeight: touchTarget`.
-- `IconButton`: `icon`, `accessibilityLabel` **obligatoriu** în tip, `hitSlop` până la 44 pt, variantă `filled` pentru play-ul de 76 pt.
-- `Chip`: `label`, `selected`, `onPress` opțional (chip de metadate necliclabil vs. filtru); rol `button` + `selected` în stare.
-- `ChipGroup<T>`: `options`, `value`, `onChange`, rol `radiogroup`/`radio`; logică în `useChipGroup`.
-- `Switch` propriu (macheta are thumb închis pe șină chihlimbar, imposibil cu `Switch` din RN): `Pressable` + Reanimated (`withTiming` 150 ms), rol `switch`, `accessibilityState={{ checked }}`.
-- **Teste:** fiecare variantă randează; `onPress` / `onChange` apelate cu `await fireEvent.press`; `disabled` blochează apăsarea; stările de accesibilitate.
+### 6. Interactive primitives: `Button`, `IconButton`, `Chip`, `ChipGroup`, `Switch`
+- `Button`: variants `primary | secondary | ghost | danger`, `size` (`md`, `lg` for pill CTAs like "Importă primul PDF" / "Continuă de la pagina 34"), optional `icon`, `loading`, `disabled`; `accessibilityRole="button"`, `accessibilityState={{ disabled, busy }}`, `minHeight: touchTarget`.
+- `IconButton`: `icon`, `accessibilityLabel` **required** in the type, `hitSlop` up to 44 pt, `filled` variant for the 76 pt play.
+- `Chip`: `label`, `selected`, optional `onPress` (non-clickable metadata chip vs. filter); `button` role + `selected` in the state.
+- `ChipGroup<T>`: `options`, `value`, `onChange`, `radiogroup`/`radio` role; logic in `useChipGroup`.
+- Custom `Switch` (the mockup has a dark thumb on an amber track, impossible with RN's `Switch`): `Pressable` + Reanimated (`withTiming` 150 ms), `switch` role, `accessibilityState={{ checked }}`.
+- **Tests:** every variant renders; `onPress` / `onChange` called with `await fireEvent.press`; `disabled` blocks the press; the accessibility states.
 
-**Făcut** (2026-11-19). Ce am constatat:
-- **Reanimated 4.7 în Jest:** mock-ul oficial (`react-native-reanimated/mock`) e inutilizabil. Importă `src/index`, unde `initializers.native.ts` apelează `setCSSEventHandler` pe JSReanimated (ales când `IS_JEST`), iar acolo aruncă eroare. Până acum nu crăpa, pentru că nimeni nu importa Reanimated. L-am înlocuit în `jest.setup.js` cu un mock manual minim (`Animated.*`, `useSharedValue`, `useAnimatedStyle`, `withTiming`, `withSpring`…), unde animațiile ajung instant la valoarea țintă. Mock-ul se extinde când apare un API nou.
-- **`radiogroup`:** containerul `ChipGroup` rămâne neaccesibil (cu `accessible`, TalkBack ar înghiți radio-urile), așa că `getByRole('radiogroup')` din RNTL nu-l găsește. Testul îl caută după etichetă și verifică rolul.
-- **Limita de 7 props:** `Button` are exact 7 (`label`, `onPress`, `variant`, `size`, `icon`, `loading`, `disabled`). Am renunțat la `testID`, iar testele caută după rol și nume. Lățimea vine de la părinte (`alignSelf` implicit), fără un prop `fullWidth`.
-- **Variante:** `lg` = 52 pt, pill. `secondary` = `surfaceRaised` (PROMPT), `danger` = contur `dangerBorder` + text `danger`.
-- **Iconițe pline:** `Icon` umple implicit glifele de redare (`play`, `pause`), ca în machete. `IconButton` cu `active` umple și colorează iconița cu `accent` (semnul de carte setat).
-- **Ținte de 44 pt:** `Chip` (32 pt) și `Switch` (28 pt) ajung la 44 pt prin `hitSlop` calculat din tokens.
-- **Feedback comun:** `feedback.styles.ts` (apăsat / dezactivat) e folosit de toate primitivele apăsabile.
+**Done** (2026-11-19). Findings:
+- **Reanimated 4.7 in Jest:** the official mock (`react-native-reanimated/mock`) is unusable. It imports `src/index`, where `initializers.native.ts` calls `setCSSEventHandler` on JSReanimated (picked when `IS_JEST`), and it throws there. It didn't crash until now, because nobody imported Reanimated. I replaced it in `jest.setup.js` with a minimal manual mock (`Animated.*`, `useSharedValue`, `useAnimatedStyle`, `withTiming`, `withSpring`…), where animations reach the target value instantly. The mock is extended when a new API shows up.
+- **`radiogroup`:** the `ChipGroup` container stays non-accessible (with `accessible`, TalkBack would swallow the radios), so RNTL's `getByRole('radiogroup')` doesn't find it. The test looks it up by label and checks the role.
+- **The 7 props limit:** `Button` has exactly 7 (`label`, `onPress`, `variant`, `size`, `icon`, `loading`, `disabled`). I dropped `testID`, and tests search by role and name. The width comes from the parent (default `alignSelf`), without a `fullWidth` prop.
+- **Variants:** `lg` = 52 pt, pill. `secondary` = `surfaceRaised` (PROMPT), `danger` = `dangerBorder` outline + `danger` text.
+- **Filled icons:** `Icon` fills the playback glyphs (`play`, `pause`) by default, as in the mockups. `IconButton` with `active` fills the icon and colors it with `accent` (bookmark set).
+- **44 pt targets:** `Chip` (32 pt) and `Switch` (28 pt) reach 44 pt through `hitSlop` computed from tokens.
+- **Shared feedback:** `feedback.styles.ts` (pressed / disabled) is used by all pressable primitives.
 
-### 7. Primitive de afișare: `Card`, `ProgressBar`, `ListRow`, `BookCover`, `EmptyState`, `ScreenHeader`
-- `Card`: `surface`, `radius.card`, padding din tokens; varianta `raised`.
-- `ProgressBar`: `value` 0–1 (limitat), `tone` (`accent | success | info`), șină `border`; rol `progressbar` cu `accessibilityValue={{ min: 0, max: 100, now }}`.
-- `ListRow`: `title`, `subtitle?`, `leading?`, `trailing?` (slot: Switch, text, iconiță), `onPress?`, `divider`; ținta ≥ 44 pt; când are `onPress`, rol `button`.
-- `BookCover`: `id`, `title`, `author`, `size` (`sm | lg`); culoarea din `pickCoverColor`; autor sus, titlu jos (macheta „Detalii carte”); `accessibilityLabel` compus din i18n.
-- `EmptyState`: `icon` în cerc `surface`, `title`, `description`, `action?` (un `Button`), `note?` (macheta „Bibliotecă goală”).
-- `ScreenHeader`: variante `large` (titlu display „Biblioteca mea” / „Setări” + acțiune dreapta) și `compact` (back, supratitlu + titlu centrat, acțiune dreapta — macheta Player/Detalii); safe-area sus; titlul cu rol `header` și `maxFontSizeMultiplier` 1.4.
-- **Teste:** render, slot-uri, clamp la `ProgressBar`, culoare determinist la `BookCover`, acțiunea din `EmptyState`, back din `ScreenHeader`.
+### 7. Display primitives: `Card`, `ProgressBar`, `ListRow`, `BookCover`, `EmptyState`, `ScreenHeader`
+- `Card`: `surface`, `radius.card`, padding from tokens; the `raised` variant.
+- `ProgressBar`: `value` 0–1 (clamped), `tone` (`accent | success | info`), `border` track; `progressbar` role with `accessibilityValue={{ min: 0, max: 100, now }}`.
+- `ListRow`: `title`, `subtitle?`, `leading?`, `trailing?` (slot: Switch, text, icon), `onPress?`, `divider`; target ≥ 44 pt; with `onPress`, `button` role.
+- `BookCover`: `id`, `title`, `author`, `size` (`sm | lg`); color from `pickCoverColor`; author on top, title at the bottom (the "Detalii carte" mockup); `accessibilityLabel` composed from i18n.
+- `EmptyState`: `icon` in a `surface` circle, `title`, `description`, `action?` (a `Button`), `note?` (the "Bibliotecă goală" mockup).
+- `ScreenHeader`: variants `large` (display title "Biblioteca mea" / "Setări" + right action) and `compact` (back, overline + centered title, right action — the Player/Details mockup); top safe area; title with `header` role and `maxFontSizeMultiplier` 1.4.
+- **Tests:** render, slots, `ProgressBar` clamp, deterministic color for `BookCover`, the `EmptyState` action, back in `ScreenHeader`.
 
-**Făcut** (2026-11-19). Ce am constatat:
-- **Conflict plan ↔ skill:** `BookCover` primește `accessibilityLabel` deja tradus, nu „compus din i18n”, pentru că skill-ul §3 interzice cheile i18n în primitive. A câștigat skill-ul; eticheta o compune feature-ul (M4).
-- **`clamp`** e în `shared/utils` (prima unitate de acolo). Îl folosesc `useProgressBar` și, la pasul 10, `formatPercent`.
-- **`Card`:** `padded={false}` păstrează doar padding-ul orizontal, pentru listele cu rânduri și separatoare (Setări). Raza e `radius.cardLg` (20), ca în machete.
-- **`ListRow`:** `tone` (`default | muted | active`) acoperă stările capitolelor din „Detalii carte” fără prop-uri de culoare și rămâne la 7 props. Rândul apăsabil își ia eticheta din textul copiilor.
-- **`BookCover`:** e `React.memo` (va sta în liste). `sm` arată inițiala titlului, `lg` autorul sus și titlul jos. Fundalurile sunt precalculate per culoare.
-- **`ScreenHeader`:** `compact` folosește `bodyStrong` pentru titlu, cu `maxFontSizeMultiplier` 1.4 explicit. Safe area vine din `useScreenHeader` (memoizat pe `top`). Când lipsește butonul de back, slotul stâng rămâne gol, ca titlul să stea centrat.
-- **`EmptyState`:** acțiunea e un `Pick<ButtonProps>`, randat ca `Button size="lg"`.
-- **Lint:** `memo(function BookCover…)` declanșează `no-shadow`, așa că funcția internă se numește `BookCoverView`.
+**Done** (2026-11-19). Findings:
+- **Plan ↔ skill conflict:** `BookCover` receives an already-translated `accessibilityLabel`, not one "composed from i18n", because skill §3 forbids i18n keys in primitives. The skill won; the feature composes the label (M4).
+- **`clamp`** is in `shared/utils` (the first unit there). It's used by `useProgressBar` and, in step 10, by `formatPercent`.
+- **`Card`:** `padded={false}` keeps only the horizontal padding, for lists with rows and separators (Settings). The radius is `radius.cardLg` (20), as in the mockups.
+- **`ListRow`:** `tone` (`default | muted | active`) covers the chapter states in "Detalii carte" without color props and stays at 7 props. The pressable row takes its label from the children's text.
+- **`BookCover`:** is `React.memo` (it will live in lists). `sm` shows the title initial, `lg` the author on top and the title at the bottom. Backgrounds are precomputed per color.
+- **`ScreenHeader`:** `compact` uses `bodyStrong` for the title, with an explicit `maxFontSizeMultiplier` 1.4. The safe area comes from `useScreenHeader` (memoized on `top`). When the back button is missing, the left slot stays empty, so the title stays centered.
+- **`EmptyState`:** the action is a `Pick<ButtonProps>`, rendered as `Button size="lg"`.
+- **Lint:** `memo(function BookCover…)` triggers `no-shadow`, so the inner function is called `BookCoverView`.
 
 ### 8. `Slider`
-- Wrapper peste `@react-native-community/slider` cu culori din tokens (`accent` / `border`), `label`, `valueLabel` (ex. „1.0×”, „Normal” — macheta Setări), `step`, `onChange` / `onComplete`; `accessibilityLabel` + `accessibilityValue`.
-- Mock în `jest.setup.js` pentru slider (componentă nativă).
-- **Teste:** propagă `value` / `onComplete`; eticheta și valoarea afișată.
+- Wrapper over `@react-native-community/slider` with colors from tokens (`accent` / `border`), `label`, `valueLabel` (e.g. "1.0×", "Normal" — the Settings mockup), `step`, `onChange` / `onComplete`; `accessibilityLabel` + `accessibilityValue`.
+- Mock in `jest.setup.js` for the slider (native component).
+- **Tests:** propagates `value` / `onComplete`; the label and the displayed value.
 
-**Făcut** (2026-11-19). Ce am constatat: `@react-native-community/slider` 5.2 randează în Jest fără mock (componenta codegen devine host), iar `fireEvent(…, 'valueChange' | 'slidingComplete')` ajunge la callback-uri. Riscul nu s-a confirmat și n-am mai adăugat mock-ul. `min / max / step` sunt grupate în `range`, ca să rămân la 7 props. `valueTone` (`accent` pentru „1.0×”, `muted` pentru „Normal”) urmează macheta Setări. `valueLabel` e și `accessibilityValue.text`, ca TalkBack să anunțe „1.0×”, nu numărul brut.
+**Done** (2026-11-19). Findings: `@react-native-community/slider` 5.2 renders in Jest without a mock (the codegen component becomes a host), and `fireEvent(…, 'valueChange' | 'slidingComplete')` reaches the callbacks. The risk didn't materialize and I didn't add the mock. `min / max / step` are grouped in `range`, to stay at 7 props. `valueTone` (`accent` for "1.0×", `muted` for "Normal") follows the Settings mockup. `valueLabel` is also `accessibilityValue.text`, so TalkBack announces "1.0×", not the raw number.
 
-### 9. `BottomTabBar` și înlocuirea tab bar-ului
-- `shared/ui/BottomTabBar`: primește `items: { key, label, icon, focused, onPress }[]` (fără tipuri React Navigation în `shared`); fundal `tabBar`, activ `accent`, inactiv `textMuted`; rol `tab`, `selected`; safe-area jos.
-- Adaptor în `app/navigation/TabBarAdapter.tsx` care mapează `BottomTabBarProps` → `items` (iconițele `book`, `headphones`, `sliders-horizontal`), folosit în `TabsNavigator` prin `tabBar`.
-- **Teste:** în `RootNavigator.test.tsx`, apăsarea pe „Setări” schimbă tab-ul și elementul activ are `selected`. (Notă: acum tab-urile **vor avea** rolul `tab`, deci se actualizează capcana din `CLAUDE.md`.)
+### 9. `BottomTabBar` and replacing the tab bar
+- `shared/ui/BottomTabBar`: receives `items: { key, label, icon, focused, onPress }[]` (no React Navigation types in `shared`); `tabBar` background, active `accent`, inactive `textMuted`; `tab` role, `selected`; bottom safe area.
+- Adapter in `app/navigation/TabBarAdapter.tsx` mapping `BottomTabBarProps` → `items` (icons `book`, `headphones`, `sliders-horizontal`), used in `TabsNavigator` through `tabBar`.
+- **Tests:** in `RootNavigator.test.tsx`, pressing "Setări" switches the tab and the active item has `selected`. (Note: the tabs **will now have** the `tab` role, so the pitfall in `CLAUDE.md` gets updated.)
 
-**Făcut** (2026-11-19). Ce am constatat: `BottomTabBar` nu folosește tipuri React Navigation, iar `TabBarAdapter` (în `app/navigation`) emite `tabPress` cu `canPreventDefault` înainte de `navigate`, ca tab bar-ul implicit. `tabBar` primește o funcție definită la nivel de modul (`renderTabBar`), ca să nu se creeze o componentă nouă la fiecare randare. Fiecare tab e un `BottomTabBarItem` memoizat, cu rol `tab` și `selected`. Containerul are rolul `tablist`. Eticheta tab-ului e limitată la 1.4×. Testele găsesc acum tab-urile cu `getByRole('tab')`.
+**Done** (2026-11-19). Findings: `BottomTabBar` doesn't use React Navigation types, and `TabBarAdapter` (in `app/navigation`) emits `tabPress` with `canPreventDefault` before `navigate`, like the default tab bar. `tabBar` gets a module-level function (`renderTabBar`), so no new component is created on every render. Each tab is a memoized `BottomTabBarItem`, with `tab` role and `selected`. The container has the `tablist` role. The tab label is capped at 1.4×. Tests now find the tabs with `getByRole('tab')`.
 
-### 10. `shared/utils`: formatare
-- `formatBytes.ts` (`1,2 MB`, `8,9 MB`, `512 KB`), `formatDuration.ts` (`~ 1 h 52 min`, `12 min`, `< 1 min`), `formatPercent.ts` (`41%`, clamp 0–100). Unitățile și sufixele vin din `ro.json` (`format.*`) sau sunt parametri, ca funcțiile să rămână pure.
-- **Teste** table-driven: 0, limite de unitate, rotunjire, valori negative/NaN.
+### 10. `shared/utils`: formatting
+- `formatBytes.ts` (`1,2 MB`, `8,9 MB`, `512 KB`), `formatDuration.ts` (`~ 1 h 52 min`, `12 min`, `< 1 min`), `formatPercent.ts` (`41%`, clamp 0–100). Units and suffixes come from `ro.json` (`format.*`) or are parameters, so the functions stay pure.
+- Table-driven **tests**: 0, unit boundaries, rounding, negative/NaN values.
 
-**Făcut** (2026-11-19). Ce am constatat:
-- **Funcții pure:** unitățile vin ca parametru (`ByteUnits`, `DurationUnits`), iar șirurile stau în `ro.json` → `format.bytes` / `format.duration`. Testele le citesc chiar de acolo. Feature-urile le vor lua cu `t('format.bytes', { returnObjects: true })`.
-- **„~” și „rămase”:** prefixul și sufixul aparțin propoziției din feature (de ex. `player.remaining: "~ {{duration}} rămase"`), nu formatter-ului. Așa `formatDuration` dă „1 h 52 min”, „2 h”, „12 min”, „< 1 min”.
-- **`formatDecimal`:** virgulă zecimală, fără „,0” la coadă, fără `Intl`.
-- **`formatBytes`:** promovează unitatea după rotunjire (1023,6 KB → „1 MB”, nu „1024 KB”). B și KB sunt întregi, MB și GB au o zecimală.
-- **`formatPercent`:** primește un raport între 0 și 1, ca `ProgressBar`, și refolosește `clamp`.
+**Done** (2026-11-19). Findings:
+- **Pure functions:** units come as a parameter (`ByteUnits`, `DurationUnits`), and the strings live in `ro.json` → `format.bytes` / `format.duration`. The tests read them from there. Features will get them with `t('format.bytes', { returnObjects: true })`.
+- **"~" and "rămase":** the prefix and suffix belong to the feature's sentence (e.g. `player.remaining: "~ {{duration}} rămase"`), not to the formatter. So `formatDuration` gives "1 h 52 min", "2 h", "12 min", "< 1 min".
+- **`formatDecimal`:** decimal comma, no trailing ",0", no `Intl`.
+- **`formatBytes`:** promotes the unit after rounding (1023.6 KB → "1 MB", not "1024 KB"). B and KB are integers, MB and GB have one decimal.
+- **`formatPercent`:** takes a ratio between 0 and 1, like `ProgressBar`, and reuses `clamp`.
 
-### 11. Catalog vizual (doar `__DEV__`) și verificare pe emulator
-- `src/app/dev/UiCatalogScreen.tsx`, înregistrat în `RootNavigator` doar când `__DEV__`, deep link `abook://dev/ui`: toate primitivele în toate variantele, pentru comparare cu machetele.
-- **Verificare:** `npm run emu`, apoi `adb shell am start -d abook://dev/ui`; capturi comparate cu `01-biblioteca-goala.png`, `03-detalii-carte.png`, `05-setari.png` (tab bar, butoane, chips, switch, slider, copertă, empty state). TalkBack pornit pe catalog: fiecare control își anunță rolul și eticheta în română.
+### 11. Visual catalog (`__DEV__` only) and emulator check
+- `src/app/dev/UiCatalogScreen.tsx`, registered in `RootNavigator` only when `__DEV__`, deep link `abook://dev/ui`: all primitives in all variants, for comparison with the mockups.
+- **Check:** `npm run emu`, then `adb shell am start -d abook://dev/ui`; screenshots compared with `01-biblioteca-goala.png`, `03-detalii-carte.png`, `05-setari.png` (tab bar, buttons, chips, switch, slider, cover, empty state). TalkBack on in the catalog: every control announces its role and label in Romanian.
 
-**Făcut** (2026-11-19). Ce am constatat:
-- **Structura:** catalogul stă în `src/app/dev/` (ecran + 5 secțiuni + `samples.ts`). Ruta `DevUi` și link-ul `dev/ui` există doar când `__DEV__`. Textele de test din `samples.ts` copiază machetele și nu trec prin i18n, pentru că nu sunt copy de produs.
-- **Build:** `npm run emu` a refăcut build-ul nativ, deși M1 nu are schimbări native. Hash-ul fișierelor native s-a schimbat după normalizarea LF de la pasul 2.
-- **Comparația cu machetele** (capturi pe emulator): fonturile, tab bar-ul (activ chihlimbar, bară de stare luminoasă), butoanele, play-ul de 76 pt, chips-urile, switch-ul (thumb închis pe șină chihlimbar), coperta mare, rândurile de capitol și starea goală corespund. Textul negru pe negru din M0 a dispărut.
-- **Accesibilitate** (`uiautomator dump` în loc de TalkBack ascultat): fiecare control are `content-desc` în română. Radio-urile și switch-urile au `checkable` / `checked`, tab-urile au `selected`, butoanele dezactivate au `enabled=false`, butonul în încărcare anunță „…, busy”, iar slider-ele anunță „Viteză implicită, 1.0×”. IconButton-urile au 132 px = 44 dp.
-- **Abateri, de rezolvat în M6 (Setări / Player):** (1) nodul nativ al slider-ului are ≈ 18 dp înălțime, deși stilul cere 44 (SeekBar-ul își păstrează înălțimea intrinsecă), deci ținta de atingere e sub 44 pt; (2) șina goală (`border` pe `surface`) abia se vede, iar macheta are o șină mai groasă și mai deschisă. Ambele cer probabil un slider propriu (Gesture Handler + Reanimated).
-- **Viteza:** se afișează „1.0×” (punct și o zecimală, ca în machetă), nu prin `formatDecimal`. Formatul vitezei îl decide feature-ul în M6.
+**Done** (2026-11-19). Findings:
+- **Structure:** the catalog lives in `src/app/dev/` (screen + 5 sections + `samples.ts`). The `DevUi` route and the `dev/ui` link exist only when `__DEV__`. The sample texts in `samples.ts` copy the mockups and don't go through i18n, because they aren't product copy.
+- **Build:** `npm run emu` redid the native build, even though M1 has no native changes. The hash of the native files changed after the LF normalization in step 2.
+- **Comparison with the mockups** (emulator screenshots): the fonts, the tab bar (active amber, light status bar), the buttons, the 76 pt play, the chips, the switch (dark thumb on amber track), the large cover, the chapter rows and the empty state match. The black-on-black text from M0 is gone.
+- **Accessibility** (`uiautomator dump` instead of listening to TalkBack): every control has a Romanian `content-desc`. Radios and switches have `checkable` / `checked`, tabs have `selected`, disabled buttons have `enabled=false`, the loading button announces "…, busy", and the sliders announce "Viteză implicită, 1.0×". The IconButtons are 132 px = 44 dp.
+- **Deviations, to be solved in M6 (Settings / Player):** (1) the slider's native node is ≈ 18 dp tall, even though the style asks for 44 (the SeekBar keeps its intrinsic height), so the touch target is below 44 pt; (2) the empty track (`border` on `surface`) is barely visible, while the mockup has a thicker, lighter track. Both probably require a custom slider (Gesture Handler + Reanimated).
+- **Speed:** displayed as "1.0×" (dot and one decimal, as in the mockup), not through `formatDecimal`. The feature decides the speed format in M6.
 
-### 12. Închidere
-- Checklist `modular-architecture` §10, rezumatul (unități noi / refolosite / `arch-exception`), actualizarea `PLAN.md` (M1 ✅) și a `CLAUDE.md` (capcane noi).
+### 12. Closing
+- `modular-architecture` §10 checklist, the summary (new / reused units / `arch-exception`), updating `PLAN.md` (M1 ✅) and `CLAUDE.md` (new pitfalls).
 
 ## Definition of done – M1
 
-- [x] Toate token-urile din PROMPT §7 există în `shared/theme`; zero hex în afara lui (lint).
-- [x] Testul de contrast trece (≥ 4.5:1 pentru toate perechile text/fundal folosite).
-- [x] Cele 13 primitive din PROMPT + `AppText` și `Icon` există, fiecare cu folder complet și teste (render, interacțiune, accesibilitate).
-- [x] Fiecare control are rol, stare și etichetă în română; header-e limitate la 1.4×; ținte ≥ 44 pt, **cu o excepție**: `Slider` nativ pe Android (≈ 18 dp), mutată în riscurile M6 din `PLAN.md`.
-- [x] Regula „max 7 props” e activă și dovedită de o santinelă.
-- [x] Tab bar-ul propriu e folosit în app și verificat pe emulator; bara de stare e luminoasă.
-- [x] `formatBytes`, `formatDuration`, `formatPercent` testate.
-- [x] `npm run check` verde (208 teste, 28 de suite); câte un commit per pas.
+- [x] All tokens from PROMPT §7 exist in `shared/theme`; zero hex outside it (lint).
+- [x] The contrast test passes (≥ 4.5:1 for all text/background pairs used).
+- [x] The 13 primitives from PROMPT + `AppText` and `Icon` exist, each with a complete folder and tests (render, interaction, accessibility).
+- [x] Every control has a role, a state and a Romanian label; headers capped at 1.4×; targets ≥ 44 pt, **with one exception**: the native `Slider` on Android (≈ 18 dp), moved to the M6 risks in `PLAN.md`.
+- [x] The "max 7 props" rule is active and proven by a sentinel.
+- [x] The custom tab bar is used in the app and verified on the emulator; the status bar is light.
+- [x] `formatBytes`, `formatDuration`, `formatPercent` tested.
+- [x] `npm run check` green (208 tests, 28 suites); one commit per step.
 
-### 12. Închidere — **Făcut** (2026-11-19)
+### 12. Closing — **Done** (2026-11-19)
 
-**Checklist `modular-architecture` §10:** limitele de mărime sunt impuse de lint pe `shared/ui` (≤ 150 de linii) și pe `shared/utils` (≤ 40 / 200), plus 7 props prin `local/max-props`. Nu există `arch-exception`. Importurile merg doar în jos: `app/dev` → `shared`, iar `shared` nu importă nimic de deasupra (boundaries + `no-cycle`). Nimic nu e duplicat: feedback-ul de apăsare e în `feedback.styles.ts`, `clamp` e folosit de `ProgressBar` și `formatPercent`, `AppText` e singura cale de randare a textului (și `ScreenPlaceholder` a trecut pe el). Nu există hex, magic numbers (excepție: înălțimea cutiei de demo din catalogul dev, comentată) sau stiluri inline create la fiecare randare; valorile dinamice sunt memoizate în hook-uri. Fiecare primitivă are teste.
+**`modular-architecture` §10 checklist:** the size limits are enforced by lint on `shared/ui` (≤ 150 lines) and on `shared/utils` (≤ 40 / 200), plus 7 props through `local/max-props`. There is no `arch-exception`. Imports only go downward: `app/dev` → `shared`, and `shared` imports nothing from above (boundaries + `no-cycle`). Nothing is duplicated: the press feedback is in `feedback.styles.ts`, `clamp` is used by `ProgressBar` and `formatPercent`, `AppText` is the only way to render text (and `ScreenPlaceholder` switched to it). There are no hex values, magic numbers (exception: the height of the demo box in the dev catalog, commented) or inline styles created on every render; dynamic values are memoized in hooks. Every primitive has tests.
 
-**Unități noi:**
+**New units:**
 - **`shared/theme`:** `spacing`, `radius`, `sizes`, `motion`, `contrast`, `coverColor`, `theme`, `ThemeProvider`, `useTheme`.
 - **`shared/ui`:** `AppText`, `Icon`, `Button`, `IconButton`, `Chip`, `ChipGroup` (`useChipGroup`), `Switch` (`useSwitch`), `Card`, `ProgressBar` (`useProgressBar`), `ListRow`, `BookCover`, `EmptyState`, `ScreenHeader` (`useScreenHeader`), `Slider`, `BottomTabBar` (`BottomTabBarItem`, `useBottomTabBar`), `feedback.styles`.
 - **`shared/utils`:** `clamp`, `formatDecimal`, `formatBytes`, `formatDuration`, `formatPercent`.
-- **`app`:** `navigationTheme`, `TabBarAdapter`, `app/dev/*` (catalogul).
-- **Unelte:** `eslint-rules/max-props.js`.
+- **`app`:** `navigationTheme`, `TabBarAdapter`, `app/dev/*` (the catalog).
+- **Tooling:** `eslint-rules/max-props.js`.
 
-**Unități refolosite:** `fonts.ts`, `BookId`, `ScreenPlaceholder` (migrat), `I18nProvider`, `linking`, scriptul `run-android.ps1`.
+**Reused units:** `fonts.ts`, `BookId`, `ScreenPlaceholder` (migrated), `I18nProvider`, `linking`, the `run-android.ps1` script.
 
-**Abateri de la plan:**
-- `BookCover` primește eticheta deja tradusă (skill §3 > plan).
-- `Slider` n-a avut nevoie de mock.
-- Mock-ul Reanimated e manual.
-- În plus față de plan: `clamp` și `formatDecimal`.
-- Ținta `Slider` pe Android e sub 44 pt (amânat la M6).
+**Deviations from the plan:**
+- `BookCover` receives the already-translated label (skill §3 > plan).
+- `Slider` didn't need a mock.
+- The Reanimated mock is manual.
+- Beyond the plan: `clamp` and `formatDecimal`.
+- The `Slider` target on Android is below 44 pt (deferred to M6).
 
-**Capcane noi** sunt în `CLAUDE.md` → „Capcane descoperite în M1”.
+**New pitfalls** are in `CLAUDE.md` → "Pitfalls found in M1".
 
-## Riscuri M1
+## M1 risks
 
-| Risc | Mitigare |
+| Risk | Mitigation |
 | --- | --- |
-| `textRead` (#8A9099) sau `textMuted` sub 4.5:1 pe `surfaceRaised` | testul o arată; se folosesc doar pe `bg`/`surface`, sau se ajustează tokenul și se semnalează |
-| Mock-ul Reanimated nu acoperă animația `Switch` | testăm starea și accesibilitatea, nu animația; animația se verifică pe emulator |
-| `@react-native-community/slider` fără mock oficial pentru Jest | mock manual în `jest.setup.js` |
-| Regula ESLint locală pentru props e fragilă pe tipuri complexe (intersecții, generice) | numără doar literalele de tip / interfețele `*Props`; restul rămân la review |
-| `lucide-react-native` ESM în Jest | e deja în `ESM_PACKAGES`; se verifică la primul test cu `Icon` |
-
+| `textRead` (#8A9099) or `textMuted` below 4.5:1 on `surfaceRaised` | the test shows it; they are used only on `bg`/`surface`, or the token is adjusted and reported |
+| The Reanimated mock doesn't cover the `Switch` animation | we test state and accessibility, not the animation; the animation is checked on the emulator |
+| `@react-native-community/slider` has no official Jest mock | manual mock in `jest.setup.js` |
+| The local ESLint props rule is fragile on complex types (intersections, generics) | it counts only type literals / `*Props` interfaces; the rest is left to review |
+| `lucide-react-native` ESM in Jest | already in `ESM_PACKAGES`; checked at the first test with `Icon` |

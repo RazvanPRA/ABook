@@ -1,156 +1,156 @@
-# Plan de lucru – Audiobook PDF
+# Work plan – Audiobook PDF
 
-Sursa: `.claude/PROMPT.md` (cerințe), skill-urile din `.claude/skills/` (`audiobook-storage`, `pdf-import-pipeline`, `tts-playback-engine`) și skill-ul instalat `modular-architecture`.
+Source: `.claude/PROMPT.md` (requirements), the skills in `.claude/skills/` (`audiobook-storage`, `pdf-import-pipeline`, `tts-playback-engine`) and the installed `modular-architecture` skill.
 
-**Platformă: React Native CLI, fără Expo** (decizie a utilizatorului, 2026-11-18; `PROMPT.md` §2 și skill-urile din proiect au fost actualizate în consecință).
+**Platform: React Native CLI, no Expo** (user decision, 2026-11-18; `PROMPT.md` §2 and the project skills were updated accordingly).
 
-Branch de lucru: `dev`. Fiecare milestone se închide printr-un commit (sau PR spre `main`) doar după ce:
+Working branch: `dev`. Each milestone is closed with a commit (or a PR to `main`) only after:
 
-- `npm run typecheck`, `npm run lint` și `npm test` sunt verzi;
-- checklist-ul *Definition of done* din `modular-architecture` (secțiunea 10) e bifat;
-- rezumatul listează unitățile noi, cele refolosite și orice `arch-exception`.
+- `npm run typecheck`, `npm run lint` and `npm test` are green;
+- the *Definition of done* checklist from `modular-architecture` (section 10) is ticked;
+- the summary lists the new units, the reused ones and any `arch-exception`.
 
-## Reguli transversale (se aplică în toate milestone-urile)
+## Cross-cutting rules (apply to every milestone)
 
-| Sursă | Regulă |
+| Source | Rule |
 | --- | --- |
-| `modular-architecture` | Componentă ≤ 150 linii (JSX ≤ 80), ecran ≤ 120, hook ≤ 80, funcție ≤ 40, fișier serviciu ≤ 200, ≤ 7 props, ≤ 3 parametri, JSX ≤ 4 niveluri, complexitate ≤ 10 |
-| `modular-architecture` | Dependențe doar în jos: app → features → services → repositories → storage; `shared` e folosit de toți. Între feature-uri doar prin `index.ts` |
-| `modular-architecture` | Componentă = folder cu `.tsx`, `.styles.ts`, `.types.ts`, `use*.ts`, `.test.tsx` și `index.ts` |
-| `modular-architecture` | Fără hex, magic numbers sau texte hard-codate; doar tokens și i18n |
-| `audiobook-storage` | Doar `storage/` și `repositories/` ating AsyncStorage și `@dr.pogodin/react-native-fs`. Cheile se construiesc doar prin `storage/keys.ts` |
-| `audiobook-storage` | Validare zod la citire; o valoare invalidă se loghează și e tratată ca lipsă |
-| `pdf-import-pipeline` | Parsarea rămâne în WebView; `features/import` orchestrează, nu parsează |
-| `tts-playback-engine` | O frază per utterance și token de generație; scrierile de progres nu pleacă din componente |
+| `modular-architecture` | Component ≤ 150 lines (JSX ≤ 80), screen ≤ 120, hook ≤ 80, function ≤ 40, service file ≤ 200, ≤ 7 props, ≤ 3 parameters, JSX ≤ 4 levels, complexity ≤ 10 |
+| `modular-architecture` | Dependencies only downward: app → features → services → repositories → storage; `shared` is used by everyone. Between features only through `index.ts` |
+| `modular-architecture` | Component = folder with `.tsx`, `.styles.ts`, `.types.ts`, `use*.ts`, `.test.tsx` and `index.ts` |
+| `modular-architecture` | No hex, magic numbers or hard-coded texts; only tokens and i18n |
+| `audiobook-storage` | Only `storage/` and `repositories/` touch AsyncStorage and `@dr.pogodin/react-native-fs`. Keys are built only through `storage/keys.ts` |
+| `audiobook-storage` | zod validation on read; an invalid value is logged and treated as missing |
+| `pdf-import-pipeline` | Parsing stays in the WebView; `features/import` orchestrates, it doesn't parse |
+| `tts-playback-engine` | One sentence per utterance and a generation token; progress writes don't originate in components |
 
-## Conflicte de semnalat (câștigă skill-ul, conform PROMPT §1)
+## Conflicts to report (the skill wins, per PROMPT §1)
 
-1. **Locul primitivelor UI.** Exemplele din `modular-architecture` folosesc `src/components/ui`, iar PROMPT folosește `src/shared/ui`. Diagrama de straturi din skill pune însă „ui primitives” chiar în `shared`, deci regula de fond e respectată. **Decizie propusă:** `src/shared/ui`, cu regula de căutare pentru refolosire (skill §6) aplicată pe `src/shared`.
-2. **Locul repository-urilor.** Skill-ul le pune în `features/<f>/repository/`, iar PROMPT și `audiobook-storage` le centralizează în `src/repositories/`, pentru că `progress` și `settings` sunt folosite de mai multe feature-uri. **Decizie propusă:** `src/repositories/`, fiindcă skill-ul de stocare e mai specific. Feature-urile văd doar interfețele, prin `app/dependencies.ts`.
-3. **Locul schemelor zod.** `audiobook-storage` le cere în `model/schemas.ts` al fiecărui feature, dar repository-urile din stratul inferior nu au voie să importe din feature-uri. **Decizie propusă:** schemele de persistență stau în `src/shared/domain/schemas/`, iar fiecare feature le re-exportă din `model/schemas.ts`.
-4. **Stratul `screens`.** Skill-ul are un strat `screens`, iar navigația stă în `src/app/navigation`. **Decizie propusă:** navigatoarele din `src/app/navigation` doar înregistrează ecranele exportate din `features/<f>/index.ts`; ecranele rămân în `features/<f>/screens`.
+1. **Location of UI primitives.** The `modular-architecture` examples use `src/components/ui`, while PROMPT uses `src/shared/ui`. The skill's layer diagram, however, puts "ui primitives" right in `shared`, so the underlying rule is respected. **Proposed decision:** `src/shared/ui`, with the reuse search rule (skill §6) applied to `src/shared`.
+2. **Location of repositories.** The skill puts them in `features/<f>/repository/`, while PROMPT and `audiobook-storage` centralize them in `src/repositories/`, because `progress` and `settings` are used by several features. **Proposed decision:** `src/repositories/`, since the storage skill is more specific. Features see only the interfaces, via `app/dependencies.ts`.
+3. **Location of zod schemas.** `audiobook-storage` wants them in each feature's `model/schemas.ts`, but repositories in the lower layer may not import from features. **Proposed decision:** persistence schemas live in `src/shared/domain/schemas/`, and each feature re-exports them from `model/schemas.ts`.
+4. **The `screens` layer.** The skill has a `screens` layer, while navigation lives in `src/app/navigation`. **Proposed decision:** the navigators in `src/app/navigation` only register the screens exported from `features/<f>/index.ts`; screens stay in `features/<f>/screens`.
 
-> Cele patru decizii trebuie confirmate înainte de M0.
+> The four decisions must be confirmed before M0.
 
 ---
 
-## M0 – Fundație și unelte  *(PROMPT pasul 1)* — ✅ încheiat 2026-11-19
+## M0 – Foundation and tooling  *(PROMPT step 1)* — ✅ done 2026-11-19
 
-Rezultatele, abaterile și capcanele sunt în `.claude/plans/M0-fundatie.md` și în `CLAUDE.md`.
+Results, deviations and pitfalls are in `.claude/plans/M0-fundatie.md` and in `CLAUDE.md`.
 
-**Obiectiv:** un proiect React Native CLI care pornește pe emulator, cu toată infrastructura de calitate activă. Detalii: `.claude/plans/M0-fundatie.md`.
+**Goal:** a React Native CLI project that starts on the emulator, with all quality infrastructure active. Details: `.claude/plans/M0-fundatie.md`.
 
-- `@react-native-community/cli init` (RN 0.88), TypeScript `strict`, New Architecture; `android/` și `ios/` în repo.
-- React Navigation: RootStack (Tabs, Import modal, Book) + Tabs (Library, Player, Settings), cu `ParamList` tipate.
-- Fonturile Inter și Space Grotesk ca `.ttf` legate nativ; `react-native-bootsplash` ținut până la încărcare.
-- ESLint (`@react-native/eslint-config` + `typescript-eslint`), Prettier și `eslint-plugin-boundaries` cu regulile de straturi din skill §3. Interdicție pe AsyncStorage/FS în afara `storage/` și `repositories/`, și pe orice import `expo*`.
-- Reguli ESLint pentru limite: `max-lines`, `max-params`, `complexity`, `max-depth`.
-- Jest (preset `react-native`) și `@testing-library/react-native`; scripturile `typecheck`, `lint` și `test`.
-- Setări native directe: `AsyncStorage_db_size_in_MB` în `android/gradle.properties` și `UIBackgroundModes: ["audio"]` în `Info.plist`.
-- `i18next` cu `ro.json` și `I18nProvider`.
-- **`.claude/scripts/run-android.ps1`**, adaptat din `techspeak` (tot RN CLI, deci modificări mici): proiectul în rădăcină, pachetul ABook, `npm` în loc de `yarn`.
+- `@react-native-community/cli init` (RN 0.88), TypeScript `strict`, New Architecture; `android/` and `ios/` in the repo.
+- React Navigation: RootStack (Tabs, Import modal, Book) + Tabs (Library, Player, Settings), with typed `ParamList`s.
+- Inter and Space Grotesk fonts as natively linked `.ttf`; `react-native-bootsplash` held until loading finishes.
+- ESLint (`@react-native/eslint-config` + `typescript-eslint`), Prettier and `eslint-plugin-boundaries` with the layer rules from skill §3. Ban on AsyncStorage/FS outside `storage/` and `repositories/`, and on any `expo*` import.
+- ESLint rules for limits: `max-lines`, `max-params`, `complexity`, `max-depth`.
+- Jest (`react-native` preset) and `@testing-library/react-native`; the `typecheck`, `lint` and `test` scripts.
+- Direct native settings: `AsyncStorage_db_size_in_MB` in `android/gradle.properties` and `UIBackgroundModes: ["audio"]` in `Info.plist`.
+- `i18next` with `ro.json` and `I18nProvider`.
+- **`.claude/scripts/run-android.ps1`**, adapted from `techspeak` (also RN CLI, so small changes): project at the root, the ABook package, `npm` instead of `yarn`.
 
-**Gata când:** aplicația se deschide pe emulator prin script, cu 3 tab-uri goale și fonturile încărcate, iar CI-ul local e verde.
+**Done when:** the app opens on the emulator via the script, with 3 empty tabs and the fonts loaded, and local CI is green.
 
-## M1 – Design system  *(pasul 2)* — ✅ încheiat 2026-11-19
+## M1 – Design system  *(step 2)* — ✅ done 2026-11-19
 
-Rezultatele, abaterile și capcanele sunt în `.claude/plans/M1-design-system.md` și în `CLAUDE.md`. Catalogul vizual: `abook://dev/ui` (doar în build-ul de debug).
+Results, deviations and pitfalls are in `.claude/plans/M1-design-system.md` and in `CLAUDE.md`. Visual catalog: `abook://dev/ui` (debug build only).
 
-**Obiectiv:** toate primitivele, construite pe tokens și testate, înainte de orice ecran. Detalii: `.claude/plans/M1-design-system.md`.
+**Goal:** all primitives, built on tokens and tested, before any screen. Details: `.claude/plans/M1-design-system.md`.
 
-- `shared/theme`: tokens (culori, `space`, `radius`, `type`) din PROMPT §7, plus `ThemeProvider` și `useTheme`.
-- `shared/ui`: `Button` (primary/secondary/ghost/danger), `IconButton`, `Chip`, `ChipGroup`, `Card`, `ProgressBar`, `Switch`, `ListRow`, `Slider`, `BookCover` (culoare deterministă din id), `BottomTabBar`, `ScreenHeader`, `EmptyState`.
-- `shared/utils`: formatare de dimensiuni, durate și procente, în fișiere separate pe scop.
-- Accesibilitate în contractul fiecărei primitive: rol, stare, etichetă, ținte ≥ 44 pt, font scaling limitat la 1.4× în header-e.
+- `shared/theme`: tokens (colors, `space`, `radius`, `type`) from PROMPT §7, plus `ThemeProvider` and `useTheme`.
+- `shared/ui`: `Button` (primary/secondary/ghost/danger), `IconButton`, `Chip`, `ChipGroup`, `Card`, `ProgressBar`, `Switch`, `ListRow`, `Slider`, `BookCover` (deterministic color from id), `BottomTabBar`, `ScreenHeader`, `EmptyState`.
+- `shared/utils`: formatting of sizes, durations and percentages, in separate files by purpose.
+- Accessibility in every primitive's contract: role, state, label, targets ≥ 44 pt, font scaling capped at 1.4× in headers.
 
-**Teste:** render, interacțiune și stare de accesibilitate pentru fiecare primitivă; un test că tokens au contrast ≥ 4.5:1.
-**Gata când:** fiecare primitivă din listă există și e testată, iar tab bar-ul real înlocuiește pe cel implicit.
+**Tests:** render, interaction and accessibility state for each primitive; a test that tokens have contrast ≥ 4.5:1.
+**Done when:** every primitive in the list exists and is tested, and the real tab bar replaces the default one.
 
-## M2 – Date și stocare  *(pasul 3, skill `audiobook-storage`)*
+## M2 – Data and storage  *(step 3, `audiobook-storage` skill)*
 
-- `shared/domain`: `BookId`, `PageNumber`, `SentenceIndex` și schemele zod pentru `BookMeta`, `Chapter`, `ChapterChunk`, `Progress`, `Bookmark`, `Settings`.
-- `storage/keys.ts`, `keyValueStore.ts` (multiGet/multiSet/multiRemove, namespacing `abk:`), `fileStore.ts` (API-ul `File`/`Directory`).
-- `storage/migrations/` (`001-initial.ts`) și runner-ul de migrări.
-- `repositories/`: `BookRepository`, `ProgressRepository`, `SettingsRepository`, fiecare ca interfață + implementare `Local*`. Includ împărțirea capitolelor peste 256 KB în `ch:{n}:p:{k}` și ștergerea pe prefix.
-- `app/dependencies.ts`, `app/bootstrap.ts` (migrări, apoi un singur `multiGet` pentru `books` + `meta` + `settings`, apoi marcarea cărților rămase `processing`) și `StoreProvider` cu RTK.
+- `shared/domain`: `BookId`, `PageNumber`, `SentenceIndex` and the zod schemas for `BookMeta`, `Chapter`, `ChapterChunk`, `Progress`, `Bookmark`, `Settings`.
+- `storage/keys.ts`, `keyValueStore.ts` (multiGet/multiSet/multiRemove, `abk:` namespacing), `fileStore.ts` (the `File`/`Directory` API).
+- `storage/migrations/` (`001-initial.ts`) and the migration runner.
+- `repositories/`: `BookRepository`, `ProgressRepository`, `SettingsRepository`, each as interface + `Local*` implementation. They include splitting chapters over 256 KB into `ch:{n}:p:{k}` and deletion by prefix.
+- `app/dependencies.ts`, `app/bootstrap.ts` (migrations, then a single `multiGet` for `books` + `meta` + `settings`, then marking books left `processing`) and `StoreProvider` with RTK.
 
-**Teste:** cu `KeyValueStore` și `FileStore` în memorie: ordinea scrierii la import, reluarea după crash, ștergerea fără chei orfane, valori corupte, capitole prea mari, fiecare migrare.
-**Gata când:** bootstrap-ul hidratează store-ul dintr-o stocare falsă în teste și dintr-una reală pe emulator.
+**Tests:** with in-memory `KeyValueStore` and `FileStore`: write order on import, resume after crash, deletion without orphan keys, corrupt values, oversized chapters, each migration.
+**Done when:** bootstrap hydrates the store from a fake storage in tests and from a real one on the emulator.
 
-## M3 – Text și import PDF  *(pașii 4–5, skill `pdf-import-pipeline`)*
+## M3 – Text and PDF import  *(steps 4–5, `pdf-import-pipeline` skill)*
 
-**M3a – `services/text`** (funcții pure, câte una per fișier): `stripRepeatedHeaders`, `stripPageNumbers`, `joinHyphenatedWords`, `normalizeDiacritics`, `segmentSentences`, `splitLongSentence`, `detectChapters`.
-**Teste** table-driven cu mostre românești: dialog, abrevieri, cratime, sedile, fraze > 400 de caractere, text gol. Țintă: 100% acoperire.
+**M3a – `services/text`** (pure functions, one per file): `stripRepeatedHeaders`, `stripPageNumbers`, `joinHyphenatedWords`, `normalizeDiacritics`, `segmentSentences`, `splitLongSentence`, `detectChapters`.
+**Tests:** table-driven with Romanian samples: dialogue, abbreviations, hyphens, cedillas, sentences > 400 characters, empty text. Target: 100% coverage.
 
 **M3b – `services/pdf`**
-- `PdfTextExtractor` (interfață) și `WebViewPdfExtractor`.
-- `services/pdf/webview/`: HTML + `pdfjs-dist` legacy cu worker inclus, ca asset local.
-- Protocolul `{ type, requestId, payload }`, validat zod pe ambele părți, cu base64 în bucăți de 512 KB, loturi de 5 pagini, timeout și anulare.
-- `PdfExtractorHost`, montat o dată și ascuns, fără acces la rețea.
+- `PdfTextExtractor` (interface) and `WebViewPdfExtractor`.
+- `services/pdf/webview/`: HTML + legacy `pdfjs-dist` with the worker inlined, as a local asset.
+- The `{ type, requestId, payload }` protocol, zod-validated on both sides, with base64 in 512 KB chunks, batches of 5 pages, timeout and cancellation.
+- `PdfExtractorHost`, mounted once and hidden, with no network access.
 
 **M3c – `features/import`**
-- Mașina de stări `idle | copying | opening | extracting | saving | ready | failed | cancelled`.
-- Picker cu limită de 100 MB, amprentă pentru duplicate (`@noble/hashes`), reluare de la `processedPages`.
-- Cazurile speciale: PDF scanat, protejat cu parolă, corupt, anulare.
-- Ecranul Import: card fișier, pași cu stare, formular titlu/autor/limbă.
-- Cartea devine redabilă după primul capitol.
+- State machine `idle | copying | opening | extracting | saving | ready | failed | cancelled`.
+- Picker with a 100 MB limit, fingerprint for duplicates (`@noble/hashes`), resume from `processedPages`.
+- Edge cases: scanned PDF, password-protected, corrupt, cancellation.
+- Import screen: file card, steps with status, title/author/language form.
+- The book becomes playable after the first chapter.
 
-**Teste:** mașina de stări cu un `PdfTextExtractor` fals, pentru fiecare caz de eșec.
-**Gata când:** un PDF real de 300+ pagini se importă pe emulator fără ca UI-ul să înghețe.
+**Tests:** the state machine with a fake `PdfTextExtractor`, for every failure case.
+**Done when:** a real 300+ page PDF imports on the emulator without the UI freezing.
 
-## M4 – Bibliotecă și detalii carte  *(pașii 6–7)*
+## M4 – Library and book details  *(steps 6–7)*
 
-- `features/library`: listă `FlashList`, căutare, chips Toate / În curs / Terminate, card „Continuă ascultarea”, FAB „Importă PDF”. Stări: skeleton, goală (ecranul separat „Bibliotecă goală”), fără rezultate, carte în procesare cu bară de import.
-- `features/book`: copertă mare, chips de metadate, „Continuă de la pagina N”, cuprins cu stare per capitol, semne de carte, ștergere cu confirmare. Stări: carte în procesare, carte eșuată (reîncearcă). Expune selectorii publici folosiți de player.
+- `features/library`: `FlashList` list, search, chips Toate / În curs / Terminate (All / In progress / Finished), "Continuă ascultarea" (Continue listening) card, "Importă PDF" FAB. States: skeleton, empty (the separate "Bibliotecă goală" / empty library screen), no results, book being processed with an import bar.
+- `features/book`: large cover, metadata chips, "Continuă de la pagina N" (Continue from page N), table of contents with per-chapter status, bookmarks, deletion with confirmation. States: book being processed, failed book (retry). Exposes the public selectors used by the player.
 
-**Teste:** slice-uri, selectori memoizați și fiecare stare din tabelul de ecrane.
-**Gata când:** după ștergerea unei cărți, ea nu mai lasă chei sau fișiere pe dispozitiv.
+**Tests:** slices, memoized selectors and every state from the screens table.
+**Done when:** after a book is deleted, it leaves no keys or files on the device.
 
-## M5 – Voce și player  *(pasul 8, skill `tts-playback-engine`)*
+## M5 – Voice and player  *(step 8, `tts-playback-engine` skill)*
 
-- `services/tts`: `TtsEngine`, `NativeTtsEngine` (peste TurboModule-ul propriu `AbookTts`, cu spec Codegen în `specs/NativeAbookTts.ts`) și `FakeTtsEngine` pentru teste.
+- `services/tts`: `TtsEngine`, `NativeTtsEngine` (over the custom `AbookTts` TurboModule, with a Codegen spec in `specs/NativeAbookTts.ts`) and `FakeTtsEngine` for tests.
 - `features/player`:
-  - sesiunea de redare cu stările `idle | loading | playing | paused | ended | error`;
-  - token de generație; cache LRU cu cel mult 3 capitole și prefetch la 80% din capitol;
-  - pauza (cu o frază înapoi după 5 minute); vitezele 0.75–2.0; temporizator de somn; timp rămas (medie mobilă pe 20 de fraze); reîncercare la eroare; fallback de voce;
-  - progres throttled la 3 s, cu flush la pauză, la schimbarea capitolului și la trecerea în fundal.
-- Hook-uri: `usePlaybackSession`, `useActiveSentence`, `useSleepTimer`, `useRemainingTime`, `useAutoScroll`.
-- UI: text pe paragrafe în `FlashList` cu `React.memo`, evidențiere Reanimated în 150 ms, auto-scroll + „Înapoi la fraza curentă”, atingere/apăsare lungă, glisor de pagină, controale cu play 76 pt.
-- Mini-playerul deasupra tab bar-ului, pe Bibliotecă și Setări.
+  - the playback session with states `idle | loading | playing | paused | ended | error`;
+  - generation token; LRU cache with at most 3 chapters and prefetch at 80% of the chapter;
+  - pause (going back one sentence after 5 minutes); speeds 0.75–2.0; sleep timer; remaining time (moving average over 20 sentences); retry on error; voice fallback;
+  - progress throttled to 3 s, with flush on pause, on chapter change and on going to background.
+- Hooks: `usePlaybackSession`, `useActiveSentence`, `useSleepTimer`, `useRemainingTime`, `useAutoScroll`.
+- UI: text by paragraph in a `FlashList` with `React.memo`, Reanimated highlight in 150 ms, auto-scroll + "Înapoi la fraza curentă" (Back to current sentence), tap/long press, page slider, controls with a 76 pt play button.
+- The mini-player above the tab bar, on Library and Settings.
 
-**Teste:** cu `FakeTtsEngine` și fake timers: lanțul de fraze, trecerea la capitolul următor, finalul cărții, apăsări rapide, schimbarea vitezei, somnul, eroarea și fallback-ul de voce.
-**Gata când:** după omorârea aplicației, redarea se reia la aceeași frază.
+**Tests:** with `FakeTtsEngine` and fake timers: the sentence chain, moving to the next chapter, end of book, rapid presses, speed change, sleep, error and voice fallback.
+**Done when:** after the app is killed, playback resumes at the same sentence.
 
-## M6 – Setări, stocare și backup  *(pasul 9)*
+## M6 – Settings, storage and backup  *(step 9)*
 
-- `features/settings`: select de voce, slidere de viteză și ton, „Ascultă o mostră”, comutatoare (evidențiere, antete, fundal), mărimea textului, cu debounce de 500 ms.
-- Secțiunea de stocare: bară PDF (din FS) vs AsyncStorage (estimare), ștergerea textului extras.
-- Backup: export JSON `{ schemaVersion, exportedAt, entries }` prin `react-native-share`; import cu validare completă și migrare înainte de un singur `multiSet`.
-- Starea „nicio voce românească instalată”, cu instrucțiuni.
+- `features/settings`: voice select, speed and pitch sliders, "Ascultă o mostră" (Play a sample), toggles (highlight, headers, background), text size, with a 500 ms debounce.
+- Storage section: PDF bar (from FS) vs AsyncStorage (estimate), deleting the extracted text.
+- Backup: JSON export `{ schemaVersion, exportedAt, entries }` via `react-native-share`; import with full validation and migration before a single `multiSet`.
+- The "no Romanian voice installed" state, with instructions.
 
-**Teste:** round-trip de backup, backup invalid respins fără nicio scriere, debounce.
-**Gata când:** un backup reimportat pe o instalare curată reface biblioteca și progresul.
+**Tests:** backup round-trip, invalid backup rejected without any write, debounce.
+**Done when:** a backup re-imported on a clean install restores the library and progress.
 
-## M7 – Performanță, accesibilitate și finisare  *(pasul 10)*
+## M7 – Performance, accessibility and polish  *(step 10)*
 
-- Măsurători în build de release pe un Android de gamă medie: pornire < 1,5 s, 60 fps la derulare, firul JS liber la import, memorie (cel mult 3 capitole, PDF niciodată întreg în JS).
-- Verificare cu TalkBack/VoiceOver, contrast, font mărit.
-- Redare în fundal pe iOS pe un dispozitiv real; TurboModule-ul `AbookTts` configurează sesiunea audio pentru redare în fundal.
-- Comparare cu machetele, pentru toate cele 6 ecrane și toate stările.
-- Bifarea *Definition of done* din PROMPT (secțiunea finală).
+- Measurements in a release build on a mid-range Android: startup < 1.5 s, 60 fps while scrolling, JS thread free during import, memory (at most 3 chapters, PDF never fully in JS).
+- Checks with TalkBack/VoiceOver, contrast, enlarged font.
+- Background playback on iOS on a real device; the `AbookTts` TurboModule configures the audio session for background playback.
+- Comparison with the mockups, for all 6 screens and all states.
+- Ticking the PROMPT *Definition of done* (final section).
 
 ---
 
-## Riscuri și puncte de verificat devreme
+## Risks and things to check early
 
-| Risc | Când se verifică | Plan B |
+| Risk | When it's checked | Plan B |
 | --- | --- | --- |
-| pdf.js legacy + worker inclus local într-un WebView pe Android | spike la începutul M3b | build separat al worker-ului, încărcat ca blob |
-| Limita AsyncStorage pe Android | **Rezolvat în M0:** v3.1.1 folosește Room/SQLite, fără limita de 6 MB | păstrăm valorile sub ~256 KB (limita de 2 MB a `CursorWindow` la citire) |
-| `react-native-tts` | **Confirmat în M0:** nu compilează cu Gradle 9 (`jcenter()`), deci a fost scos | **M5: TurboModule propriu** `AbookTts` (Android `TextToSpeech`, iOS `AVSpeechSynthesizer`) în spatele `TtsEngine` |
-| Redare cu ecranul blocat (iOS) | M5/M7, pe dispozitiv | `AVAudioSession` cu categoria `playback` în TurboModule |
-| pdf.js ca asset local în RN CLI (fără bundler de asset-uri Expo) | spike la începutul M3b | HTML în `android/app/src/main/assets` + bundle iOS, sau HTML inline generat la build |
-| Voci `ro-RO` lipsă pe emulator | M5 | testare cu `en-US` + starea „nicio voce” |
-| Machete: 5 din 6 ecrane sunt în `.claude/design/` (lipsește Biblioteca cu cărți) | înainte de M4 | se cere macheta lipsă sau se derivă din componentele existente (card, `ProgressBar`, `BookCover`) |
-| `Slider` nativ (`@react-native-community/slider`): pe Android, nodul are ≈ 18 dp înălțime (sub ținta de 44 pt), iar șina goală abia se vede | **Constatat în M1** (emulator); se rezolvă în M6 | slider propriu cu Gesture Handler + Reanimated, cu același API ca `shared/ui/Slider` |
-| Etichetele tab-urilor din machete: Bibliotecă / **Ascultă** / Setări (nu „Player”) | M0 (`ro.json`) | — |
+| Legacy pdf.js + locally inlined worker in a WebView on Android | spike at the start of M3b | separate worker build, loaded as a blob |
+| AsyncStorage limit on Android | **Solved in M0:** v3.1.1 uses Room/SQLite, without the 6 MB limit | we keep values under ~256 KB (the 2 MB `CursorWindow` read limit) |
+| `react-native-tts` | **Confirmed in M0:** doesn't compile with Gradle 9 (`jcenter()`), so it was removed | **M5: custom TurboModule** `AbookTts` (Android `TextToSpeech`, iOS `AVSpeechSynthesizer`) behind `TtsEngine` |
+| Playback with the screen locked (iOS) | M5/M7, on a device | `AVAudioSession` with the `playback` category in the TurboModule |
+| pdf.js as a local asset in RN CLI (no Expo asset bundler) | spike at the start of M3b | HTML in `android/app/src/main/assets` + iOS bundle, or inline HTML generated at build time |
+| Missing `ro-RO` voices on the emulator | M5 | testing with `en-US` + the "no voice" state |
+| Mockups: 5 of 6 screens are in `.claude/design/` (the Library with books is missing) | before M4 | ask for the missing mockup or derive it from existing components (card, `ProgressBar`, `BookCover`) |
+| Native `Slider` (`@react-native-community/slider`): on Android the node is ≈ 18 dp tall (below the 44 pt target), and the empty track is barely visible | **Found in M1** (emulator); to be solved in M6 | custom slider with Gesture Handler + Reanimated, with the same API as `shared/ui/Slider` |
+| Tab labels in the mockups: Bibliotecă / **Ascultă** / Setări (not "Player") | M0 (`ro.json`) | — |
