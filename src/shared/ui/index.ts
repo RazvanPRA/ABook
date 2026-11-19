@@ -2,6 +2,8 @@ export { AppText } from './AppText';
 export type { AppTextProps } from './AppText';
 export { BookCover } from './BookCover';
 export type { BookCoverProps, BookCoverSize } from './BookCover';
+export { BottomTabBar } from './BottomTabBar';
+export type { BottomTabBarProps, BottomTabItem } from './BottomTabBar';
 export { Button } from './Button';
 export type { ButtonProps, ButtonSize, ButtonVariant } from './Button';
 export { Card } from './Card';

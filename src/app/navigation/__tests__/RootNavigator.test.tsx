@@ -24,10 +24,14 @@ async function renderNavigator() {
 }
 
 describe('RootNavigator', () => {
-  it('switches tabs', async () => {
+  it('switches tabs through the custom tab bar', async () => {
     await renderNavigator();
-    await fireEvent.press(screen.getByText('Setări'));
+    expect(screen.getAllByRole('tab')).toHaveLength(3);
+    expect(screen.getByRole('tab', { name: 'Bibliotecă' })).toBeSelected();
+    await fireEvent.press(screen.getByRole('tab', { name: 'Setări' }));
     expect(await screen.findByTestId('screen-settings')).toBeOnTheScreen();
+    expect(screen.getByRole('tab', { name: 'Setări' })).toBeSelected();
+    expect(screen.getByRole('tab', { name: 'Bibliotecă' })).not.toBeSelected();
   });
 
   it('opens the Book screen with its id', async () => {
