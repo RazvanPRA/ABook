@@ -11,6 +11,8 @@ export type RootStackParamList = {
   Tabs: NavigatorScreenParams<TabsParamList> | undefined;
   Import: undefined;
   Book: { id: BookId };
+  /** Visual catalog of the shared/ui primitives; registered only in __DEV__ builds. */
+  DevUi: undefined;
 };
 
 // Global typing: useNavigation() / navigation.navigate() are typed everywhere without importing app/.

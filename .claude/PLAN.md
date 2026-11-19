@@ -52,7 +52,9 @@ Rezultatele, abaterile și capcanele sunt în `.claude/plans/M0-fundatie.md` și
 
 **Gata când:** aplicația se deschide pe emulator prin script, cu 3 tab-uri goale și fonturile încărcate, iar CI-ul local e verde.
 
-## M1 – Design system  *(pasul 2)*
+## M1 – Design system  *(pasul 2)* — ✅ încheiat 2026-11-19
+
+Rezultatele, abaterile și capcanele sunt în `.claude/plans/M1-design-system.md` și în `CLAUDE.md`. Catalogul vizual: `abook://dev/ui` (doar în build-ul de debug).
 
 **Obiectiv:** toate primitivele, construite pe tokens și testate, înainte de orice ecran. Detalii: `.claude/plans/M1-design-system.md`.
 
@@ -150,4 +152,5 @@ Rezultatele, abaterile și capcanele sunt în `.claude/plans/M0-fundatie.md` și
 | pdf.js ca asset local în RN CLI (fără bundler de asset-uri Expo) | spike la începutul M3b | HTML în `android/app/src/main/assets` + bundle iOS, sau HTML inline generat la build |
 | Voci `ro-RO` lipsă pe emulator | M5 | testare cu `en-US` + starea „nicio voce” |
 | Machete: 5 din 6 ecrane sunt în `.claude/design/` (lipsește Biblioteca cu cărți) | înainte de M4 | se cere macheta lipsă sau se derivă din componentele existente (card, `ProgressBar`, `BookCover`) |
+| `Slider` nativ (`@react-native-community/slider`): pe Android, nodul are ≈ 18 dp înălțime (sub ținta de 44 pt), iar șina goală abia se vede | **Constatat în M1** (emulator); se rezolvă în M6 | slider propriu cu Gesture Handler + Reanimated, cu același API ca `shared/ui/Slider` |
 | Etichetele tab-urilor din machete: Bibliotecă / **Ascultă** / Setări (nu „Player”) | M0 (`ro.json`) | — |

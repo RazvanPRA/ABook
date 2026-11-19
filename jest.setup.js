@@ -1,9 +1,33 @@
 // Official mocks of native modules, so component tests run without a device.
 require('react-native-gesture-handler/jestSetup');
 
-jest.mock('react-native-reanimated', () =>
-  require('react-native-reanimated/mock'),
-);
+// Reanimated 4.7's official mock is unusable: it imports src/index, where initializers.native.ts calls
+// setCSSEventHandler on JSReanimated (chosen when IS_JEST), which throws. Minimal manual mock instead;
+// extend it when a new Reanimated API is used. Animations resolve instantly to their target value.
+jest.mock('react-native-reanimated', () => {
+  const RN = require('react-native');
+  const instant = value => value;
+  const Animated = {
+    View: RN.View,
+    Text: RN.Text,
+    Image: RN.Image,
+    ScrollView: RN.ScrollView,
+    createAnimatedComponent: component => component,
+  };
+  return {
+    __esModule: true,
+    default: Animated,
+    ...Animated,
+    useSharedValue: initial => ({ value: initial }),
+    useAnimatedStyle: factory => factory(),
+    useDerivedValue: factory => ({ value: factory() }),
+    withTiming: instant,
+    withSpring: instant,
+    cancelAnimation: () => {},
+    runOnJS: fn => fn,
+    Easing: { linear: instant, ease: instant },
+  };
+});
 
 jest.mock(
   'react-native-safe-area-context',
