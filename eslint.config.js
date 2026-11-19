@@ -121,7 +121,7 @@ module.exports = [
   // Jest setup/config files run with Jest globals
   {
     files: ['jest.setup.js', 'jest.config.js'],
-    languageOptions: { globals: { jest: 'readonly' } },
+    languageOptions: { globals: { jest: 'readonly', Buffer: 'readonly' } },
   },
   // Build scripts run in Node
   {

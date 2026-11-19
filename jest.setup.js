@@ -41,7 +41,8 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 // @dr.pogodin/react-native-fs ships no mock, and importing it reads native constants. In-memory file
 // system with the native semantics the app relies on: unlink/stat reject on a missing path, unlink
 // removes a directory recursively, copyFile needs an existing source and parent directory, mkdir
-// creates intermediate directories. Files are stored as sizes only. Tests seed it with __writeFile.
+// creates intermediate directories, read(…, 'base64') returns the bytes cut at the end of the file.
+// Files are byte buffers; tests seed them with __writeFile(path, bytes | size), a size meaning zeros.
 jest.mock('@dr.pogodin/react-native-fs', () => {
   const ROOT = '/data/user/0/com.abook/files';
   const files = new Map();
@@ -63,9 +64,14 @@ jest.mock('@dr.pogodin/react-native-fs', () => {
   return {
     DocumentDirectoryPath: ROOT,
     __reset: reset,
-    __writeFile: (path, size) => {
+    __writeFile: (path, content) => {
       mkdirp(parentOf(path));
-      files.set(path, size);
+      files.set(
+        path,
+        typeof content === 'number'
+          ? Buffer.alloc(content)
+          : Buffer.from(content),
+      );
     },
     exists: async path => files.has(path) || dirs.has(path),
     mkdir: async path => mkdirp(path),
@@ -88,9 +94,19 @@ jest.mock('@dr.pogodin/react-native-fs', () => {
       if (!files.has(path) && !dirs.has(path)) return missing(path);
       return {
         path,
-        size: files.get(path) ?? 0,
+        size: files.get(path)?.length ?? 0,
         isFile: () => files.has(path),
       };
+    },
+    read: async (path, length, position, encoding) => {
+      if (!files.has(path)) return missing(path);
+      if (encoding !== 'base64') {
+        throw new Error(`mock read supports base64 only, got ${encoding}`);
+      }
+      return files
+        .get(path)
+        .subarray(position, position + length)
+        .toString('base64');
     },
     readdir: async path => {
       if (!dirs.has(path)) return missing(path);

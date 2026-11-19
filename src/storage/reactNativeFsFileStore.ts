@@ -1,6 +1,11 @@
 import * as RNFS from '@dr.pogodin/react-native-fs';
 import type { BookId } from '@/shared/domain';
-import { BOOKS_DIR_NAME, PDF_EXTENSION, type FileStore } from './FileStore';
+import {
+  BOOKS_DIR_NAME,
+  PDF_EXTENSION,
+  assertByteRange,
+  type FileStore,
+} from './FileStore';
 
 /** The part of `@dr.pogodin/react-native-fs` the adapter uses; injectable for tests. */
 export type FsApi = Pick<
@@ -9,6 +14,7 @@ export type FsApi = Pick<
   | 'copyFile'
   | 'exists'
   | 'mkdir'
+  | 'read'
   | 'readdir'
   | 'stat'
   | 'unlink'
@@ -34,6 +40,13 @@ export const createReactNativeFsFileStore = (fs: FsApi = RNFS): FileStore => {
       if (await fs.exists(path)) {
         await fs.unlink(path);
       }
+    },
+    async readBase64(path, offset, length) {
+      assertByteRange(offset, length);
+      // stat rejects on a missing file; the size cuts the range at the end of the file
+      const { size } = await fs.stat(path);
+      const available = Math.min(length, size - offset);
+      return available > 0 ? fs.read(path, available, offset, 'base64') : '';
     },
   };
 };

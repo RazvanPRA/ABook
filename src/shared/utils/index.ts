@@ -1,3 +1,4 @@
+export { base64ToBytes, bytesToBase64 } from './base64';
 export { clamp } from './clamp';
 export { formatBytes } from './formatBytes';
 export type { ByteUnits } from './formatBytes';

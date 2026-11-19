@@ -157,6 +157,16 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 - `readBase64(path, offset, length)` over RNFS `read(…, 'base64')`, in the adapter, `InMemoryFileStore` (which now stores bytes, not only sizes, or a seeded content) and the jest mock; the contract suite covers it. Chunks are 512 KB.
 - **Tests:** reading across the end of the file, offset past the end, missing file rejects.
 
+**Done** (2026-11-19). Findings:
+
+- **Contract:** `readBase64(path, offset, length)` → base64 of `[offset, offset + length)`, cut at the end of the file, `''` from the end on (and for `length` 0); rejects on a missing file (even for `length` 0) and throws `RangeError` for a negative or fractional range (`assertByteRange` in `FileStore.ts`, a programming error). Each chunk is encoded on its own, so 512 KB (not a multiple of 3) chunks carry their own padding; the page decodes them one by one (step 8).
+- **Adapter:** `stat` first (it rejects on a missing file and gives the size), then `RNFS.read(path, available, offset, 'base64')` only when there is something to read: a call with `length` 0 never reaches the native side. `read` joins the injectable `FsApi`.
+- **Fakes store bytes now, not sizes:** `InMemoryFileStore.addFile(path, bytes | size)` and the jest mock's `__writeFile(path, bytes | size)` (a size means that many zero bytes), so every existing test keeps working unchanged. The mock's `read` supports `'base64'` only and says so otherwise.
+- **`shared/utils/base64.ts`** (`bytesToBase64`, `base64ToBytes`): the fake can't use `Buffer` (not in the app's types, not in RN) and Hermes' `atob`/`btoa` aren't guaranteed; step 14 decodes the first 64 KB for the fingerprint. Strict decoding: a character outside the alphabet or an impossible length throws. Checked against Node's `Buffer` for every length 0–40 and Romanian UTF-8. `no-bitwise` is off for that file only, with the reason.
+- **Test speed:** the first contract run took 40 s, almost all of it in `expect(joined).toEqual(CONTENT)` on two 1.2 MB `Uint8Array`s (Jest compares typed arrays element by element through its generic equality). An `every` loop brought the suite to 2 s.
+- **Lint:** `jest.setup.js` gets `Buffer` as a global (the mock runs in Node).
+- **Tests:** 785 in 70 suites.
+
 #### 10. Extractor and host
 - `PdfTextExtractor` interface (`open(uri) → { pageCount, info }`, `getPages(from, to)`, `getOutline()`, `close()`), `WebViewPdfExtractor` (sends the file in chunks, batches of 5 pages, typed errors: `password`, `corrupt`, `timeout`, `cancelled`), `FakePdfTextExtractor` in `services/pdf/testing/`.
 - `app/providers/PdfExtractorHost`: mounts the hidden WebView **on demand** (first `open`, unmounted after `close`; spike finding) and hands it to the extractor; wiring in `dependencies.ts` (`AppDependencies` gets `pdfExtractor`). Wraps the `WebView<object>` typing workaround once.
