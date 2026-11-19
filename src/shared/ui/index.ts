@@ -1,6 +1,16 @@
 export { AppText } from './AppText';
 export type { AppTextProps } from './AppText';
+export { Button } from './Button';
+export type { ButtonProps, ButtonSize, ButtonVariant } from './Button';
+export { Chip } from './Chip';
+export type { ChipProps } from './Chip';
+export { ChipGroup } from './ChipGroup';
+export type { ChipGroupProps, ChipOption } from './ChipGroup';
 export { Icon } from './Icon';
 export type { IconName, IconProps } from './Icon';
+export { IconButton } from './IconButton';
+export type { IconButtonProps, IconButtonVariant } from './IconButton';
 export { ScreenPlaceholder } from './ScreenPlaceholder';
 export type { ScreenPlaceholderProps } from './ScreenPlaceholder';
+export { Switch } from './Switch';
+export type { SwitchProps } from './Switch';
