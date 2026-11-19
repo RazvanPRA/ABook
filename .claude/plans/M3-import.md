@@ -293,6 +293,32 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 - `features/import/state/importSlice.ts`: `idle | copying | opening | extracting(page, total) | saving | ready | failed(reason) | cancelled` + the picked file info and the form; pure transitions (an invalid transition is ignored and logged), memoized selectors for the step list.
 - **Tests:** every transition, invalid ones, the derived step statuses (done / in progress with page X/Y / waiting / error).
 
+**Done** (2026-11-19). Findings:
+
+- **Phases**, a discriminated union in `model/types.ts`:
+  - `idle | copying | duplicate(existingBookId) | opening | extracting(page, total) | splitting | saving | ready | failed(reason, step) | cancelled(step)`.
+  - **Two phases more than the plan.**
+    - `duplicate`: PROMPT asks whether to keep a copy, so the import waits for the user's answer (`duplicateKept` → `opening`; a cancel → `cancelled`).
+    - `splitting`: the mockup shows a separate "Împărțire în capitole și fraze" step still waiting while pages come in, and the last chapter is split after the last page.
+  - `failed` and `cancelled` remember the step they stopped at, so the list shows where.
+- **Failure reasons:** `too-large | copy | scanned | password | corrupt | timeout | storage | unknown`.
+- **Transitions:** one reducer per event (`importStarted`, `fileCopied`, `duplicateFound`, `duplicateKept`, `documentOpened`, `pagesExtracted`, `chapterSaved`, `extractionFinished`, `savingStarted`, `importFinished`, `importFailed`, `importCancelled`).
+  - Each checks the phases it may come from through `allowed()`. Anything else leaves the state unchanged and logs `import: <action> ignored in phase <phase>`.
+  - `importStarted` is allowed only from a finished phase (`idle | ready | failed | cancelled`), and it forgets the previous import.
+  - `pagesExtracted` never moves back nor past `total`.
+  - `chapterSaved` counts while extracting, splitting and saving, because chapters are saved as they complete.
+- **Form:** `importStarted` titles the book from the file name (`ion-rebreanu.pdf` → `ion-rebreanu`); `documentOpened` prefills title and author from the PDF.
+  - Fields the user typed in (`edited`) aren't overwritten.
+  - `usableMetadata` drops empty values and producer placeholders (`(anonymous)`, as in `Clean_Architecture_Notite.pdf`, `unknown`, `untitled`).
+  - `importSubmitted` ("Adaugă în bibliotecă") needs a title and a running or `ready` import.
+- **Selectors:**
+  - `selectImportSteps` (memoized `deriveSteps`): the 4 steps of the mockup (`copy`, `extract`, `split`, `save`), with `done` / `active` / `waiting` / `error`. The extract step carries `{ page, total }` while extracting; a failed step shows `error`, a cancelled one goes back to `waiting`.
+  - `selectCanListen`: a chapter is saved and the import didn't fail. This drives "Poți începe să asculți…".
+  - `selectCanSubmit`, `selectIsImporting`, `selectImportFailure`, `selectExtractProgress` (0…1).
+- **Store:** the slice is mounted at `import` (`ImportRootState`). `features/import/index.ts` exports the reducer, the public selectors and the types.
+- **Flaky test, not caused by this step:** in the full `npm run check` run, `RootNavigator.test` printed an `act(...)` warning for `BottomTabView` once (the suite took 41 s under load). Run on its own, twice, it was clean in 20 s. Watch for it.
+- **Tests:** 913 in 84 suites (58 new in `features/import`).
+
 #### 13. Pipeline thunk (happy path)
 - `services/` inside the feature: `runImport` orchestrates, one capability per file: copy (`storePdf`) → `createBook` (`processing`) → open → batches of 5 → clean → segment → chapters → `saveChapter` for each completed chapter (+ `processedPages`) → `saveToc` → `meta` `ready`. Title/author prefill from the PDF info.
 - **Tests (fake extractor + M2 fakes):** the exact write order, the first chapter is readable while extraction continues, the library slice gets the book (`bookUpserted`), yields between batches.
