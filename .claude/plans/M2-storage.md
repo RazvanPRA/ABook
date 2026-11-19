@@ -113,6 +113,15 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 - `deleteBook(id)`: remove from `books`, `removeMany` on every key with `bookPrefix(id)` (from `getAllKeys`), then the file.
 - **Tests (fakes):** the write order in the fake's log; resume after a crash between chunks (`meta` stays `processing`, written chunks are readable); deletion leaves zero `abk:book:{id}:*` keys and no file; an oversized chapter round-trips; corrupt `meta` / `toc` / chunk → `null` + log, no throw; a chapter rewritten smaller removes its stale parts.
 
+**Done** (2026-11-19). Findings:
+- **Structure:** `repositories/book/` with `BookRepository.ts` (interface), `LocalBookRepository.ts` (the `createLocalBookRepository({ kv, files })` factory, same style as the adapters, instead of a `LocalBookRepository` class), `bookOrder.ts`, `metaStore.ts`, `chapterStore.ts`, `deleteBook.ts`. Plus `repositories/readValue.ts` (one key = one `getMany` + `readJson`). Every file < 100 lines, every function ≤ 40.
+- **Library order:** new books go **first** (`withBookFirst`, the latest import at the top of the Library), once. `createBook` writes `meta` + `abk:books` in a single `setMany`, and refuses a meta that isn't `processing`, so the start of the write order is enforced, not just documented.
+- **Validation on write too:** `meta`, `toc` and chunks go through their schema before `serialize`. An invalid value throws before anything is written (e.g. `updateMeta` with `processedPages > pageCount` leaves the old meta in place). Reads stay tolerant (`null` + log).
+- **Split chapters:** the manifest and every part go in **one** `setMany`, so the manifest never points to parts that weren't written. Stale parts (a chapter rewritten smaller) are found from the previous manifest, without `getAllKeys`, and removed after the write. If any part is missing or invalid, the whole chapter is `null` (logged), never a truncated chapter.
+- **Deletion:** out of `abk:books` → `getAllKeys` filtered by `bookPrefix` → `removeMany` → the PDF. Each step is idempotent, so repeating an interrupted delete finishes it (tested with `failNext('removeMany')`), and the book disappears from the library from the first step. Progress and bookmark keys, written by other repositories, go with it.
+- **`listBooks`:** two `getMany` calls (order, then all metas in one batch). A listed id without a meta is skipped and logged. A corrupt order (e.g. duplicates) is an empty library. The boot path (step 9) has its own single-`getMany` read.
+- **Tests:** 3 suites over the fakes: the import flow (exact batch order, crash mid-import with `failNext({ skip: 2 })`, round-trip of a split chapter, order, meta patches), chapter rewrites and corrupt values, deletion. The common setup is in `repositories/__fixtures__/books.ts`.
+
 ### 8. `ProgressRepository` and `SettingsRepository`
 - `ProgressRepository`: `getProgress(id)`, `saveProgress(id, progress)`, `getBookmarks(id)`, `saveBookmarks(id, bookmarks)`.
 - `SettingsRepository`: `getSettings()` (missing or invalid → `DEFAULT_SETTINGS`; a partially valid value keeps the valid fields over the defaults), `saveSettings(settings)`.
