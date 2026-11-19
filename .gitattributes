@@ -1,0 +1,10 @@
+# Working copy stays LF even with core.autocrlf=true (Prettier expects LF)
+* text=auto eol=lf
+# Shell scripts must keep LF (gradlew runs on macOS/Linux CI); Windows scripts keep CRLF
+gradlew text eol=lf
+*.sh text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.png binary
+*.jar binary
+*.ttf binary
