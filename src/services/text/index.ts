@@ -13,3 +13,15 @@ export { expandLigatures } from './expandLigatures';
 export { segmentSentences } from './segmentSentences';
 export type { Sentence } from './segmentSentences';
 export { MAX_SENTENCE_CHARS, splitLongSentence } from './splitLongSentence';
+export type { ChapterRange, ChapterStart } from './chapterRanges';
+export { rangesFromStarts } from './chapterRanges';
+export type { OutlineItem } from './chaptersFromOutline';
+export { chaptersFromOutline } from './chaptersFromOutline';
+export { findChapterHeading, isHeadingLine } from './findChapterHeading';
+export {
+  PAGES_PER_FIXED_CHAPTER,
+  fixedPageChapters,
+} from './fixedPageChapters';
+export { medianLineHeight } from './medianLineHeight';
+export { buildChapterChunk } from './buildChapterChunk';
+export { toChapter } from './toChapter';
