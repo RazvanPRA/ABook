@@ -52,6 +52,8 @@ Fiecare pas se încheie cu `npm run check` verde și un commit separat; secțiun
 - Santinelă nouă în `__tests__/lint/architecture-rules.test.ts` (fixture cu 8 props → eroare, 7 → ok).
 - **Verificare:** `npm run lint` raportează fixture-ul; restul codului trece.
 
+**Făcut** (2026-11-19). Ce am constatat: regula stă în `eslint-rules/max-props.js` și e înregistrată ca plugin `local` pe `src/**`, fără teste. Numără membrii proprii ai interfețelor și tipurilor `*Props`, inclusiv suma literalelor dintr-o intersecție. Tipurile referite sau extinse nu se expandează, așa că `extends PressableProps` nu se adună la număr. Numără și proprietățile parametrului destructurat al unei funcții PascalCase, fără `...rest`. Cele 4 santinele (interfață cu 8 props, intersecție 4 + 4, destructurare cu 8 props, cazurile permise) folosesc `lintText`, deci nu e nevoie de fixture pe disc.
+
 ### 5. Fundații: `AppText` și `Icon`
 - Structura fiecărei primitive (skill §4): `shared/ui/<Nume>/{<Nume>.tsx, .styles.ts, .types.ts, use<Nume>.ts (doar dacă are logică), <Nume>.test.tsx, index.ts}`, exportată din `shared/ui/index.ts`.
 - `AppText`: `variant`, `color` (cheie de token, nu hex), `maxFontSizeMultiplier` implicit 1.4 pentru `display`/`title`; `accessibilityRole="header"` opțional.
