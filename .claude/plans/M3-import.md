@@ -172,6 +172,30 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 - `app/providers/PdfExtractorHost`: mounts the hidden WebView **on demand** (first `open`, unmounted after `close`; spike finding) and hands it to the extractor; wiring in `dependencies.ts` (`AppDependencies` gets `pdfExtractor`). Wraps the `WebView<object>` typing workaround once.
 - **Tests:** the extractor against a fake WebView transport (chunking, batching, error mapping, cancel mid-batch).
 
+**Done** (2026-11-19). Findings:
+
+- **Three pieces in `services/pdf/extractor/`:**
+  - `PdfBridgeTransport` (`mount`, `unmount`, `post`, `listen`) is all the extractor knows about the WebView.
+  - `createBridgeConnection` boots the page and numbers the requests. It mounts on `start()` and waits for the `ready` event (20 s, `DEFAULT_BOOT_TIMEOUT_MS`). A typed `request(body)` resolves with the response that matches the request type (`ResponseFor<T>`, from `EXPECTED_RESPONSE`, now `as const`).
+  - `createWebViewPdfExtractor` holds the `PdfTextExtractor` logic.
+- **A failure resets the connection.** The failures are a boot error event, a boot timeout, or a transport failure (`onError`, render process gone, post with no WebView attached). Each one rejects everything pending with `boot` and unmounts. The next `open` mounts a fresh WebView.
+- **Chunks:** read with `readChunk(path, offset, 512 KB)`, sent one at a time, each acknowledged before the next is read. A base64 string shorter than a full chunk (699,052 characters) marks the last chunk, so only a size that is an exact multiple costs one extra empty read. An empty file is rejected as `corrupt` without reaching pdf.js. A read failure (missing file) passes through unchanged, because it isn't a PDF error.
+- **Sessions instead of a cancel flag** (`extractorSessions.ts`):
+  - Every `open` and `close` starts a session, and an overtaken call stops with `cancelled` at its next step, so it sends nothing more.
+  - `getPages` and `getOutline` with no document open in the current session reject locally with `not-open`, without touching the WebView.
+  - `password` is always `null`: a protected PDF is a `password` failure, as PROMPT says.
+- **`close` = cancel pending + unmount.** The page's `close` request isn't sent: unmounting destroys the page and pdf.js with it, and the WebView lives only from `open` to `close` (spike finding). The request stays in the protocol for a WebView kept alive later.
+- **Host side, a deviation from the plan:**
+  - `createWebViewTransport()` in services (pure, tested) holds the session (`null` = no WebView). Every `mount` is a new number, used as the WebView `key`, so `unmount` + `mount` in the same tick still gives a fresh page.
+  - `PdfExtractorHost` (`app/providers`, rendered in `AppProviders` next to the navigator, so step 15 can use it during boot) subscribes to it with `useSyncExternalStore`. It loads the HTML lazily with `import()` (`loadPdfWebViewHtml`) on the first mount and keeps it.
+  - The host renders a 1×1, `opacity: 0` WebView hidden from accessibility, attaches `postMessage` and forwards `onMessage` / `onError` / `onRenderProcessGone` / `onContentProcessDidTerminate`. The `WebView<object>` workaround lives only there.
+  - Metro's `import()` and the 1×1 size are checked on the emulator in step 11.
+- **Wiring, a deviation from the plan:** `AppDependencies` lives in `repositories/`, which may not import services, so it doesn't get `pdfExtractor`. `app/dependencies.ts` defines `FeatureDependencies = AppDependencies + pdfExtractor`, which is the thunks' `extra` (`createAppStore`). `AppServices` adds `pdfTransport` for the host. `readChunk` binds to `stores.files.readBase64`. `features/import` will declare `AppDependencies & { pdfExtractor }` itself.
+- **`FakePdfTextExtractor`** (`services/pdf/testing`) is for feature tests: PDFs by path, `openError`, `failAtPage` (`timeout`), `pauseAtPage` + `resume`, a `close` that rejects a paused batch with `cancelled`, and a `calls` log.
+- **Test transport:** `__fixtures__/pageTransport.ts` runs the **real page handler** (`createRequestHandler` + `parseRequest`) over a fake pdf.js, so the extractor tests check the page's actual answers. A 1.2 MB file joined back byte for byte, batches 1–5/6–10/11–12, and pdf.js exceptions mapped to `password` / `corrupt` / `unknown`. `hold(type)` covers timeouts and cancel mid-batch.
+- **Jest:** `jest.setup.js` mocks `react-native-webview` with a View (`testID 'webview'`) carrying the props plus `posted`, so tests can see what RN sent. Testing Library v14 has no `UNSAFE_getByType`, and the hidden WebView needs `includeHiddenElements: true`.
+- **Tests:** 826 in 75 suites.
+
 #### 11. Emulator check of the extractor
 - Dev route `abook://dev/pdf` (`__DEV__` only, like `dev/ui` and `dev/storage`): opens a generated 300+ page PDF, shows pages/s and the cleaned text of a chosen page, and a counter that keeps ticking to prove the JS thread is free.
 - **Check:** the whole PDF extracts without a red screen or a freeze; password and corrupt PDFs give the typed errors.

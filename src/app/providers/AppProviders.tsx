@@ -6,6 +6,7 @@ import { color, ThemeProvider } from '@/shared/theme';
 import type { AppServices } from '../dependencies';
 import type { AppStore } from '../store';
 import { I18nProvider } from './I18nProvider';
+import { PdfExtractorHost } from './PdfExtractorHost';
 import { ServicesProvider } from './ServicesProvider';
 import { StoreProvider } from './StoreProvider';
 
@@ -18,7 +19,10 @@ export function AppProviders({
   return (
     <StoreProvider store={store}>
       <ServicesProvider services={services}>
-        <UiProviders>{children}</UiProviders>
+        <UiProviders>
+          {children}
+          <PdfExtractorHost transport={services.pdfTransport} />
+        </UiProviders>
       </ServicesProvider>
     </StoreProvider>
   );

@@ -118,6 +118,25 @@ jest.mock('@dr.pogodin/react-native-fs', () => {
   };
 });
 
+// react-native-webview needs its native component. The mock renders a View (testID 'webview') carrying
+// the props, so tests call onMessage / onError on it; `posted` is what RN posted into this instance.
+jest.mock('react-native-webview', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  class WebView extends React.Component {
+    posted = [];
+    postMessage = message => this.posted.push(message);
+    render() {
+      return React.createElement(View, {
+        testID: 'webview',
+        ...this.props,
+        posted: this.posted,
+      });
+    }
+  }
+  return { __esModule: true, WebView, default: WebView };
+});
+
 jest.mock('react-native-bootsplash', () => ({
   hide: jest.fn(() => Promise.resolve()),
   isVisible: jest.fn(() => false),

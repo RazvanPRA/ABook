@@ -85,12 +85,23 @@ export type WebViewResponse = z.infer<typeof webViewResponseSchema>;
 export type WebViewResponseType = WebViewResponse['type'];
 
 /** The response a request expects when it succeeds. */
-export const EXPECTED_RESPONSE: Readonly<
-  Record<WebViewRequestType, WebViewResponseType>
-> = {
+export const EXPECTED_RESPONSE = {
   'load-chunk': 'chunk-loaded',
   open: 'opened',
   'get-pages': 'pages',
   'get-outline': 'outline',
   close: 'closed',
-};
+} as const satisfies Readonly<Record<WebViewRequestType, WebViewResponseType>>;
+
+/** A request without its id: what a caller asks for, before the bridge numbers it. */
+export type WebViewRequestBody = WebViewRequest extends infer R
+  ? R extends WebViewRequest
+    ? Omit<R, 'requestId'>
+    : never
+  : never;
+
+/** The success response to a request of type `T`. */
+export type ResponseFor<T extends WebViewRequestType> = Extract<
+  WebViewResponse,
+  { type: (typeof EXPECTED_RESPONSE)[T] }
+>;
