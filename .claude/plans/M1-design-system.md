@@ -45,6 +45,8 @@ Fiecare pas se încheie cu `npm run check` verde și un commit separat; secțiun
 - `ScreenPlaceholder` trece pe noile tokens (rezolvă textul negru pe negru din M0).
 - **Teste:** `useTheme` întoarce token-urile; aruncă în afara providerului; `App` randează cu providerul.
 
+**Făcut** (2026-11-19). Ce am constatat: în RN 0.88 `StatusBar` nu mai are `backgroundColor` (edge-to-edge pe Android), deci e doar `barStyle="light-content"`, iar fundalul îl dă `GestureHandlerRootView`, cu `color.bg`. `theme.ts` adună toate token-urile într-un obiect, iar `ThemeProvider` îl expune prin context. Stilurile rămân statice. `navigationTheme` păstrează fonturile din `DarkTheme` și are un test propriu. `renderHook` e asincron în Testing Library v14, iar eroarea din afara providerului se prinde cu `await expect(async () => …).rejects`.
+
 ### 4. Regulă ESLint locală „max 7 props”
 - Plugin local în `eslint.config.js` (`local/max-props`): numără membrii tipului `*Props` din `*.types.ts` / parametrul destructurat al componentei; prag 7 (skill §2).
 - Santinelă nouă în `__tests__/lint/architecture-rules.test.ts` (fixture cu 8 props → eroare, 7 → ok).

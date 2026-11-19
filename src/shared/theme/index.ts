@@ -11,3 +11,7 @@ export type { IconSize } from './sizes';
 export { duration, opacity } from './motion';
 export { contrastRatio, relativeLuminance } from './contrast';
 export { pickCoverColor } from './coverColor';
+export { theme } from './theme';
+export type { Theme } from './theme';
+export { ThemeProvider } from './ThemeProvider';
+export { useTheme } from './useTheme';
