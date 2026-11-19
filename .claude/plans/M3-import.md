@@ -99,7 +99,7 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 - **Headings (`findChapterHeading(page, bodyHeight)`):** a line ≤ 60 characters, taller than `1.15 ×` the body height (`medianLineHeight`, the median of the non-blank lines), starting with `Capitolul` / `Partea` / `Cartea` (any case) or being an **uppercase** Roman numeral alone (`IV`, `XII.`; a lowercase `vi` is a word). A tall short line right under it is added to the title (`I — Glasul pământului`). Per page, so the pipeline can run it while streaming; it uses headings only when it finds at least 2 (step 13).
 - **Fallback (`fixedPageChapters`):** every 10 pages, empty titles, the last chapter shorter; a nonsense size is clamped to ≥ 1.
 - **`buildChapterChunk(pages)`** (headers and page numbers already removed): `joinHyphenatedWords`, then per line `expandLigatures` → `normalizeDiacritics` → `normalizeWhitespace`, then `segmentSentences` and `splitLongSentence`. Each sentence gets the page of the line where it starts, found from the line offsets in the joined text. Lines taller than `1.15 ×` the chunk's median are segmented **on their own**, so `Partea întâi` and `Glasul pământului` become sentences instead of merging into the first sentence (they have no final period). The result passes `chapterChunkSchema`; `toChapter(index, range, chunk)` builds the `toc` entry and passes `chapterSchema`.
-- **M3a complete:** 17 small files in `services/text`, every function pure and ≤ 40 lines, 100% statements/branches/functions/lines (228 / 114 / 72 / 215). Tests: 686 in 63 suites.
+- **M3a complete:** 19 small files in `services/text`, every function pure and ≤ 40 lines, 100% statements/branches/functions/lines (228 / 114 / 72 / 215). Tests: 686 in 63 suites.
 
 ### M3b – `services/pdf`
 
@@ -107,6 +107,35 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 - Answers the two open rows of the risk table: legacy pdf.js 6.5 with its worker inside a WebView on Android, and where the HTML lives in RN CLI (an Android `assets/` file + the iOS bundle, vs. an inline string generated at build time and passed as `source={{ html }}`).
 - Also checks: `originWhitelist`, no network (`INTERNET` exists only in debug, so a release build proves it), message size limits, speed on a 300+ page PDF.
 - **Check:** text from page 1 of a real PDF arrives in RN on the emulator. The spike code is discarded; the decision and numbers are recorded here.
+
+**Done** (2026-11-19). Spike on `emulator-5554` (Android 17, System WebView / Chrome 157, debug build), with a throwaway `abook://dev/pdf-spike` screen and a generated 320-page PDF (1.42 MB, Helvetica, running header, page numbers, a larger `Capitolul N` every 20 pages, Title/Author). Code removed after the run; nothing of it is committed.
+
+**Decision: the HTML is a generated string, passed as `source={{ html }}`** (no Android asset, no iOS bundle resource, the same code path on both platforms). The build script reads `pdfjs-dist/legacy/build/pdf.min.mjs` (538 KB) and `pdf.worker.min.mjs` (1.33 MB) and embeds them **as base64** (no escaping problems with `</script>` or non-ASCII); the page decodes them into blobs and loads pdf.js with `await import(blobUrl)`, which gives its real ESM exports. Result: 2.38 MB of HTML.
+
+**Decision: the "fake worker", not a Web Worker.** A page loaded from an HTML string has an opaque (`null`) origin, and Chromium refuses to start **any** Worker from a blob URL there (even a one-line probe fails with an empty `error` event); `getDocument` then waits forever. Setting `globalThis.pdfjsWorker = await import(workerBlobUrl)` makes pdf.js run its worker code on the WebView's main thread. That thread is not RN's JS thread, and the WebView is hidden, so it costs nothing visible. It doesn't depend on the origin, so it should behave the same in WKWebView (checked on iOS in M7). Plan B, not needed: a `baseUrl` for a real origin.
+
+**Measurements:**
+
+| What | Result |
+| --- | --- |
+| Boot (decode + import pdf.js + import worker) | 1.94 s on the very first WebView start, then 0.13–0.39 s |
+| Sending the PDF, 3 × 512 KB base64 chunks with an ack each | 665 ms for 1.42 MB |
+| `getDocument` + `getMetadata` + `getOutline` | 86 ms; Title "Ion - test" and Author "Liviu Rebreanu" read |
+| 320 pages, batches of 5 (`getPage` → `getTextContent` → `cleanup`) | 2.2 s (145 pages/s), slowest batch 136 ms; 13,474 lines |
+| Line shape | header `y` 0.04 / height 9, heading `y` 0.091 / height 18: the step 2 and step 6 assumptions hold |
+| Truncated PDF (first 30 KB) | `InvalidPDFException: Invalid PDF structure.` comes back through the bridge |
+| Network | `fetch('https://example.com')` → "Failed to fetch": the CSP (`default-src 'none'; script-src 'unsafe-inline' blob:`) blocks it even in debug, which has `INTERNET` |
+| RN JS thread | longest gap of a 50 ms timer: 173 ms, with on-screen logging of every chunk; measured again without logging in step 11 |
+
+**Findings for the next steps:**
+
+- **Typing bug in react-native-webview 14.0.1:** `class WebView<P = undefined> extends Component<WebViewProps & P>`, and `X & undefined` is `never` under strict TS, so every prop is rejected. Workaround: `WebView<object>` (JSX generic and `useRef<WebView<object>>`). Step 10 wraps it once in `PdfExtractorHost`.
+- **pdf.js lines:** `getTextContent` items with `hasEOL` and an empty `str` produce empty lines; the WebView side drops them (step 8). Items are grouped into lines by baseline (`transform[5]`, tolerance half the font height); `y = (pageHeight − baseline) / pageHeight`, `height = |transform[3]|`.
+- **Options:** `getDocument({ data, isEvalSupported: false, disableFontFace: true })`: no `eval` (CSP) and no font loading (text only).
+- **Messages:** RN → WebView with `postMessage` (a 700 KB string per chunk went through fine); the page listens on both `window` and `document` (`message`), WebView → RN with `window.ReactNativeWebView.postMessage`.
+- **Startup:** the first WebView start costs ~2 s and the HTML is 2.38 MB, so `PdfExtractorHost` mounts the WebView **on demand** (first `open`) and unmounts it after `close`, instead of at app start (PROMPT §8: first screen < 1.5 s). The HTML module is required lazily too.
+- **Not tested here:** a password-protected PDF (no tool on this PC generates one): the test-PDF script in step 11 makes one, and `PasswordException` is checked there. iOS is checked in M7.
+- **Practical:** in RN 0.88 `console.log` doesn't reach `adb logcat` (`ReactNativeJS`), so results were read with `uiautomator dump` and a screenshot; and a deep link sent right after the app restarts is lost during bootstrap (the M2 risk), so it has to be sent again once the app is up.
 
 #### 8. WebView build and bridge protocol
 - A build script (in `.claude/scripts/` or `scripts/`) that produces the self-contained HTML from `services/pdf/webview/` sources + `pdfjs-dist`; the output is checked in or generated before Metro, as the spike decides. A test fails if the generated file is stale.
@@ -119,7 +148,7 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 
 #### 10. Extractor and host
 - `PdfTextExtractor` interface (`open(uri) → { pageCount, info }`, `getPages(from, to)`, `getOutline()`, `close()`), `WebViewPdfExtractor` (sends the file in chunks, batches of 5 pages, typed errors: `password`, `corrupt`, `timeout`, `cancelled`), `FakePdfTextExtractor` in `services/pdf/testing/`.
-- `app/providers/PdfExtractorHost`: mounts the WebView once, hidden, and hands it to the extractor; wiring in `dependencies.ts` (`AppDependencies` gets `pdfExtractor`).
+- `app/providers/PdfExtractorHost`: mounts the hidden WebView **on demand** (first `open`, unmounted after `close`; spike finding) and hands it to the extractor; wiring in `dependencies.ts` (`AppDependencies` gets `pdfExtractor`). Wraps the `WebView<object>` typing workaround once.
 - **Tests:** the extractor against a fake WebView transport (chunking, batching, error mapping, cancel mid-batch).
 
 #### 11. Emulator check of the extractor

@@ -91,7 +91,7 @@ Steps, decisions and findings: `.claude/plans/M3-import.md` (branch `m3-import`)
 - `services/pdf/webview/`: HTML + legacy `pdfjs-dist` with the worker inlined, as a local asset. pdfjs-dist 6.5 is ESM only (`pdf.mjs`, `pdf.worker.mjs`), so a build step produces the self-contained HTML (decided by the spike).
 - The `{ type, requestId, payload }` protocol, zod-validated on both sides, with base64 in 512 KB chunks, batches of 5 pages, timeout and cancellation.
 - The extractor gets a `readChunk` function (over a new `FileStore.readBase64`, bound in `dependencies.ts`), so `services/pdf` never touches the file system.
-- `PdfExtractorHost`, mounted once and hidden, with no network access.
+- `PdfExtractorHost`, hidden, mounted on demand (first `open`) and unmounted after `close`, with no network access (CSP).
 
 **M3c – `features/import`**
 - State machine `idle | copying | opening | extracting | saving | ready | failed | cancelled`.
@@ -151,13 +151,14 @@ Steps, decisions and findings: `.claude/plans/M3-import.md` (branch `m3-import`)
 
 | Risk | When it's checked | Plan B |
 | --- | --- | --- |
-| Legacy pdf.js + locally inlined worker in a WebView on Android (pdfjs-dist 6.5 ships only ESM `.mjs`) | spike at the start of M3b (M3 step 7) | separate worker build, loaded as a blob |
+| Legacy pdf.js + locally inlined worker in a WebView on Android (pdfjs-dist 6.5 ships only ESM `.mjs`) | **Solved in the M3 spike (step 7):** pdf.js and its worker embedded as base64 and loaded with `import()` from blob URLs; the worker runs as pdf.js's "fake worker" on the WebView thread, because a page from an HTML string has an opaque origin and Chromium refuses blob Workers there. 320 pages in 2.2 s on the emulator | a `baseUrl` for a real origin and a real Worker |
 | Header/footer detection needs all pages, but import saves chapter by chapter | M3 step 2 | statistics on a sample window (first ~20 pages), recomputed the same way on resume |
 | AsyncStorage limit on Android | **Solved in M0:** v3.1.1 uses Room/SQLite, without the 6 MB limit | we keep values under ~256 KB (the 2 MB `CursorWindow` read limit) |
 | A deep link that arrives **during** bootstrap is lost (the `NavigationContainer` mounts after hydration; a cold start with the link works) | **Found in M2** (emulator); to be solved in M4, when real links matter | mount the container from the start and gate only its content, or keep the URL until it's ready |
 | `react-native-tts` | **Confirmed in M0:** doesn't compile with Gradle 9 (`jcenter()`), so it was removed | **M5: custom TurboModule** `AbookTts` (Android `TextToSpeech`, iOS `AVSpeechSynthesizer`) behind `TtsEngine` |
 | Playback with the screen locked (iOS) | M5/M7, on a device | `AVAudioSession` with the `playback` category in the TurboModule |
-| pdf.js as a local asset in RN CLI (no Expo asset bundler) | spike at the start of M3b | HTML in `android/app/src/main/assets` + iOS bundle, or inline HTML generated at build time |
+| pdf.js as a local asset in RN CLI (no Expo asset bundler) | **Solved in the M3 spike (step 7):** inline HTML generated at build time (2.38 MB), passed as `source={{ html }}`, the same on both platforms; the WebView is mounted on demand, not at startup | HTML in `android/app/src/main/assets` + iOS bundle |
+| WKWebView: `import()` from blob URLs and the fake worker on iOS | M7, on a device | `baseUrl` + a real Worker, or a classic-script build of pdf.js |
 | Missing `ro-RO` voices on the emulator | M5 | testing with `en-US` + the "no voice" state |
 | Mockups: 5 of 6 screens are in `.claude/design/` (the Library with books is missing) | before M4 | ask for the missing mockup or derive it from existing components (card, `ProgressBar`, `BookCover`) |
 | Native `Slider` (`@react-native-community/slider`): on Android the node is ≈ 18 dp tall (below the 44 pt target), and the empty track is barely visible | **Found in M1** (emulator); to be solved in M6 | custom slider with Gesture Handler + Reanimated, with the same API as `shared/ui/Slider` |
