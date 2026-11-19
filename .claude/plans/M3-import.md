@@ -81,6 +81,13 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 - `splitLongSentence(sentence, maxChars = 400)`: cut at the `;` or `,` closest to the middle, recursively; if there is none, at the space closest to the middle; never mid-word. Every part ≤ `maxChars` (the M2 chapter splitter relies on it).
 - **Tests:** 401 / 399 characters, only commas, no punctuation, one giant word, idempotence on short sentences.
 
+**Done** (2026-11-19). Findings:
+
+- **Split points:** a `;` or `,` **followed by whitespace** (so the Romanian decimal comma `3,5` is never one), the mark staying with the first part; punctuation anywhere wins over a space nearer the middle, then the space closest to the middle; ties go to the earlier position. Parts are trimmed, so joining them with one space gives the original text back (tested on a ~1,800-character sentence).
+- **Last resort:** a run of more than 400 characters without spaces (a URL, extraction garbage) is cut every 400 characters. "Never mid-word" holds whenever there is a space; the hard cut keeps the ≤ 400 guarantee that the M2 chapter splitter relies on.
+- **Signature:** `splitLongSentence(sentence, maxChars = MAX_SENTENCE_CHARS)` → `string[]` (blank → `[]`). The parts of a split sentence get the page of the sentence's start in step 6: a 400-character sentence crosses at most one page break, so the second part may show the previous page. Accepted.
+- **Tests:** 628 in 60 suites; `services/text` 100%.
+
 #### 6. Chapters and chunks
 - `detectChapters` in three files by source: `chaptersFromOutline`, `detectHeadingChapters` (regex + line height above the page median), `fixedPageChapters` (~10 pages); plus `buildChapterChunk(pages)` → `{ sentences, sentencePages }` validated against the M2 `ChapterChunk` schema, and `toChapter` for the `toc` entry.
 - **Tests:** outline with nested entries and missing pages, headings in Roman numerals, a "Capitolul" inside a paragraph (not a heading), a PDF with no headings, a sentence that spans a page break (gets the page where it starts).

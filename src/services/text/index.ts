@@ -12,3 +12,4 @@ export { normalizeWhitespace } from './normalizeWhitespace';
 export { expandLigatures } from './expandLigatures';
 export { segmentSentences } from './segmentSentences';
 export type { Sentence } from './segmentSentences';
+export { MAX_SENTENCE_CHARS, splitLongSentence } from './splitLongSentence';
