@@ -32,6 +32,8 @@ npm run pdf:webview    # regenerate the PDF WebView page (also on postinstall an
 
 The PDF WebView page (`src/services/pdf/webview/generated/`, 2.4 MB, gitignored) is generated from `src/services/pdf/webview/page` + `pdfjs-dist` by `scripts/build-pdf-webview.js`. Metro, tsc and Jest need it; a test fails when it is stale.
 
+**Sample PDFs** for manual testing live outside the repo, in `C:\ModDeInvatare\Book-PDF`: Romanian notes (3 p.), _The Clean Coder_ (244 p.) and _Microservices Patterns_ (522 p., the real 300+ page PDF). What each one exercises is in `.claude/plans/M3-import.md` → "Sample PDFs". Push one with `MSYS_NO_PATHCONV=1 adb push "C:/ModDeInvatare/Book-PDF/<file>" /sdcard/Download/`. Never copy them, or text from them, into the repo: two are copyrighted and one carries personal data in a watermark.
+
 `npm run emu` runs `.claude/scripts/run-android.ps1`. Logs are in `android/build/run-android/`. Exit codes: 1 SDK/AVD/JDK, 2 emulator died, 3 boot timeout, 4 Metro, 5 build, 6 app not in foreground.
 
 ## Structure and layers
