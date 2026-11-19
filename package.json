@@ -13,7 +13,9 @@
     "start": "react-native start",
     "test": "jest",
     "typecheck": "tsc --noEmit",
-    "check": "npm run typecheck && npm run lint && npm run format:check && npm run test -- --coverage"
+    "pdf:webview": "node scripts/build-pdf-webview.js",
+    "postinstall": "npm run pdf:webview",
+    "check": "npm run pdf:webview && npm run typecheck && npm run lint && npm run format:check && npm run test -- --coverage"
   },
   "dependencies": {
     "@dr.pogodin/react-native-fs": "2.41.0",

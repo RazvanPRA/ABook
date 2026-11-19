@@ -27,7 +27,10 @@ npm run emu            # emulator + Metro + build only on native changes + launc
 npm run emu -- -SkipBuild | -EmulatorOnly | -ForceBuild | -ResetCache
 npm run emu:rebuild    # forced build + cleared Metro cache
 npx react-native-asset # after adding a font to assets/fonts
+npm run pdf:webview    # regenerate the PDF WebView page (also on postinstall and in check)
 ```
+
+The PDF WebView page (`src/services/pdf/webview/generated/`, 2.4 MB, gitignored) is generated from `src/services/pdf/webview/page` + `pdfjs-dist` by `scripts/build-pdf-webview.js`. Metro, tsc and Jest need it; a test fails when it is stale.
 
 `npm run emu` runs `.claude/scripts/run-android.ps1`. Logs are in `android/build/run-android/`. Exit codes: 1 SDK/AVD/JDK, 2 emulator died, 3 boot timeout, 4 Metro, 5 build, 6 app not in foreground.
 

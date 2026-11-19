@@ -113,6 +113,7 @@ module.exports = [
       '.bundle/',
       'vendor/',
       '**/__lint-fixtures__/**',
+      'src/services/pdf/webview/generated/',
     ],
   },
   ...withoutFlow,
@@ -121,6 +122,11 @@ module.exports = [
   {
     files: ['jest.setup.js', 'jest.config.js'],
     languageOptions: { globals: { jest: 'readonly' } },
+  },
+  // Build scripts run in Node
+  {
+    files: ['scripts/**/*.js'],
+    languageOptions: { globals: require('globals').node },
   },
 
   // Strict TypeScript (skill §8)
