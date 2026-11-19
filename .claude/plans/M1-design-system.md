@@ -127,6 +127,14 @@ Fiecare pas se încheie cu `npm run check` verde și un commit separat; secțiun
 - `src/app/dev/UiCatalogScreen.tsx`, înregistrat în `RootNavigator` doar când `__DEV__`, deep link `abook://dev/ui`: toate primitivele în toate variantele, pentru comparare cu machetele.
 - **Verificare:** `npm run emu`, apoi `adb shell am start -d abook://dev/ui`; capturi comparate cu `01-biblioteca-goala.png`, `03-detalii-carte.png`, `05-setari.png` (tab bar, butoane, chips, switch, slider, copertă, empty state). TalkBack pornit pe catalog: fiecare control își anunță rolul și eticheta în română.
 
+**Făcut** (2026-11-19). Ce am constatat:
+- **Structura:** catalogul stă în `src/app/dev/` (ecran + 5 secțiuni + `samples.ts`). Ruta `DevUi` și link-ul `dev/ui` există doar când `__DEV__`. Textele de test din `samples.ts` copiază machetele și nu trec prin i18n, pentru că nu sunt copy de produs.
+- **Build:** `npm run emu` a refăcut build-ul nativ, deși M1 nu are schimbări native. Hash-ul fișierelor native s-a schimbat după normalizarea LF de la pasul 2.
+- **Comparația cu machetele** (capturi pe emulator): fonturile, tab bar-ul (activ chihlimbar, bară de stare luminoasă), butoanele, play-ul de 76 pt, chips-urile, switch-ul (thumb închis pe șină chihlimbar), coperta mare, rândurile de capitol și starea goală corespund. Textul negru pe negru din M0 a dispărut.
+- **Accesibilitate** (`uiautomator dump` în loc de TalkBack ascultat): fiecare control are `content-desc` în română. Radio-urile și switch-urile au `checkable` / `checked`, tab-urile au `selected`, butoanele dezactivate au `enabled=false`, butonul în încărcare anunță „…, busy”, iar slider-ele anunță „Viteză implicită, 1.0×”. IconButton-urile au 132 px = 44 dp.
+- **Abateri, de rezolvat în M6 (Setări / Player):** (1) nodul nativ al slider-ului are ≈ 18 dp înălțime, deși stilul cere 44 (SeekBar-ul își păstrează înălțimea intrinsecă), deci ținta de atingere e sub 44 pt; (2) șina goală (`border` pe `surface`) abia se vede, iar macheta are o șină mai groasă și mai deschisă. Ambele cer probabil un slider propriu (Gesture Handler + Reanimated).
+- **Viteza:** se afișează „1.0×” (punct și o zecimală, ca în machetă), nu prin `formatDecimal`. Formatul vitezei îl decide feature-ul în M6.
+
 ### 12. Închidere
 - Checklist `modular-architecture` §10, rezumatul (unități noi / refolosite / `arch-exception`), actualizarea `PLAN.md` (M1 ✅) și a `CLAUDE.md` (capcane noi).
 
