@@ -18,5 +18,18 @@
   },
   "book": {
     "title": "Detalii carte"
+  },
+  "format": {
+    "bytes": {
+      "B": "B",
+      "KB": "KB",
+      "MB": "MB",
+      "GB": "GB"
+    },
+    "duration": {
+      "hour": "h",
+      "minute": "min",
+      "lessThanMinute": "< 1 min"
+    }
   }
 }
