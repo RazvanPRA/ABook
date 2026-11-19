@@ -28,5 +28,7 @@ export type {
 } from './ScreenHeader';
 export { ScreenPlaceholder } from './ScreenPlaceholder';
 export type { ScreenPlaceholderProps } from './ScreenPlaceholder';
+export { Slider } from './Slider';
+export type { SliderProps, SliderRange } from './Slider';
 export { Switch } from './Switch';
 export type { SwitchProps } from './Switch';

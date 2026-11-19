@@ -103,6 +103,8 @@ Fiecare pas se încheie cu `npm run check` verde și un commit separat; secțiun
 - Mock în `jest.setup.js` pentru slider (componentă nativă).
 - **Teste:** propagă `value` / `onComplete`; eticheta și valoarea afișată.
 
+**Făcut** (2026-11-19). Ce am constatat: `@react-native-community/slider` 5.2 randează în Jest fără mock (componenta codegen devine host), iar `fireEvent(…, 'valueChange' | 'slidingComplete')` ajunge la callback-uri. Riscul nu s-a confirmat și n-am mai adăugat mock-ul. `min / max / step` sunt grupate în `range`, ca să rămân la 7 props. `valueTone` (`accent` pentru „1.0×”, `muted` pentru „Normal”) urmează macheta Setări. `valueLabel` e și `accessibilityValue.text`, ca TalkBack să anunțe „1.0×”, nu numărul brut.
+
 ### 9. `BottomTabBar` și înlocuirea tab bar-ului
 - `shared/ui/BottomTabBar`: primește `items: { key, label, icon, focused, onPress }[]` (fără tipuri React Navigation în `shared`); fundal `tabBar`, activ `accent`, inactiv `textMuted`; rol `tab`, `selected`; safe-area jos.
 - Adaptor în `app/navigation/TabBarAdapter.tsx` care mapează `BottomTabBarProps` → `items` (iconițele `book`, `headphones`, `sliders-horizontal`), folosit în `TabsNavigator` prin `tabBar`.
