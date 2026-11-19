@@ -23,6 +23,8 @@ Fiecare pas se încheie cu `npm run check` verde și un commit separat; secțiun
 - Încarc `modular-architecture` (structura componentei, limite, §6 reutilizare, §10 DoD).
 - **Verificare:** `git log dev` conține `d983cd1`.
 
+**Făcut** (2026-11-19). Ce am constatat: planul M1 s-a comis pe `m0-schelet-rn` (`c007736`), iar `dev` a avansat prin fast-forward. `git switch` a rescris tot working copy-ul cu CRLF, din cauza `core.autocrlf=true` din configul global Git, iar `prettier --check` a picat pe 43 de fișiere neatinse. Fix-ul durabil e `* text=auto eol=lf` în `.gitattributes` (intră în commitul pasului 2). `Set-Content` din PS 5.1 pune BOM în mesajul de commit, așa că fișierul de mesaj se scrie cu tool-ul Write.
+
 ### 2. Tokens complete în `shared/theme`
 - `colors.ts`: toată paleta din PROMPT §7 (`bg`, `surface`, `surfaceRaised`, `border`, `divider`, `tabBar`, `text`, `textMuted`, `textRead`, `accent`, `onAccent`, `success`, `successBg`, `danger`, `dangerBorder`, `info`, `cover[]`).
 - `spacing.ts`: `space` (4, 8, 12, 16, 20, 24) + aliasuri semantice (`screenPadding: 20`, `cardGap: 16`).
@@ -33,6 +35,8 @@ Fiecare pas se încheie cu `npm run check` verde și un commit separat; secțiun
 - `contrast.ts`: `relativeLuminance` și `contrastRatio` (funcții pure, WCAG 2.x).
 - `coverColor.ts`: `pickCoverColor(id: BookId)` — hash determinist (djb2) modulo `color.cover.length`.
 - **Teste:** contrast ≥ 4.5:1 pentru `text`, `textMuted`, `textRead`, `danger`, `success`, `accent` pe `bg` și `surface`, și `onAccent` pe `accent`; `pickCoverColor` stabil și distribuit pe toate cele 3 culori; tokens fără valori `undefined`.
+
+**Făcut** (2026-11-19). Ce am constatat: toate perechile trec de 4.5:1, inclusiv `textRead` / `textMuted` / `info` pe `tabBar`, `text` și `textMuted` pe `surfaceRaised`, `success` pe `successBg` și `text` pe cele 3 culori de copertă. Riscul despre `textRead` nu s-a confirmat. Exportul se numește `type` (ca în PROMPT), iar TS îl acceptă în `import { type }`. Tokens în plus față de plan: `radius.coverLg` / `cardLg`, `size.buttonLg`, `progressBar`, `coverSm` / `coverLg`, `emptyStateIcon`, `switch`, `opacity.pressed`. `type.title` folosește Space Grotesk Bold, pentru că SemiBold nu există. djb2 e scris fără operatori pe biți (regula `no-bitwise` din configul RN).
 
 ### 3. `ThemeProvider`, `useTheme`, integrarea în app
 - `shared/theme/ThemeProvider.tsx` + `useTheme()` (context cu obiectul `theme`; aruncă eroare în afara providerului).
