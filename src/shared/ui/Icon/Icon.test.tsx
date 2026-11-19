@@ -22,6 +22,21 @@ describe('Icon', () => {
     });
   });
 
+  it('fills playback glyphs by default, others only on request', async () => {
+    await render(
+      <>
+        <Icon name="play" testID="play" />
+        <Icon name="book" testID="book" />
+        <Icon name="book" filled testID="filled-book" />
+      </>,
+    );
+    const fill = (id: string) =>
+      screen.getByTestId(id, { includeHiddenElements: true }).props.fill;
+    expect(fill('play')).toBe(color.text);
+    expect(fill('book')).toBe('none');
+    expect(fill('filled-book')).toBe(color.text);
+  });
+
   it('is hidden from accessibility', async () => {
     await render(<Icon name="book" testID="icon" />);
     expect(screen.queryByTestId('icon')).toBeNull();

@@ -1,6 +1,6 @@
 import React from 'react';
 import { color as colors, size as sizes } from '@/shared/theme';
-import { icons } from './icons';
+import { FILLED_BY_DEFAULT, icons } from './icons';
 import type { IconProps } from './Icon.types';
 
 const STROKE_WIDTH = 2;
@@ -13,7 +13,7 @@ export function Icon({
   name,
   size = 'md',
   color = 'text',
-  filled = false,
+  filled = FILLED_BY_DEFAULT.has(name),
   testID,
 }: IconProps) {
   const Glyph = icons[name];

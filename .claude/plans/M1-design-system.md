@@ -70,6 +70,15 @@ Fiecare pas se încheie cu `npm run check` verde și un commit separat; secțiun
 - `Switch` propriu (macheta are thumb închis pe șină chihlimbar, imposibil cu `Switch` din RN): `Pressable` + Reanimated (`withTiming` 150 ms), rol `switch`, `accessibilityState={{ checked }}`.
 - **Teste:** fiecare variantă randează; `onPress` / `onChange` apelate cu `await fireEvent.press`; `disabled` blochează apăsarea; stările de accesibilitate.
 
+**Făcut** (2026-11-19). Ce am constatat:
+- **Reanimated 4.7 în Jest:** mock-ul oficial (`react-native-reanimated/mock`) e inutilizabil. Importă `src/index`, unde `initializers.native.ts` apelează `setCSSEventHandler` pe JSReanimated (ales când `IS_JEST`), iar acolo aruncă eroare. Până acum nu crăpa, pentru că nimeni nu importa Reanimated. L-am înlocuit în `jest.setup.js` cu un mock manual minim (`Animated.*`, `useSharedValue`, `useAnimatedStyle`, `withTiming`, `withSpring`…), unde animațiile ajung instant la valoarea țintă. Mock-ul se extinde când apare un API nou.
+- **`radiogroup`:** containerul `ChipGroup` rămâne neaccesibil (cu `accessible`, TalkBack ar înghiți radio-urile), așa că `getByRole('radiogroup')` din RNTL nu-l găsește. Testul îl caută după etichetă și verifică rolul.
+- **Limita de 7 props:** `Button` are exact 7 (`label`, `onPress`, `variant`, `size`, `icon`, `loading`, `disabled`). Am renunțat la `testID`, iar testele caută după rol și nume. Lățimea vine de la părinte (`alignSelf` implicit), fără un prop `fullWidth`.
+- **Variante:** `lg` = 52 pt, pill. `secondary` = `surfaceRaised` (PROMPT), `danger` = contur `dangerBorder` + text `danger`.
+- **Iconițe pline:** `Icon` umple implicit glifele de redare (`play`, `pause`), ca în machete. `IconButton` cu `active` umple și colorează iconița cu `accent` (semnul de carte setat).
+- **Ținte de 44 pt:** `Chip` (32 pt) și `Switch` (28 pt) ajung la 44 pt prin `hitSlop` calculat din tokens.
+- **Feedback comun:** `feedback.styles.ts` (apăsat / dezactivat) e folosit de toate primitivele apăsabile.
+
 ### 7. Primitive de afișare: `Card`, `ProgressBar`, `ListRow`, `BookCover`, `EmptyState`, `ScreenHeader`
 - `Card`: `surface`, `radius.card`, padding din tokens; varianta `raised`.
 - `ProgressBar`: `value` 0–1 (limitat), `tone` (`accent | success | info`), șină `border`; rol `progressbar` cu `accessibilityValue={{ min: 0, max: 100, now }}`.

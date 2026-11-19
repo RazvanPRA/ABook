@@ -7,7 +7,7 @@ export interface IconProps {
   size?: IconSize;
   /** Color token; defaults to `text`. */
   color?: ColorToken;
-  /** Filled glyph (e.g. the play triangle on the accent button). */
+  /** Filled glyph; defaults to true for playback glyphs (play, pause). */
   filled?: boolean;
   testID?: string;
 }

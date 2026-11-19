@@ -54,3 +54,9 @@ export const icons = {
 } as const;
 
 export type IconName = keyof typeof icons;
+
+/** Playback glyphs are drawn filled in the mockups. */
+export const FILLED_BY_DEFAULT: ReadonlySet<IconName> = new Set<IconName>([
+  'play',
+  'pause',
+]);
