@@ -41,6 +41,16 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 - `stripRepeatedHeaders(pages, sample)` (top/bottom band, digits replaced before comparing, ≥ 50% of the sample), `stripPageNumbers` (isolated numbers, `- 12 -`, `12 / 300`, Roman numerals alone on a line).
 - **Tests:** table-driven with a book header + chapter header, footers with changing page numbers, a line that repeats in the middle of the page (kept), < 2 pages, empty pages.
 
+**Done** (2026-11-19). Findings:
+
+- **Line shape:** `PageLine { text, y, height }` with `y` = the baseline's distance from the top as a **fraction of the page height** (0–1), so band checks need no page size; `height` stays in PDF units (compared between lines for headings in step 6). The WebView normalizes `y` in M3b. The types live in `services/text/types.ts`; `services/pdf` may import them (`boundaries` allows service → service).
+- **Two functions instead of `stripRepeatedHeaders(pages, sample)`:** `detectRepeatedHeaders(sample)` runs once on the first `HEADER_SAMPLE_PAGES` (20) and returns the set of signatures; `stripRepeatedHeaders(pages, headers)` applies it to every batch. That fits the streaming import and the resume (the same sample gives the same set). Shared helpers in `pageBands.ts`: top/bottom band = 10% of the page, `headerSignature` (whitespace collapsed, digits → `#`, lower case).
+- **Threshold:** a band line is a header when it appears on ≥ `max(2, ceil(50% × non-empty sample pages))` pages, counted once per page. Empty pages don't dilute the share, and a 2-page sample needs the line on both. Alternating running headers (book title on even pages, chapter on odd ones) sit at exactly 50% and are found.
+- **Page numbers only in the bands:** `12`, `- 12 -`, `12 / 300`, `12 din 300`, `pag. 12` (≤ 4 digits) in either band; Roman numerals only in the **footer**, because a lone `IV` at the top of a page is usually a chapter heading (step 6 relies on it). A number alone in the body (a year, a list item) is kept.
+- **Coverage:** `collectCoverageFrom` = `services/text` only, with a **`global`** 100% threshold. A path key (`./src/services/text/`, or a glob) is never matched by Jest on Windows ("Coverage data … was not found", exit 1). `npm run check` now runs `jest --coverage`; checked that one uncovered function makes it fail. Widening `collectCoverageFrom` later raises the bar for the new folders too (comment in `jest.config.js`).
+- **Pitfalls:** `noUncheckedIndexedAccess` applies to tests (`texts(...)[0]` is `string[] | undefined`; destructure with a default). The first `check` after the Jest config change hit the known `EPERM` on the transform cache; the rerun was green.
+- **Tests:** 503 in 55 suites; `services/text` 100% statements/branches/functions/lines.
+
 #### 3. Hyphenation and normalization
 - `joinHyphenatedWords` (`cuvân-\ntul` → `cuvântul` only when the hyphen ends a line and the next line starts lowercase; keeps `d-na`, `într-o` mid-line, and a hyphen before an uppercase word).
 - `normalizeDiacritics` (ş ţ Ş Ţ cedilla → ș ț Ș Ț comma below, collapsed whitespace, NBSP, soft hyphen removed).

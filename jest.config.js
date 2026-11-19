@@ -27,6 +27,25 @@ module.exports = {
       '<rootDir>/node_modules/lucide-react-native/dist/cjs/lucide-react-native.js',
   },
   transformIgnorePatterns: [`node_modules/(?!(${ESM_PACKAGES.join('|')})/)`],
+  // Coverage is collected only with --coverage (npm run check) and only for services/text, which must stay
+  // at 100%. The threshold is global because Jest doesn't match path keys on Windows; widening
+  // collectCoverageFrom therefore raises the bar for the new folders too.
+  collectCoverageFrom: [
+    'src/services/text/**/*.ts',
+    '!**/__tests__/**',
+    '!**/__fixtures__/**',
+    '!src/services/text/index.ts',
+    '!src/services/text/types.ts',
+  ],
+  coverageReporters: ['text-summary'],
+  coverageThreshold: {
+    global: {
+      branches: 100,
+      functions: 100,
+      lines: 100,
+      statements: 100,
+    },
+  },
   testPathIgnorePatterns: [
     '/node_modules/',
     '/android/',
