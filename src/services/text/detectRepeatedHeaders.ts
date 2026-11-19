@@ -1,4 +1,4 @@
-import { headerSignature, isInPageBand } from './pageBands';
+import { countBandSignatures } from './pageBands';
 import type { PageText } from './types';
 
 /** Pages read at the start of an import to learn the headers and footers (decision in M3-import.md). */
@@ -30,21 +30,4 @@ export function detectRepeatedHeaders(
     }
   }
   return repeated;
-}
-
-/** On how many pages each band signature appears (once per page at most). */
-function countBandSignatures(pages: readonly PageText[]): Map<string, number> {
-  const counts = new Map<string, number>();
-  for (const page of pages) {
-    const signatures = new Set(
-      page.lines
-        .filter(isInPageBand)
-        .map(line => headerSignature(line.text))
-        .filter(signature => signature !== ''),
-    );
-    for (const signature of signatures) {
-      counts.set(signature, (counts.get(signature) ?? 0) + 1);
-    }
-  }
-  return counts;
 }

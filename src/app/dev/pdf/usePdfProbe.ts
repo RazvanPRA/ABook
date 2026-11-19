@@ -13,9 +13,10 @@ export const devPdfDir = (booksDir: string) =>
 
 /**
  * Dev only: the PDFs in files/dev-pdfs, a probe run over one, and per-request bridge timings.
- * `autoRun` (a file name from the deep link) runs once the file list is known.
+ * `autoRun` (a file name from the deep link) runs once the file list is known, and again when
+ * `nonce` (the link's `run` param) changes: a fast refresh keeps the old result otherwise.
  */
-export const usePdfProbe = (autoRun: string | null) => {
+export const usePdfProbe = (autoRun: string | null, nonce: string | null) => {
   const { stores, pdfExtractor, pdfTransport } = useAppServices();
   const dir = devPdfDir(stores.files.booksDir());
   const [files, setFiles] = useState<string[]>([]);
@@ -57,11 +58,12 @@ export const usePdfProbe = (autoRun: string | null) => {
 
   const autoRan = useRef<string | null>(null);
   useEffect(() => {
-    if (autoRun && autoRan.current !== autoRun && files.includes(autoRun)) {
-      autoRan.current = autoRun;
+    const key = `${autoRun}|${nonce}`;
+    if (autoRun && autoRan.current !== key && files.includes(autoRun)) {
+      autoRan.current = key;
       run(autoRun);
     }
-  }, [autoRun, files, run]);
+  }, [autoRun, nonce, files, run]);
 
   return { files, running, progress, outcome, timings, phase, run };
 };

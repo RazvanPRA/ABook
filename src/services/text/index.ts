@@ -6,6 +6,16 @@ export {
 } from './detectRepeatedHeaders';
 export { stripRepeatedHeaders } from './stripRepeatedHeaders';
 export { stripPageNumbers } from './stripPageNumbers';
+export {
+  MIN_NUMBERED_HEADER_PAGES,
+  printedPageOffset,
+  stripNumberedRunningHeaders,
+} from './stripNumberedRunningHeaders';
+export {
+  MIN_CHAPTER_HEADER_PAGES,
+  detectChapterHeaders,
+  stripChapterRunningHeaders,
+} from './stripChapterRunningHeaders';
 export { joinHyphenatedWords } from './joinHyphenatedWords';
 export { normalizeDiacritics } from './normalizeDiacritics';
 export { normalizeWhitespace } from './normalizeWhitespace';

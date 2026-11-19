@@ -5,13 +5,17 @@ import {
 } from '@/services/pdf';
 import {
   HEADER_SAMPLE_PAGES,
+  chaptersFromOutline,
   detectRepeatedHeaders,
   expandLigatures,
   joinHyphenatedWords,
   normalizeDiacritics,
+  fixedPageChapters,
   normalizeWhitespace,
+  stripChapterRunningHeaders,
   stripPageNumbers,
   stripRepeatedHeaders,
+  type OutlineItem,
   type PageText,
 } from '@/services/text';
 
@@ -28,6 +32,8 @@ export interface ProbeProgress {
 export interface ProbeResult {
   readonly document: PdfDocument;
   readonly outlineCount: number;
+  /** Chapters the per-chapter header rules ran on (outline, else every 10 pages). */
+  readonly chapterCount: number;
   readonly openMs: number;
   readonly extractMs: number;
   readonly slowestBatchMs: number;
@@ -76,13 +82,17 @@ export async function runPdfProbe(
     });
     await yieldToJs();
     const cleanStarted = now();
-    const { headers, strippedPages, cleanPages } = cleanAll(extraction.pages);
+    const { headers, chapterCount, strippedPages, cleanPages } = cleanAll(
+      extraction.pages,
+      outline,
+    );
     const cleanMs = now() - cleanStarted;
     return {
       ok: true,
       result: {
         document,
         outlineCount: outline.length,
+        chapterCount,
         openMs,
         extractMs: extraction.ms,
         slowestBatchMs: extraction.slowestMs,
@@ -105,12 +115,23 @@ export async function runPdfProbe(
   }
 }
 
-/** The step 2–3 cleanup over the whole book, headers learned from the first pages. */
-function cleanAll(pages: readonly PageText[]) {
+/**
+ * The cleanup as the import will run it: book headers learned from the first pages, then the
+ * per-chapter running heads (step 11a), then page numbers and hyphenation.
+ */
+function cleanAll(pages: readonly PageText[], outline: readonly OutlineItem[]) {
   const headers = detectRepeatedHeaders(pages.slice(0, HEADER_SAMPLE_PAGES));
-  const strippedPages = stripPageNumbers(stripRepeatedHeaders(pages, headers));
+  const bookClean = stripRepeatedHeaders(pages, headers);
+  const chapters =
+    chaptersFromOutline(outline, pages.length) ??
+    fixedPageChapters(pages.length);
+  const chapterClean = chapters.flatMap(({ startPage, endPage }) =>
+    stripChapterRunningHeaders(bookClean.slice(startPage - 1, endPage)),
+  );
+  const strippedPages = stripPageNumbers(chapterClean);
   return {
     headers,
+    chapterCount: chapters.length,
     strippedPages,
     cleanPages: joinHyphenatedWords(strippedPages),
   };

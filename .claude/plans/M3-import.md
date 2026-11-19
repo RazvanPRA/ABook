@@ -215,7 +215,7 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 - Also open the real samples: `Microservices_Patterns.pdf` (522 p.) and `The.Clean.Coder…pdf` (6.0 MB, the most chunks). After cleanup, the licence watermark, the running headers and the page numbers (Roman and Arabic) are gone.
 - **Check:** the whole PDF extracts without a red screen or a freeze; password and corrupt PDFs give the typed errors.
 
-**Done** (2026-11-19), on `emulator-5554`, debug build with Metro. **Partly met:** extraction, errors and watermark removal pass; running headers that change from chapter to chapter remain, so step 11a is proposed below.
+**Done** (2026-11-19), on `emulator-5554`, debug build with Metro. **Partly met:** extraction, errors and watermark removal pass; running headers that change from chapter to chapter remain, so step 11a is proposed below (done: all removed).
 
 **Test PDFs:** `npm run dev:pdfs` (`scripts/make-dev-pdfs.js` + `scripts/dev-pdfs/pdfWriter.js`, no dependency) writes them to `.dev-pdfs/` (gitignored):
 - `ion-320.pdf`: 320 pages, running title, page numbers, `Capitolul N` every 20 pages, hyphenated line ends, dialogue, „…”.
@@ -264,11 +264,28 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 - **Privacy:** the watermark carries the owner's name and email. The emulator scripts redacted it from every output, and nothing here quotes it.
 - **Tests:** 840 in 78 suites.
 
-#### 11a. Running headers that change by chapter (proposed, after step 11)
+#### 11a. Running headers that change by chapter
 - In `services/text`, two more header rules, both applied per chapter (the pipeline cleans a chapter at a time):
   - a band line whose leading or trailing number is the printed page number: the offset `page − number` most common on the chapter's pages (`72 CHAPTER 3 …`, `71Overview…`);
   - band lines repeated on ≥ 50% of a chapter's pages and on ≥ 3 pages (`CHAPTER 1 PROFESSIONALISM`).
 - **Check:** with `abook://dev/pdf`, no running header left on the pages checked in step 11, and no body line lost on them.
+
+**Done** (2026-11-19). Met on the emulator. Findings:
+
+- **Three rules, not two.** `stripChapterRunningHeaders(chapterPages)` runs after the book-wide `stripRepeatedHeaders` and before `stripPageNumbers`, on one chapter's pages:
+  1. **`stripNumberedRunningHeaders`:** a band line whose leading or trailing number (1–4 digits) is the page's printed number. The offset `page − printed` is the one most pages of the chapter agree on, if ≥ 3 do (`printedPageOffset`); otherwise nothing is removed. This removes `72 CHAPTER 3 …`, `71Overview of…` (the number glued to the text) and `270 CHAPTER 8 …` in `Microservices`, and the chapter opener's footer `1` (y 0.91).
+  2. **`detectChapterHeaders`:** band signatures repeated on ≥ 3 pages of the chapter, with no share threshold. The plan's "≥ 50% of the chapter" was too strict: `CHAPTER 1 PROFESSIONALISM` is printed only on odd pages, never on the opener, so it stays under 50%.
+  3. **Same slot, added on the emulator:** in `Clean Coder`, the even pages carry the **current section title** as running head (`TAKING RESPONSIBILITY`, `THE CODING DOJO`), each printed on one or two pages only, with no number. These heads sit exactly where rules 1–2 removed the chapter head (y 0.075, height 9.977), while the body starts at y 0.134.
+     - `headerSlots` learns the slots, position to 1/250 of the page and height to half a point, from the lines rules 1–2 removed on ≥ 3 pages.
+     - Then any band line in such a slot goes, whatever its text.
+- **Nothing lost from the body**, checked line by line through the new "what was removed / first lines with y and height" view:
+  - `Microservices` body lines that start in the top band (y 0.091, height 9.99) stay, because their slot differs from the head's (y 0.05).
+  - `Clean Coder` section headings in the body (y 0.135, height 12) and chapter openers (height 36 / 150) stay.
+  - The Romanian notes' title (y 0.091, height 20) and the `Capitolul N` headings of `ion-320.pdf` stay.
+- **Chapters for the rules:** the dev probe uses `chaptersFromOutline` and otherwise `fixedPageChapters` (22 and 24 chapters for the two books). Step 13 cleans each chapter with the same order: book headers, then `stripChapterRunningHeaders`, then page numbers, then hyphens. A chapter shorter than 3 pages gets no per-chapter rule, by design.
+- **Known limit:** a running head in a chapter where neither rule 1 nor rule 2 finds 3 pages (a 2-page chapter, or a book whose heads carry neither a number nor a repeated chapter title) stays. None of the samples has one.
+- **Dev screen:** `&run=<any>` re-runs a file from the link, because a fast refresh keeps the previous result. `countBandSignatures` moved to `pageBands.ts`, now shared by the book and chapter rules.
+- **Tests:** 855 in 80 suites, `services/text` still at 100%.
 
 ### M3c – `features/import`
 

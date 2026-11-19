@@ -18,12 +18,16 @@ function stringParam(params: object | undefined, key: string): string | null {
 
 /**
  * Dev-only extractor check (abook://dev/pdf): speed, JS-thread gaps, what the cleanup removed.
- * `?file=<name>&page=<n>` runs a file and shows a page without tapping (emulator scripts).
+ * `?file=<name>&page=<n>[&run=<any>]` runs a file and shows a page without tapping (emulator
+ * scripts); a new `run` value runs it again.
  */
 export function PdfDebugScreen() {
   const navigation = useNavigation();
   const { params } = useRoute();
-  const probe = usePdfProbe(stringParam(params, 'file'));
+  const probe = usePdfProbe(
+    stringParam(params, 'file'),
+    stringParam(params, 'run'),
+  );
   const [page, setPage] = useState(1);
   const linkedPage = Number(stringParam(params, 'page') ?? 1);
   useEffect(() => setPage(linkedPage), [linkedPage, probe.outcome]);
@@ -101,7 +105,7 @@ function metricsLine(result: ProbeResult): string {
     pageCount / Math.max(result.extractMs / 1000, 0.001),
   );
   const lines = result.rawPages.reduce((sum, p) => sum + p.lines.length, 0);
-  return `${pageCount} pagini · ${result.outlineCount} intrări în cuprins · deschidere ${result.openMs} ms · extragere ${result.extractMs} ms (${perSecond} pag/s) · lot max ${result.slowestBatchMs} ms · curățare ${result.cleanMs} ms · ${lines} linii · ${result.headerCount} antete`;
+  return `${pageCount} pagini · ${result.outlineCount} intrări în cuprins · ${result.chapterCount} capitole · deschidere ${result.openMs} ms · extragere ${result.extractMs} ms (${perSecond} pag/s) · lot max ${result.slowestBatchMs} ms · curățare ${result.cleanMs} ms · ${lines} linii · ${result.headerCount} antete`;
 }
 
 const leftoversLine = ({ leftoverHeaders }: ProbeResult) =>
@@ -111,6 +115,16 @@ const leftoversLine = ({ leftoverHeaders }: ProbeResult) =>
   ].join('\n');
 
 const STEPS = [-10, -1, 1, 10];
+
+/** The first 3 kept lines with their position, to tell a running head from a body heading. */
+const firstLines = (page: ProbeResult['strippedPages'][number] | undefined) =>
+  (page?.lines ?? [])
+    .slice(0, 3)
+    .map(
+      line =>
+        `${line.text.slice(0, 50)} (y ${line.y.toFixed(3)}, h ${line.height})`,
+    )
+    .join(' | ');
 
 function ResultSection({
   result,
@@ -146,7 +160,7 @@ function ResultSection({
         {`eliminate: ${removedLines(result, page - 1).join(' | ') || '—'}`}
       </AppText>
       <AppText testID="pdf-clean-head">
-        {`curățat, început: ${pageText(result.cleanPages[page - 1]).slice(0, 120)}`}
+        {`curățat, primele linii: ${firstLines(result.strippedPages[page - 1])}`}
       </AppText>
     </CatalogSection>
   );
