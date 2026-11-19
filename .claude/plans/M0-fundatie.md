@@ -1,80 +1,80 @@
-# M0 – Fundație și unelte (React Native CLI)
+# M0 – Foundation and tooling (React Native CLI)
 
-Branch: `m0-fundatie` (din `dev`). La final: PR `m0-fundatie` → `dev`.
-Referințe: `.claude/PLAN.md` (M0), `.claude/PROMPT.md` §2, §3 și §8 pasul 1, skill-ul `modular-architecture` §2, §3 și §10.
+Branch: `m0-fundatie` (from `dev`). At the end: PR `m0-fundatie` → `dev`.
+References: `.claude/PLAN.md` (M0), `.claude/PROMPT.md` §2, §3 and §8 step 1, the `modular-architecture` skill §2, §3 and §10.
 
-**Platformă: React Native CLI pur. Fără Expo**: nici SDK, nici pachete `expo-*`, nici `install-expo-modules`. Lint-ul interzice orice import `expo*`.
+**Platform: pure React Native CLI. No Expo**: no SDK, no `expo-*` packages, no `install-expo-modules`. Lint forbids any `expo*` import.
 
-## Obiectiv
+## Goal
 
-Un proiect React Native CLI care pornește pe emulatorul `Pixel_10_Pro_XL` prin `.claude/scripts/run-android.ps1`. Are 3 tab-uri goale și fonturile încărcate, iar `typecheck`, `lint` și `test` sunt verzi. Regulile de arhitectură sunt deja impuse de lint, înainte să existe cod de business.
+A React Native CLI project that starts on the `Pixel_10_Pro_XL` emulator via `.claude/scripts/run-android.ps1`. It has 3 empty tabs and the fonts loaded, and `typecheck`, `lint` and `test` are green. The architecture rules are already enforced by lint, before any business code exists.
 
-## Mediu verificat (2026-11-18)
+## Verified environment (2026-11-18)
 
-| Unealtă | Versiune | Notă |
+| Tool | Version | Note |
 | --- | --- | --- |
 | Node / npm | 24.13.0 / 11.6.2 | ok |
-| React Native | 0.88.1 (`@react-native-community/cli` 21.0.0) | ultimul stabil |
+| React Native | 0.88.1 (`@react-native-community/cli` 21.0.0) | latest stable |
 | Android SDK | `%LOCALAPPDATA%\Android\Sdk` | AVD `Pixel_10_Pro_XL` |
-| JDK | `JAVA_HOME` = 25; există și 17 (Adoptium) | Se verifică ce JDK cere RN 0.88 (pasul 2). Dacă e 17, scriptul setează `JAVA_HOME` doar pentru build |
+| JDK | `JAVA_HOME` = 25; 17 (Adoptium) is also installed | Check which JDK RN 0.88 requires (step 2). If it's 17, the script sets `JAVA_HOME` for the build only |
 
-## Echivalențe Expo → RN CLI (aplicate în PROMPT §2)
+## Expo → RN CLI equivalents (applied in PROMPT §2)
 
-| Nevoie | Înainte (Expo) | Acum (RN CLI) | Versiune |
+| Need | Before (Expo) | Now (RN CLI) | Version |
 | --- | --- | --- | --- |
-| Navigare | `expo-router` | `@react-navigation/native` + `native-stack` + `bottom-tabs` | 7.5 / 7.21 / 7.22 |
-| Fișiere | `expo-file-system` | `@dr.pogodin/react-native-fs` | 2.41 |
-| Alegere PDF | `expo-document-picker` | `@react-native-documents/picker` | 12.1 |
-| Voce | `expo-speech` | `react-native-tts` (rezervă: TurboModule propriu) | 4.1.1 |
+| Navigation | `expo-router` | `@react-navigation/native` + `native-stack` + `bottom-tabs` | 7.5 / 7.21 / 7.22 |
+| Files | `expo-file-system` | `@dr.pogodin/react-native-fs` | 2.41 |
+| PDF picking | `expo-document-picker` | `@react-native-documents/picker` | 12.1 |
+| Voice | `expo-speech` | `react-native-tts` (fallback: custom TurboModule) | 4.1.1 |
 | UUID / hash | `expo-crypto` | `react-native-get-random-values` + `uuid`, `@noble/hashes` | 2.1 / – / 2.4 |
-| Partajare | `expo-sharing` | `react-native-share` | 12.3 |
+| Sharing | `expo-sharing` | `react-native-share` | 12.3 |
 | Splash | `expo-splash-screen` | `react-native-bootsplash` | 7.3 |
-| Fonturi | `expo-font` + `@expo-google-fonts/*` | `.ttf` în `assets/fonts`, legate cu `react-native-asset` | – |
-| Config native | config plugins | modificări directe în `android/` și `ios/` | – |
-| Teste | `jest-expo` | Jest cu preset `react-native` | – |
+| Fonts | `expo-font` + `@expo-google-fonts/*` | `.ttf` in `assets/fonts`, linked with `react-native-asset` | – |
+| Native config | config plugins | direct changes in `android/` and `ios/` | – |
+| Tests | `jest-expo` | Jest with the `react-native` preset | – |
 
-## Presupuneri (de confirmat; nu blochează începutul)
+## Assumptions (to be confirmed; they don't block the start)
 
-- Deciziile 1–4 din `PLAN.md` („Conflicte de semnalat”) se aplică așa cum au fost propuse.
-- Numele proiectului nativ este `ABook`, cu pachetul / bundle id `com.abook` și numele afișat „Audiobook PDF”.
-- Managerul de pachete este `npm`.
-- Lucrez doar pe Android pe Windows. Folderul `ios/` se generează și se ține în repo, dar build-ul iOS (pod install, Xcode) nu se poate verifica aici.
+- Decisions 1–4 from `PLAN.md` ("Conflicts to report") apply as proposed.
+- The native project name is `ABook`, with package / bundle id `com.abook` and display name "Audiobook PDF".
+- The package manager is `npm`.
+- I work on Android only, on Windows. The `ios/` folder is generated and kept in the repo, but the iOS build (pod install, Xcode) can't be verified here.
 
 ---
 
-## Pași
+## Steps
 
-Fiecare pas se încheie cu un commit pe `m0-fundatie`. De la pasul 4 încolo, fiecare commit trece `typecheck`, `lint` și `test`.
+Each step ends with a commit on `m0-fundatie`. From step 4 on, every commit passes `typecheck`, `lint` and `test`.
 
-### 1. Commit de pornire
-- Adaug `.claude/` (PROMPT, PLAN, plans, skills).
-- **Verificare:** `git status` curat.
+### 1. Initial commit
+- Add `.claude/` (PROMPT, PLAN, plans, skills).
+- **Check:** `git status` clean.
 
-### 2. Schelet React Native CLI
-**Făcut** (2026-11-18). Ce am constatat:
-- RN 0.88.1 cere JDK între 17 și 20 (`react-native doctor`). Scriptul folosește automat JDK 17.
-- Template-ul a generat `com/com.abook/`; am mutat fișierele în `com/abook/`. Am setat `rootProject.name` la `ABook` și numele afișat la „Audiobook PDF”.
-- TS 6 marchează `baseUrl` ca depreciat, așa că `paths` e folosit fără el.
-- `doctor` raportează „Android SDK N/A”, deși build-tools 37 e instalat și build-ul trece. E o eroare de detecție a lui `doctor`.
-- Build-ul de debug primește `ACCESS_LOCAL_NETWORK` de la dev support-ul RN (Android 17 îl cere la rulare). `run-android.ps1` îl acordă pe emulator.
-- Primul build a durat 135 s. A doua rulare a scriptului nu face build și durează 9 s.
+### 2. React Native CLI skeleton
+**Done** (2026-11-18). Findings:
+- RN 0.88.1 requires a JDK between 17 and 20 (`react-native doctor`). The script uses JDK 17 automatically.
+- The template generated `com/com.abook/`; I moved the files to `com/abook/`. I set `rootProject.name` to `ABook` and the display name to "Audiobook PDF".
+- TS 6 flags `baseUrl` as deprecated, so `paths` is used without it.
+- `doctor` reports "Android SDK N/A", even though build-tools 37 is installed and the build passes. It's a detection bug in `doctor`.
+- The debug build gets `ACCESS_LOCAL_NETWORK` from RN dev support (Android 17 asks for it at runtime). `run-android.ps1` grants it on the emulator.
+- The first build took 135 s. The second run of the script doesn't build and takes 9 s.
 
-- `npx @react-native-community/cli@latest init ABook --package-name com.abook --skip-git-init`, generat într-un folder temporar (rădăcina nu e goală), apoi mutat în rădăcină. Rămân `README.md` și `.claude/`, iar `.gitignore` vine din template.
-- Verific în `android/gradle.properties` că `newArchEnabled=true`, și îl activez și pe iOS.
-- Afișez numele „Audiobook PDF”: `android/app/src/main/res/values/strings.xml` și `CFBundleDisplayName` în `Info.plist`.
-- `tsconfig.json`: `strict: true`, `noUncheckedIndexedAccess`, `noImplicitOverride`, alias-ul `@/*` → `src/*`, oglindit în `babel-plugin-module-resolver`.
-- Verific ce JDK cere RN 0.88 (documentația „Set up your environment”).
-- Șterg `App.tsx` demo; punctul de intrare devine `src/app/App.tsx`.
-- **Verificare:** `npx tsc --noEmit` trece; `npx react-native doctor` fără erori pe Android.
+- `npx @react-native-community/cli@latest init ABook --package-name com.abook --skip-git-init`, generated in a temporary folder (the root isn't empty), then moved to the root. `README.md` and `.claude/` stay, and `.gitignore` comes from the template.
+- Check in `android/gradle.properties` that `newArchEnabled=true`, and enable it on iOS too.
+- Display the name "Audiobook PDF": `android/app/src/main/res/values/strings.xml` and `CFBundleDisplayName` in `Info.plist`.
+- `tsconfig.json`: `strict: true`, `noUncheckedIndexedAccess`, `noImplicitOverride`, the `@/*` → `src/*` alias, mirrored in `babel-plugin-module-resolver`.
+- Check which JDK RN 0.88 requires (the "Set up your environment" docs).
+- Delete the demo `App.tsx`; the entry point becomes `src/app/App.tsx`.
+- **Check:** `npx tsc --noEmit` passes; `npx react-native doctor` without errors on Android.
 
-### 3. Dependențe (toate cele native, o singură dată)
-**Rezultat** (2026-11-18):
-- **Spike `react-native-tts`: EȘUAT.** Biblioteca nu compilează, pentru că `build.gradle` folosește `jcenter()`, care a fost eliminat în Gradle 9 (RN 0.88 folosește Gradle 9.4.1). Am scos-o. Vocea devine un **TurboModule propriu** (`AbookTts`: Android `TextToSpeech`, iOS `AVSpeechSynthesizer`) în M5, în spatele `TtsEngine`.
-- **AsyncStorage 3.1.1:** folosește Room/SQLite și are un API nou (`getMany` / `setMany` / `removeMany`, `getAllKeys`, `createAsyncStorage(name)`), fără `multiGet` și fără proprietatea `AsyncStorage_db_size_in_MB`, deci limita de ~6 MB din v1 nu mai există. Regula de ~256 KB per valoare rămâne, din cauza limitei de 2 MB a `CursorWindow` la citire. Pasul 7 nu mai are nimic de setat pentru AsyncStorage.
-- **`pdfjs-dist` 6.5.438:** are `legacy/build/pdf.mjs` și `pdf.worker.mjs`.
-- Toate versiunile sunt fixate exact în `package.json`, iar `.npmrc` are `save-exact=true`.
+### 3. Dependencies (all native ones, at once)
+**Result** (2026-11-18):
+- **`react-native-tts` spike: FAILED.** The library doesn't compile, because `build.gradle` uses `jcenter()`, which was removed in Gradle 9 (RN 0.88 uses Gradle 9.4.1). I removed it. The voice becomes a **custom TurboModule** (`AbookTts`: Android `TextToSpeech`, iOS `AVSpeechSynthesizer`) in M5, behind `TtsEngine`.
+- **AsyncStorage 3.1.1:** uses Room/SQLite and has a new API (`getMany` / `setMany` / `removeMany`, `getAllKeys`, `createAsyncStorage(name)`), without `multiGet` and without the `AsyncStorage_db_size_in_MB` property, so the ~6 MB limit from v1 no longer exists. The ~256 KB per value rule remains, because of the 2 MB `CursorWindow` read limit. Step 7 no longer has anything to set for AsyncStorage.
+- **`pdfjs-dist` 6.5.438:** has `legacy/build/pdf.mjs` and `pdf.worker.mjs`.
+- All versions are pinned exactly in `package.json`, and `.npmrc` has `save-exact=true`.
 
-Instalez acum toate librăriile native, ca build-ul nativ să se facă rar și scriptul să nu mai recompileze la fiecare milestone.
+I install all native libraries now, so the native build happens rarely and the script doesn't recompile at every milestone.
 
 ```
 npm i @react-navigation/native @react-navigation/native-stack @react-navigation/bottom-tabs \
@@ -87,182 +87,182 @@ npm i @reduxjs/toolkit react-redux zod i18next react-i18next lucide-react-native
   uuid @noble/hashes pdfjs-dist
 ```
 
-- Pentru fiecare librărie nativă, verific în documentația ei compatibilitatea cu RN 0.88 și New Architecture, apoi fixez versiunea. Reanimated cere plugin-ul Babel (pentru Reanimated 4: `react-native-worklets/plugin`).
-- Pentru `pdfjs-dist` fixez o versiune care are build-ul legacy (folosit în M3).
-- Fără `redux-persist`, fără kit-uri UI și fără `expo*` (PROMPT §2).
-- **Spike `react-native-tts`:** build Android, plus un test manual de `speak`/`stop` din ecranul placeholder. Dacă nu compilează sau nu emite evenimente pe New Architecture, notez în `PLAN.md` și planific TurboModule-ul propriu pentru M5, fără să blochez M0.
-- **Verificare:** `cd android && gradlew assembleDebug` trece.
+- For each native library, I check its docs for compatibility with RN 0.88 and the New Architecture, then pin the version. Reanimated requires the Babel plugin (for Reanimated 4: `react-native-worklets/plugin`).
+- For `pdfjs-dist` I pin a version that has the legacy build (used in M3).
+- No `redux-persist`, no UI kits and no `expo*` (PROMPT §2).
+- **`react-native-tts` spike:** Android build, plus a manual `speak`/`stop` test from the placeholder screen. If it doesn't compile or doesn't emit events on the New Architecture, I note it in `PLAN.md` and plan the custom TurboModule for M5, without blocking M0.
+- **Check:** `cd android && gradlew assembleDebug` passes.
 
-### 4. Calitate: TypeScript, ESLint, Prettier, Jest
-**Făcut** (2026-11-19). `npm run check` (typecheck, lint, Prettier, Jest) e verde, cu 20/20 teste, dintre care 19 sunt santinele de lint. Abateri față de plan:
-- **ESLint 9.39** cu flat config (`eslint.config.js`), peste `@react-native/eslint-config/flat`. Fără pachetul `typescript-eslint`: pluginul `@typescript-eslint` e deja inclus de configul RN, iar al doilea ar fi fost o definiție duplicată. Regulile `no-explicit-any` și `no-non-null-assertion` sunt setate explicit.
-- `eslint-plugin-ft-flow` (venit din configul RN) cade pe ESLint 9 (`getAllComments`). Nu folosim Flow, așa că i-am scos regulile.
-- `eslint-plugin-boundaries` 7.4 folosește regula `boundaries/dependencies` cu `policies`. Între feature-uri, importurile sunt permise doar spre `index.ts` (`fileInternalPath`) sau în interiorul aceluiași feature (`captured.feature`). Spre repositories, feature-urile au voie doar la importuri de tip.
-- `import/no-cycle` merge cu `disableScc: true`: optimizarea SCC cade pe fișiere care nu există pe disc.
-- Santinelele dau configul direct prin `overrideConfig`, pentru că ESLint 9 îl încarcă prin `import()` dinamic, nesuportat de VM-ul Jest. Fișierele-țintă se creează temporar în `__lint-fixtures__` și se șterg la final.
-- Tipurile Node (`@types/node`) se încarcă doar în testul de lint (`/// <reference types="node" />`); codul aplicației nu le vede.
-- Am creat deja aici scheletul `src/` cu `index.ts`, din pasul 5, ca santinelele să aibă ținte reale.
+### 4. Quality: TypeScript, ESLint, Prettier, Jest
+**Done** (2026-11-19). `npm run check` (typecheck, lint, Prettier, Jest) is green, with 20/20 tests, 19 of which are lint sentinels. Deviations from the plan:
+- **ESLint 9.39** with flat config (`eslint.config.js`), on top of `@react-native/eslint-config/flat`. No `typescript-eslint` package: the `@typescript-eslint` plugin is already included in the RN config, and a second one would have been a duplicate definition. The `no-explicit-any` and `no-non-null-assertion` rules are set explicitly.
+- `eslint-plugin-ft-flow` (coming from the RN config) fails on ESLint 9 (`getAllComments`). We don't use Flow, so I removed its rules.
+- `eslint-plugin-boundaries` 7.4 uses the `boundaries/dependencies` rule with `policies`. Between features, imports are allowed only to `index.ts` (`fileInternalPath`) or within the same feature (`captured.feature`). Towards repositories, features may only use type imports.
+- `import/no-cycle` works with `disableScc: true`: the SCC optimization fails on files that don't exist on disk.
+- The sentinels pass the config directly via `overrideConfig`, because ESLint 9 loads it through dynamic `import()`, unsupported by the Jest VM. The target files are created temporarily in `__lint-fixtures__` and deleted at the end.
+- Node types (`@types/node`) are loaded only in the lint test (`/// <reference types="node" />`); app code doesn't see them.
+- I already created the `src/` skeleton with `index.ts` files here, from step 5, so the sentinels have real targets.
 
-- **Scripturi** în `package.json`: `typecheck` (`tsc --noEmit`), `lint` (`eslint .`), `format`, `test` (`jest`), `check` (toate trei).
-- **ESLint** (flat config: `@react-native/eslint-config` + `typescript-eslint` strict + `eslint-config-prettier`):
+- **Scripts** in `package.json`: `typecheck` (`tsc --noEmit`), `lint` (`eslint .`), `format`, `test` (`jest`), `check` (all three).
+- **ESLint** (flat config: `@react-native/eslint-config` + strict `typescript-eslint` + `eslint-config-prettier`):
   - `@typescript-eslint/no-explicit-any`, `no-non-null-assertion`: `error`;
-  - limitele din skill §2:
+  - the limits from skill §2:
 
-    | Glob | Reguli |
+    | Glob | Rules |
     | --- | --- |
     | `**/components/**/*.tsx`, `src/shared/ui/**/*.tsx` | `max-lines` 150 |
     | `**/screens/**/*.tsx` | `max-lines` 120 |
     | `**/hooks/**/use*.ts` | `max-lines` 80 |
     | `src/services/**`, `**/services/**`, `src/shared/utils/**` | `max-lines` 200, `max-lines-per-function` 40 |
-    | toate fișierele | `max-params` 3, `complexity` 10, `max-depth` 4, `react/jsx-max-depth` 4 |
+    | all files | `max-params` 3, `complexity` 10, `max-depth` 4, `react/jsx-max-depth` 4 |
 
-  - regula de max 7 props nu există gata făcută; o verific în review și, dacă devine nevoie, scriu o regulă locală în M1;
-  - interdicții (`no-restricted-imports`):
-    - `expo`, `expo-*` și `@expo/*` peste tot;
-    - `@react-native-async-storage/async-storage` și `@dr.pogodin/react-native-fs` în afara `src/storage/**` și `src/repositories/**`;
-    - hex-uri literale în afara `src/shared/theme/**` (`no-restricted-syntax` pe `/#[0-9a-fA-F]{3,8}/`).
-- **`eslint-plugin-boundaries`**, cu elementele `app`, `feature`, `service`, `repository`, `storage`, `shared` și regulile:
-  - `app` → orice;
-  - `feature` → `service`, `shared` și alt `feature` doar prin `index.ts`;
+  - the max 7 props rule doesn't exist off the shelf; I check it in review and, if needed, write a local rule in M1;
+  - bans (`no-restricted-imports`):
+    - `expo`, `expo-*` and `@expo/*` everywhere;
+    - `@react-native-async-storage/async-storage` and `@dr.pogodin/react-native-fs` outside `src/storage/**` and `src/repositories/**`;
+    - literal hex values outside `src/shared/theme/**` (`no-restricted-syntax` on `/#[0-9a-fA-F]{3,8}/`).
+- **`eslint-plugin-boundaries`**, with the elements `app`, `feature`, `service`, `repository`, `storage`, `shared` and the rules:
+  - `app` → anything;
+  - `feature` → `service`, `shared` and another `feature` only through `index.ts`;
   - `service` → `shared`;
   - `repository` → `storage`, `shared`;
   - `storage` → `shared`;
   - `shared` → `shared`;
-  - în plus, `import/no-cycle`.
-- **Jest:** preset `react-native`, `@testing-library/react-native`, `jest.setup.ts` cu mock-urile oficiale (AsyncStorage, Reanimated, gesture-handler, safe-area, bootsplash) și `transformIgnorePatterns` pentru pachetele ESM (`@react-navigation`, `lucide-react-native`, `@noble/hashes`, `uuid`).
-- **Teste de santinelă** pentru reguli: fișiere fixture care încalcă intenționat `boundaries` și `no-restricted-imports` (inclusiv un import `expo-*`), rulate cu `ESLint` din API într-un test Jest, care verifică că regulile raportează erorile.
-- **Verificare:** `npm run check` verde.
+  - plus `import/no-cycle`.
+- **Jest:** `react-native` preset, `@testing-library/react-native`, `jest.setup.ts` with the official mocks (AsyncStorage, Reanimated, gesture-handler, safe-area, bootsplash) and `transformIgnorePatterns` for the ESM packages (`@react-navigation`, `lucide-react-native`, `@noble/hashes`, `uuid`).
+- **Sentinel tests** for the rules: fixture files that intentionally violate `boundaries` and `no-restricted-imports` (including an `expo-*` import), run with the `ESLint` API in a Jest test, which checks that the rules report the errors.
+- **Check:** `npm run check` green.
 
-### 5. Structura `src/` și navigația
-**Făcut** (2026-11-19). `npm run check` e verde, cu 27 de teste. Verificat pe emulator: tab-urile Bibliotecă / Ascultă / Setări, `abook://book/test-1` deschide „Detalii carte” cu id-ul, iar `abook://settings` deschide tab-ul Setări.
-- **Mutat din pasul 6:** `ro.json` cu chei tipizate (`i18next.d.ts`), `i18n` sincron, `I18nProvider` și `AppProviders`, pentru că etichetele tab-urilor nu pot fi hard-codate.
-- `BookScreen` primește `bookId` ca prop. Adaptorul `BookRoute` din `app/navigation` citește parametrul rutei, așa că feature-urile nu importă tipuri de navigație. `ReactNavigation.RootParamList` e declarat global pentru `useNavigation()`.
-- `BookId` (tip branded) e în `shared/domain`, iar `ScreenPlaceholder` (temporar) e în `shared/ui`.
-- **Nativ:** intent-filter `abook://` (Android), `CFBundleURLTypes` (iOS) și `RNScreensFragmentFactory` în `MainActivity` (recomandat de `react-native-screens`).
-- **Teste:** în Testing Library v14, `fireEvent.press` e asincron și trebuie așteptat cu `await`. Butoanele din bottom-tabs nu au rolul `tab`.
-- **Vizual, până la M1:** textul placeholder e negru pe fundal negru și tab-urile nu au iconițe. Se rezolvă cu tokens și cu `BottomTabBar`.
+### 5. The `src/` structure and navigation
+**Done** (2026-11-19). `npm run check` is green, with 27 tests. Verified on the emulator: the Bibliotecă / Ascultă / Setări tabs, `abook://book/test-1` opens "Detalii carte" with the id, and `abook://settings` opens the Setări tab.
+- **Moved from step 6:** `ro.json` with typed keys (`i18next.d.ts`), synchronous `i18n`, `I18nProvider` and `AppProviders`, because the tab labels can't be hard-coded.
+- `BookScreen` receives `bookId` as a prop. The `BookRoute` adapter in `app/navigation` reads the route parameter, so features don't import navigation types. `ReactNavigation.RootParamList` is declared globally for `useNavigation()`.
+- `BookId` (branded type) is in `shared/domain`, and `ScreenPlaceholder` (temporary) is in `shared/ui`.
+- **Native:** `abook://` intent-filter (Android), `CFBundleURLTypes` (iOS) and `RNScreensFragmentFactory` in `MainActivity` (recommended by `react-native-screens`).
+- **Tests:** in Testing Library v14, `fireEvent.press` is async and must be awaited. The bottom-tabs buttons don't have the `tab` role.
+- **Visually, until M1:** the placeholder text is black on black and the tabs have no icons. Solved with tokens and with `BottomTabBar`.
 
-- Folderele din PROMPT §3, fiecare cu un `index.ts` minim, ca regulile `boundaries` să aibă ce verifica:
-  - `src/features/{library,import,book,player,settings}` (fiecare cu un `screens/` placeholder);
+- The folders from PROMPT §3, each with a minimal `index.ts`, so the `boundaries` rules have something to check:
+  - `src/features/{library,import,book,player,settings}` (each with a placeholder `screens/`);
   - `src/services/{pdf,text,tts}`, `src/repositories`, `src/storage/migrations`;
   - `src/shared/{ui,theme,i18n,domain,utils}`.
 - `src/app/navigation/`:
-  - `types.ts`: `RootStackParamList` (`Tabs`, `Import`, `Book: { id: BookId }`), `TabsParamList` (`Library`, `Player`, `Settings`) și declarația globală `ReactNavigation.RootParamList`, pentru `navigation.navigate` tipat;
-  - `RootNavigator.tsx`: native stack, cu `Import` ca `presentation: 'modal'`;
-  - `TabsNavigator.tsx`: bottom tabs (tab bar-ul implicit acum; `BottomTabBar` propriu vine în M1);
-  - `linking.ts`: schema `abook://` (`book/:id`, `import`).
-- Navigatoarele înregistrează doar ecranele exportate din `features/<f>/index.ts` (decizia 4).
-- **Teste:** navigatorul randează tab-ul Bibliotecă; `navigate('Book', { id })` ajunge pe ecranul de detalii.
+  - `types.ts`: `RootStackParamList` (`Tabs`, `Import`, `Book: { id: BookId }`), `TabsParamList` (`Library`, `Player`, `Settings`) and the global `ReactNavigation.RootParamList` declaration, for typed `navigation.navigate`;
+  - `RootNavigator.tsx`: native stack, with `Import` as `presentation: 'modal'`;
+  - `TabsNavigator.tsx`: bottom tabs (the default tab bar for now; the custom `BottomTabBar` comes in M1);
+  - `linking.ts`: the `abook://` scheme (`book/:id`, `import`).
+- The navigators only register the screens exported from `features/<f>/index.ts` (decision 4).
+- **Tests:** the navigator renders the Library tab; `navigate('Book', { id })` reaches the details screen.
 
-### 6. Providers, fonturi, splash, i18n
-**Făcut** (2026-11-19). `npm run check` e verde, cu 40 de teste. Verificat pe emulator: splash cu logo chihlimbar pe `#111316`, apoi „Biblioteca mea” în Space Grotesk Bold.
-- Fonturile vin din surse oficiale (OFL): Inter v4.1 (`rsms/inter`, Regular + SemiBold) și Space Grotesk (`floriankarsten/space-grotesk`). Space Grotesk **nu are SemiBold static**, așa că folosim Medium (500) și Bold (700). Licențele sunt în `assets/licenses/`.
-- Fișierele poartă numele PostScript (verificate din tabela `name`), deci `fontFamily` e identic pe Android și iOS. Le leagă `react-native-asset` (`react-native.config.js`).
-- Testul `__tests__/fonts` verifică faptul că fiecare `fontFamily` există în `assets/fonts`, în Android și în `UIAppFonts`.
-- Splash-ul e generat de `react-native-bootsplash` din `assets/brand/splash-logo.svg` (iconița Lucide `file-headphone`, ISC). E inițializat în `MainActivity`/`SceneDelegate` și ascuns la `NavigationContainer.onReady`.
-- În `shared/theme` există deja `fontFamily` și culorile `bg`/`text`. Restul token-urilor vin în M1.
-- **Pentru M1:** după splash, bara de stare are iconițe închise pe fundal închis. Trebuie `StatusBar` cu `barStyle="light-content"`.
+### 6. Providers, fonts, splash, i18n
+**Done** (2026-11-19). `npm run check` is green, with 40 tests. Verified on the emulator: splash with the amber logo on `#111316`, then "Biblioteca mea" in Space Grotesk Bold.
+- The fonts come from official sources (OFL): Inter v4.1 (`rsms/inter`, Regular + SemiBold) and Space Grotesk (`floriankarsten/space-grotesk`). Space Grotesk **has no static SemiBold**, so we use Medium (500) and Bold (700). The licenses are in `assets/licenses/`.
+- The files carry the PostScript name (checked from the `name` table), so `fontFamily` is identical on Android and iOS. `react-native-asset` links them (`react-native.config.js`).
+- The `__tests__/fonts` test checks that every `fontFamily` exists in `assets/fonts`, in Android and in `UIAppFonts`.
+- The splash is generated by `react-native-bootsplash` from `assets/brand/splash-logo.svg` (the Lucide `file-headphone` icon, ISC). It's initialized in `MainActivity`/`SceneDelegate` and hidden at `NavigationContainer.onReady`.
+- `shared/theme` already has `fontFamily` and the `bg`/`text` colors. The rest of the tokens come in M1.
+- **For M1:** after the splash, the status bar has dark icons on a dark background. It needs `StatusBar` with `barStyle="light-content"`.
 
-- `src/shared/i18n/ro.json` (titlurile tab-urilor și ale ecranelor placeholder) și `src/app/providers/I18nProvider.tsx`; niciun text hard-codat.
-- `src/app/providers/AppProviders.tsx` compune `GestureHandlerRootView`, `SafeAreaProvider`, `I18nProvider` și `NavigationContainer` (cu `linking` și o temă întunecată provizorie). `StoreProvider` și `ThemeProvider` se adaugă în M1 și M2, ca sloturi.
-- Fonturi:
-  - descarc Inter (400/600) și Space Grotesk (600/700) ca `.ttf` în `assets/fonts/` (licență OFL, inclusă în `assets/fonts/LICENSE`);
-  - le leg cu `react-native.config.js` (`assets: ['./assets/fonts']`) și `npx react-native-asset`;
-  - verific numele PostScript ca `fontFamily` să fie identic pe Android și iOS.
-- Splash: `react-native-bootsplash generate` cu culoarea de fundal `#111316` (singura culoare definită în afara tokens, în configul nativ) și `BootSplash.hide()` după montarea navigației. În M2, `hide()` așteaptă și `bootstrap.ts`.
-- **Teste:** render pe `AppProviders` cu un copil; tab-urile afișează cele 3 etichete în română.
+- `src/shared/i18n/ro.json` (titles of the tabs and of the placeholder screens) and `src/app/providers/I18nProvider.tsx`; no hard-coded text.
+- `src/app/providers/AppProviders.tsx` composes `GestureHandlerRootView`, `SafeAreaProvider`, `I18nProvider` and `NavigationContainer` (with `linking` and a provisional dark theme). `StoreProvider` and `ThemeProvider` are added in M1 and M2, as slots.
+- Fonts:
+  - download Inter (400/600) and Space Grotesk (600/700) as `.ttf` into `assets/fonts/` (OFL license, included in `assets/fonts/LICENSE`);
+  - link them with `react-native.config.js` (`assets: ['./assets/fonts']`) and `npx react-native-asset`;
+  - check the PostScript names so `fontFamily` is identical on Android and iOS.
+- Splash: `react-native-bootsplash generate` with the background color `#111316` (the only color defined outside tokens, in the native config) and `BootSplash.hide()` after navigation mounts. In M2, `hide()` also waits for `bootstrap.ts`.
+- **Tests:** render `AppProviders` with a child; the tabs show the 3 Romanian labels.
 
-### 7. Setări native directe
-**Făcut** (2026-11-19). `npm run check` e verde, cu 48 de teste. Am verificat manifestele unite de Gradle (`processDebugMainManifest` / `processReleaseMainManifest`):
-- **Release:** nicio permisiune de rețea sau de stocare partajată. A rămas doar `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`, internă, cu semnătură.
-- **Debug:** `INTERNET` (`src/debug`), plus `ACCESS_LOCAL_NETWORK` și `SYSTEM_ALERT_WINDOW`, venite din dev support-ul RN.
-- Am scos `READ/WRITE_EXTERNAL_STORAGE` (aduse de o librărie) din `main`, deci din ambele variante: PDF-ul vine prin selectorul de documente.
+### 7. Direct native settings
+**Done** (2026-11-19). `npm run check` is green, with 48 tests. I checked the manifests merged by Gradle (`processDebugMainManifest` / `processReleaseMainManifest`):
+- **Release:** no network or shared storage permissions. Only `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` remains, internal, signature-level.
+- **Debug:** `INTERNET` (`src/debug`), plus `ACCESS_LOCAL_NETWORK` and `SYSTEM_ALERT_WINDOW`, coming from RN dev support.
+- I removed `READ/WRITE_EXTERNAL_STORAGE` (brought in by a library) from `main`, so from both variants: the PDF comes through the document picker.
 - iOS: `UIBackgroundModes` = `audio`.
-- AsyncStorage: nimic de setat, pentru că v3 nu mai are `AsyncStorage_db_size_in_MB` (vezi pasul 3).
-- Testul `__tests__/native` fixează aceste reguli în manifestele sursă și în `Info.plist`.
-- `run-android.ps1` oprește aplicația înainte de reinstalare. Altfel rămânea pe ecran un dialog ANR vechi („no focused window”) peste instanța nouă. Pornirea curată în debug a durat 2,45 s.
+- AsyncStorage: nothing to set, because v3 no longer has `AsyncStorage_db_size_in_MB` (see step 3).
+- The `__tests__/native` test pins these rules in the source manifests and in `Info.plist`.
+- `run-android.ps1` stops the app before reinstalling. Otherwise a stale ANR dialog ("no focused window") stayed on screen over the new instance. A clean start in debug took 2.45 s.
 
-- `android/gradle.properties`: `AsyncStorage_db_size_in_MB`. **Întâi** verific în documentația versiunii de AsyncStorage instalate dacă proprietatea se mai numește așa (v2/v3 pot diferi). Dacă nu se mai aplică, notez în `PLAN.md` și păstrez riscul pentru M2.
+- `android/gradle.properties`: `AsyncStorage_db_size_in_MB`. **First** I check in the docs of the installed AsyncStorage version whether the property is still called that (v2/v3 may differ). If it no longer applies, I note it in `PLAN.md` and keep the risk for M2.
 - `ios/ABook/Info.plist`: `UIBackgroundModes` = `audio`.
-- `AndroidManifest.xml`: fără permisiunea `INTERNET` în build-ul de release. Rămâne în `src/debug/` pentru Metro, ca garanție pentru „fără rețea la rulare”.
-- **Verificare:** build Android trece; proprietățile apar în fișierele native.
+- `AndroidManifest.xml`: no `INTERNET` permission in the release build. It stays in `src/debug/` for Metro, as a guarantee for "no network at runtime".
+- **Check:** the Android build passes; the properties appear in the native files.
 
 ### 8. `.claude/scripts/run-android.ps1`
-**Făcut** (2026-11-19). Scriptul e verificat în toate modurile, cu codul de ieșire 0 în fiecare caz:
+**Done** (2026-11-19). The script is verified in all modes, with exit code 0 in each case:
 
-| Caz | Rezultat |
+| Case | Result |
 | --- | --- |
-| A. `-ForceBuild -ResetCache` | Metro repornit cu cache curat, build în 25 s, total 48 s |
-| B. fără parametri, fără schimbări native | fără build, total 12 s |
-| C. `-SkipBuild` | fără build, total 13 s |
+| A. `-ForceBuild -ResetCache` | Metro restarted with a clean cache, build in 25 s, total 48 s |
+| B. no parameters, no native changes | no build, total 12 s |
+| C. `-SkipBuild` | no build, total 13 s |
 | D. `-EmulatorOnly` | emulator + Metro, total 7 s |
-| E. emulator oprit | lock-uri orfane șterse, fereastra din afara ecranului mutată, boot în 2 s (snapshot), total 19 s |
+| E. emulator stopped | orphan locks deleted, off-screen window moved, boot in 2 s (snapshot), total 19 s |
 
-Modificări după versiunea inițială: JDK ≤ 20 doar pentru build (pasul 2), acordarea `ACCESS_LOCAL_NETWORK` în debug (pasul 2), `force-stop` înainte de reinstalare (pasul 7). Scripturile npm sunt `npm run emu` (cu argumente după `--`) și `npm run emu:rebuild`.
+Changes after the initial version: JDK ≤ 20 for the build only (step 2), granting `ACCESS_LOCAL_NETWORK` in debug (step 2), `force-stop` before reinstalling (step 7). The npm scripts are `npm run emu` (with arguments after `--`) and `npm run emu:rebuild`.
 
-Scriptul din `techspeak` e tot pentru RN CLI, deci l-am copiat și am schimbat puțin:
+The `techspeak` script is also for RN CLI, so I copied it and changed a little:
 
-| În techspeak | În ABook |
+| In techspeak | In ABook |
 | --- | --- |
-| `$ProjectRoot` = `..\..\app` | `..\..` (rădăcina repo-ului) |
+| `$ProjectRoot` = `..\..\app` | `..\..` (repo root) |
 | `com.techspeak` / `com.techspeak.MainActivity` | `com.abook` / `com.abook.MainActivity` |
-| `yarn` cu fallback `npx` | `npm run start` / `npx react-native run-android` (fără yarn) |
-| Amprenta nativă: `android/**`, `package.json`, `yarn.lock` | `android/**`, `package.json`, `package-lock.json` |
-| `JAVA_HOME` moștenit | setat pe JDK-ul cerut de RN 0.88 doar pentru procesul de build, dacă diferă de cel curent |
-| Dialogul de permisiune microfon (pasul 8) | eliminat (ABook nu cere microfon) |
+| `yarn` with `npx` fallback | `npm run start` / `npx react-native run-android` (no yarn) |
+| Native fingerprint: `android/**`, `package.json`, `yarn.lock` | `android/**`, `package.json`, `package-lock.json` |
+| Inherited `JAVA_HOME` | set to the JDK required by RN 0.88 for the build process only, if it differs from the current one |
+| Microphone permission dialog (step 8) | removed (ABook doesn't ask for the microphone) |
 
-- Restul rămâne: pașii 1–8, codurile de ieșire 0–6, log-urile în `android\build\run-android\`, repararea ferestrei din afara ecranului, cold boot automat, avertizarea pentru Metro duplicat.
-- **Verificare:** prima rulare face build și deschide aplicația. A doua rulare, fără schimbări native, doar repornește aplicația. Rularea cu `-ForceBuild -ResetCache` funcționează.
+- The rest stays: steps 1–8, exit codes 0–6, logs in `android\build\run-android\`, the off-screen window fix, automatic cold boot, the duplicate Metro warning.
+- **Check:** the first run builds and opens the app. The second run, without native changes, only restarts the app. The run with `-ForceBuild -ResetCache` works.
 
 ### 9. `CLAUDE.md`
-**Făcut** (2026-11-19). Conține sursele de adevăr, regulile obligatorii, comenzile, structura și straturile, plus capcanele descoperite în M0 (JDK, TTS, AsyncStorage 3, Testing Library v14, ESLint 9, fonturi, splash, manifest, commit din PowerShell).
-- Un fișier scurt în rădăcină, care trimite la `.claude/PROMPT.md`, `.claude/PLAN.md` și `.claude/plans/`.
-- Regulile principale:
-  - React Native CLI, **fără Expo**;
-  - skill-urile se încarcă înainte de codul de stocare, import sau player;
-  - comenzile `npm run check` și `run-android.ps1`;
-  - convenția de branch-uri: `m<N>-<nume>` din `dev`.
+**Done** (2026-11-19). It contains the sources of truth, the mandatory rules, the commands, the structure and layers, plus the pitfalls found in M0 (JDK, TTS, AsyncStorage 3, Testing Library v14, ESLint 9, fonts, splash, manifest, committing from PowerShell).
+- A short file at the root, pointing to `.claude/PROMPT.md`, `.claude/PLAN.md` and `.claude/plans/`.
+- The main rules:
+  - React Native CLI, **no Expo**;
+  - skills are loaded before storage, import or player code;
+  - the `npm run check` and `run-android.ps1` commands;
+  - the branch convention: `m<N>-<name>` from `dev`.
 
-### 10. Închidere
-**Făcut** (2026-11-19). `npm run check` e verde, cu 48 de teste în 6 suite, iar `npm run emu` deschide aplicația cu tab-urile Bibliotecă / Ascultă / Setări.
-- Verificarea de la închidere a găsit `fontSize: 28/16` scrise direct în `ScreenPlaceholder`, deci o încălcare a regulii „fără magic numbers”. Am reparat-o cu `shared/theme/typography.ts` (`fontSize.display` / `fontSize.body`, din PROMPT §7).
-- Dependența indirectă `@expo/config-plugins` vine de la `react-native-bootsplash`, pentru pluginul său opțional pentru Expo. Am verificat că nu ajunge în aplicație: bundle-ul JS (8,4 MB) are 0 referințe la `expo`/`@expo`, iar build-ul nativ nu o folosește. O accept ca excepție documentată. Lint-ul interzice oricum orice import `expo*` din codul nostru.
+### 10. Closing
+**Done** (2026-11-19). `npm run check` is green, with 48 tests in 6 suites, and `npm run emu` opens the app with the Bibliotecă / Ascultă / Setări tabs.
+- The closing check found `fontSize: 28/16` written directly in `ScreenPlaceholder`, a violation of the "no magic numbers" rule. I fixed it with `shared/theme/typography.ts` (`fontSize.display` / `fontSize.body`, from PROMPT §7).
+- The transitive dependency `@expo/config-plugins` comes from `react-native-bootsplash`, for its optional Expo plugin. I checked that it doesn't reach the app: the JS bundle (8.4 MB) has 0 references to `expo`/`@expo`, and the native build doesn't use it. I accept it as a documented exception. Lint forbids any `expo*` import from our code anyway.
 
-#### Checklist `modular-architecture` §10
-- [x] Niciun fișier nu depășește limitele. Cel mai mare are 33 de linii (`TabsNavigator.tsx`), iar limitele sunt impuse de ESLint.
-- [x] Fără importuri în sus sau în interiorul altui feature și fără cicluri. Le impune `boundaries`, iar 19 santinele o dovedesc.
-- [x] Fără markup sau logică duplicată. Ecranele placeholder refolosesc `ScreenPlaceholder`.
-- [x] Fără texte, culori sau mărimi hard-codate: textele sunt în `ro.json`, culorile și mărimile în `shared/theme`.
-- [x] Unitățile noi sunt în stratul corect și exportate prin `index.ts`.
-- [x] Teste adăugate și verzi.
-- [x] `typecheck`, `lint` și `test` trec.
+#### `modular-architecture` §10 checklist
+- [x] No file exceeds the limits. The largest has 33 lines (`TabsNavigator.tsx`), and the limits are enforced by ESLint.
+- [x] No upward imports or imports into another feature's internals, and no cycles. `boundaries` enforces it, and 19 sentinels prove it.
+- [x] No duplicated markup or logic. The placeholder screens reuse `ScreenPlaceholder`.
+- [x] No hard-coded texts, colors or sizes: texts are in `ro.json`, colors and sizes in `shared/theme`.
+- [x] The new units are in the right layer and exported through `index.ts`.
+- [x] Tests added and green.
+- [x] `typecheck`, `lint` and `test` pass.
 
-#### Rezumat (conform skill-ului)
-- **Unități noi:**
-  - `app`: `App`, `AppProviders`, `I18nProvider`, `RootNavigator`, `TabsNavigator`, `BookRoute`, `linking`, tipurile de navigație;
+#### Summary (per the skill)
+- **New units:**
+  - `app`: `App`, `AppProviders`, `I18nProvider`, `RootNavigator`, `TabsNavigator`, `BookRoute`, `linking`, the navigation types;
   - `features`: `LibraryScreen`, `PlayerScreen`, `SettingsScreen`, `ImportScreen`, `BookScreen`;
   - `shared`: `ScreenPlaceholder`, `BookId`/`toBookId`, `i18n` + `ro.json`, `color`, `fontFamily`, `fontSize`.
-- **Refolosite:** `ScreenPlaceholder`, în toate cele 5 ecrane.
-- **`arch-exception`:** niciuna.
+- **Reused:** `ScreenPlaceholder`, in all 5 screens.
+- **`arch-exception`:** none.
 
 ## Definition of done – M0
 
-- [x] Proiect RN CLI 0.88.1, New Architecture (`newArchEnabled=true`, `RCTNewArchEnabled`), zero dependențe directe `expo*` (lint + `npm ls`). Excepția indirectă e descrisă mai sus și nu ajunge în aplicație.
-- [x] Aplicația pornește pe `Pixel_10_Pro_XL` printr-o singură comandă (`npm run emu`), verificat în 5 moduri.
-- [x] 3 tab-uri + `Import` (modal) și `Book` (`{ id }`), cu `ParamList` tipate și deep links verificate pe emulator.
-- [x] Fonturile Inter și Space Grotesk se încarcă, iar splash-ul dispare doar după montare (test + emulator).
-- [x] Toate textele vin din `ro.json`, cu chei tipizate.
-- [x] `typecheck`, `lint` și `test` sunt verzi, iar testele de santinelă dovedesc că `boundaries` și interdicțiile sunt active.
-- [x] Toate dependențele native sunt instalate și compilate. Spike-ul `react-native-tts` a eșuat (Gradle 9), iar soluția e TurboModule-ul propriu din M5.
-- [x] `CLAUDE.md` e scris, iar `.claude/` e în commit.
+- [x] RN CLI 0.88.1 project, New Architecture (`newArchEnabled=true`, `RCTNewArchEnabled`), zero direct `expo*` dependencies (lint + `npm ls`). The transitive exception is described above and doesn't reach the app.
+- [x] The app starts on `Pixel_10_Pro_XL` with a single command (`npm run emu`), verified in 5 modes.
+- [x] 3 tabs + `Import` (modal) and `Book` (`{ id }`), with typed `ParamList`s and deep links verified on the emulator.
+- [x] The Inter and Space Grotesk fonts load, and the splash disappears only after mounting (test + emulator).
+- [x] All texts come from `ro.json`, with typed keys.
+- [x] `typecheck`, `lint` and `test` are green, and the sentinel tests prove that `boundaries` and the bans are active.
+- [x] All native dependencies are installed and compiled. The `react-native-tts` spike failed (Gradle 9), and the solution is the custom TurboModule in M5.
+- [x] `CLAUDE.md` is written, and `.claude/` is committed.
 
-## Riscuri M0
+## M0 risks
 
-| Risc | Mitigare |
+| Risk | Mitigation |
 | --- | --- |
-| JDK 25 incompatibil cu Gradle/AGP din RN 0.88 | JDK 17 e instalat; scriptul îl setează doar pentru build |
-| `react-native-tts` neîntreținut (ultima versiune 2024) pe New Architecture | spike în pasul 3; rezerva e un TurboModule propriu în M5 |
-| O librărie nativă nu e încă compatibilă cu RN 0.88 | fixez ultima versiune compatibilă; în cel mai rău caz, RN 0.87 |
-| `eslint-plugin-boundaries` nu suportă bine flat config | alternativa din PROMPT: `dependency-cruiser`, rulat în `lint` |
-| Proprietatea `AsyncStorage_db_size_in_MB` nu mai există în versiunea instalată | se documentează și se tratează în M2 (eventual text în fișiere) |
-| iOS neverificabil pe Windows | `ios/` ținut corect în repo; verificarea iOS se face în M7 pe un Mac |
+| JDK 25 incompatible with the Gradle/AGP of RN 0.88 | JDK 17 is installed; the script sets it for the build only |
+| `react-native-tts` unmaintained (last release 2024) on the New Architecture | spike in step 3; the fallback is a custom TurboModule in M5 |
+| A native library isn't yet compatible with RN 0.88 | pin the latest compatible version; worst case, RN 0.87 |
+| `eslint-plugin-boundaries` doesn't support flat config well | the alternative from PROMPT: `dependency-cruiser`, run in `lint` |
+| The `AsyncStorage_db_size_in_MB` property no longer exists in the installed version | documented and handled in M2 (possibly text in files) |
+| iOS can't be verified on Windows | `ios/` kept correctly in the repo; iOS verification happens in M7 on a Mac |
