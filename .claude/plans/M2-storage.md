@@ -180,11 +180,20 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 ### 12. Closing
 - `modular-architecture` §10 checklist, the summary (new / reused units / `arch-exception`), `PLAN.md` (M2 ✅) and `CLAUDE.md` (M2 pitfalls).
 
+**Done** (2026-11-19). `modular-architecture` §10 checklist:
+- **Limits:** no file over its limit. The largest non-test file in the new layers is 96 lines (`InMemoryFileStore`). The service limits (≤ 200 / file, ≤ 40 / function) are enforced by lint since step 6 on `repositories/` and `storage/` too. **0 `arch-exception`**.
+- **Layers:** `app → features → repositories (types only) → storage`, enforced by `boundaries` (it caught a test fixture imported from `repositories/` into a feature in step 10). Features don't import `RootState` from `app/`: each one types its selectors against its own piece of the state.
+- **No duplication:** `readValue` / `readJson` / `serialize` are shared by all repositories, and `metaEntry` / `orderEntry` by `book/` and `boot/`. Known duplicate: the RNFS jest mock (JS) and `InMemoryFileStore` (TS) have the same semantics with different roles (step 4).
+- **Hard-coded values:** 0 hex outside the theme. `abk:` appears outside `keys.ts` only in comments (lint rejects literals in code). The dev screen texts aren't in i18n, like the M1 catalog (`__DEV__` only).
+- **Tests:** 449 in 52 suites (M1 closed at 208 in 28).
+
+**Summary of units.** New: `shared/domain` (`PageNumber`, `ChapterIndex`, `SentenceIndex`, 7 schema files, `DEFAULT_SETTINGS`), `shared/utils` (`utf8ByteLength`, `logger`), `storage/` (`keys`, `KeyValueStore` + AsyncStorage adapter, `FileStore` + RNFS adapter, `migrations/` + `001-initial`, the fakes in `testing/`), `repositories/` (`readJson`, `readValue`, `serialize`, `chapterChunking`, `book/`, `progress/`, `settings/`, `boot/`, `AppDependencies`), `features/library/state` and `features/settings/state`, `app/` (`bootstrap`, `useBootstrap`, `dependencies`, `store/`, `StoreProvider`, `ServicesProvider`, `dev/storage/`). Reused: `toBookId`, `clamp`'s pattern for pure utils, `pickCoverColor` (seed), `AppText` / `Button` / `ScreenHeader` / `CatalogSection` (the dev screen), the `run-android.ps1` script.
+
 ## Definition of done – M2
 
-- [ ] Every value in the key table has a zod schema; every read goes through `readJson`.
-- [ ] Keys are built only in `storage/keys.ts`; AsyncStorage and RNFS are imported only in `storage/` (lint).
-- [ ] The import write order, resume after a crash, deletion without orphans, corrupt values, oversized chapters and each migration are covered by tests against the fakes.
-- [ ] `bootstrap` hydrates the store with one `getMany` after migrations; the splash waits for it.
-- [ ] The same flow verified on the emulator, with real storage, across an app kill.
-- [ ] `npm run check` green; one commit per step.
+- [x] Every value in the key table has a zod schema; every read goes through `readJson`. **Two deliberate exceptions:** `abk:settings` goes through `settingsFromStored` (field-by-field validation, so a corrupt field doesn't reset the whole settings) and `abk:schemaVersion` is read by the migration runner with its own strict parse (`/^\d+$/`).
+- [x] Keys are built only in `storage/keys.ts`; AsyncStorage and RNFS are imported only in `storage/` (lint).
+- [x] The import write order, resume after a crash, deletion without orphans, corrupt values, oversized chapters and each migration are covered by tests against the fakes.
+- [x] `bootstrap` hydrates the store with one `getMany` after migrations; the splash waits for it.
+- [x] The same flow verified on the emulator, with real storage, across an app kill.
+- [x] `npm run check` green (449 tests, 52 suites); one commit per step.
