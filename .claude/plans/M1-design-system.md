@@ -140,14 +140,36 @@ Fiecare pas se încheie cu `npm run check` verde și un commit separat; secțiun
 
 ## Definition of done – M1
 
-- [ ] Toate token-urile din PROMPT §7 există în `shared/theme`; zero hex în afara lui (lint).
-- [ ] Testul de contrast trece (≥ 4.5:1 pentru toate perechile text/fundal folosite).
-- [ ] Cele 13 primitive din PROMPT + `AppText` și `Icon` există, fiecare cu folder complet și teste (render, interacțiune, accesibilitate).
-- [ ] Fiecare control are rol, stare și etichetă în română; ținte ≥ 44 pt; header-e limitate la 1.4×.
-- [ ] Regula „max 7 props” e activă și dovedită de o santinelă.
-- [ ] Tab bar-ul propriu e folosit în app și verificat pe emulator; bara de stare e luminoasă.
-- [ ] `formatBytes`, `formatDuration`, `formatPercent` testate.
-- [ ] `npm run check` verde; câte un commit per pas.
+- [x] Toate token-urile din PROMPT §7 există în `shared/theme`; zero hex în afara lui (lint).
+- [x] Testul de contrast trece (≥ 4.5:1 pentru toate perechile text/fundal folosite).
+- [x] Cele 13 primitive din PROMPT + `AppText` și `Icon` există, fiecare cu folder complet și teste (render, interacțiune, accesibilitate).
+- [x] Fiecare control are rol, stare și etichetă în română; header-e limitate la 1.4×; ținte ≥ 44 pt, **cu o excepție**: `Slider` nativ pe Android (≈ 18 dp), mutată în riscurile M6 din `PLAN.md`.
+- [x] Regula „max 7 props” e activă și dovedită de o santinelă.
+- [x] Tab bar-ul propriu e folosit în app și verificat pe emulator; bara de stare e luminoasă.
+- [x] `formatBytes`, `formatDuration`, `formatPercent` testate.
+- [x] `npm run check` verde (208 teste, 28 de suite); câte un commit per pas.
+
+### 12. Închidere — **Făcut** (2026-11-19)
+
+**Checklist `modular-architecture` §10:** limitele de mărime sunt impuse de lint pe `shared/ui` (≤ 150 de linii) și pe `shared/utils` (≤ 40 / 200), plus 7 props prin `local/max-props`. Nu există `arch-exception`. Importurile merg doar în jos: `app/dev` → `shared`, iar `shared` nu importă nimic de deasupra (boundaries + `no-cycle`). Nimic nu e duplicat: feedback-ul de apăsare e în `feedback.styles.ts`, `clamp` e folosit de `ProgressBar` și `formatPercent`, `AppText` e singura cale de randare a textului (și `ScreenPlaceholder` a trecut pe el). Nu există hex, magic numbers (excepție: înălțimea cutiei de demo din catalogul dev, comentată) sau stiluri inline create la fiecare randare; valorile dinamice sunt memoizate în hook-uri. Fiecare primitivă are teste.
+
+**Unități noi:**
+- **`shared/theme`:** `spacing`, `radius`, `sizes`, `motion`, `contrast`, `coverColor`, `theme`, `ThemeProvider`, `useTheme`.
+- **`shared/ui`:** `AppText`, `Icon`, `Button`, `IconButton`, `Chip`, `ChipGroup` (`useChipGroup`), `Switch` (`useSwitch`), `Card`, `ProgressBar` (`useProgressBar`), `ListRow`, `BookCover`, `EmptyState`, `ScreenHeader` (`useScreenHeader`), `Slider`, `BottomTabBar` (`BottomTabBarItem`, `useBottomTabBar`), `feedback.styles`.
+- **`shared/utils`:** `clamp`, `formatDecimal`, `formatBytes`, `formatDuration`, `formatPercent`.
+- **`app`:** `navigationTheme`, `TabBarAdapter`, `app/dev/*` (catalogul).
+- **Unelte:** `eslint-rules/max-props.js`.
+
+**Unități refolosite:** `fonts.ts`, `BookId`, `ScreenPlaceholder` (migrat), `I18nProvider`, `linking`, scriptul `run-android.ps1`.
+
+**Abateri de la plan:**
+- `BookCover` primește eticheta deja tradusă (skill §3 > plan).
+- `Slider` n-a avut nevoie de mock.
+- Mock-ul Reanimated e manual.
+- În plus față de plan: `clamp` și `formatDecimal`.
+- Ținta `Slider` pe Android e sub 44 pt (amânat la M6).
+
+**Capcane noi** sunt în `CLAUDE.md` → „Capcane descoperite în M1”.
 
 ## Riscuri M1
 

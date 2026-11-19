@@ -59,11 +59,24 @@ Branch-uri: `main` ← `dev` ← `m<N>-<nume>` (de exemplu `m0-fundatie`, `m0-sc
 - **JDK:** RN 0.88 acceptă JDK 17–20, iar `JAVA_HOME` de pe acest PC e 25. Scriptul alege JDK 17 doar pentru build. Pentru Gradle manual: `$env:JAVA_HOME="C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot"` și `.\gradlew.bat` (cu `.\`).
 - **TTS:** `react-native-tts` nu compilează cu Gradle 9 (`jcenter()`). Vocea va fi un TurboModule propriu, `AbookTts`, în M5.
 - **AsyncStorage 3.x:** folosește Room/SQLite și API-ul `getMany` / `setMany` / `removeMany` (nu `multiGet`). Nu are `AsyncStorage_db_size_in_MB`. Valorile rămân sub ~256 KB, pentru că limita `CursorWindow` la citire e de 2 MB.
-- **Testing Library v14:** `render` și `fireEvent.*` sunt asincrone, deci se folosesc cu `await`. Butoanele din bottom-tabs nu au rolul `tab`; caută-le după text.
+- **Testing Library v14:** `render`, `renderHook` și `fireEvent.*` sunt asincrone, deci se folosesc cu `await`. Tab-urile (`BottomTabBar` propriu, din M1) au rolul `tab` și starea `selected`.
 - **ESLint 9:** pluginul `ft-flow` din configul RN e scos, pentru că se blochează. `import/no-cycle` merge cu `disableScc: true`. În Jest, ESLint primește configul prin `overrideConfig`, fiindcă ESLint 9 îl încarcă prin `import()` dinamic, iar Jest nu suportă asta.
 - **Pachete ESM în Jest:** se adaugă în `ESM_PACKAGES` din `jest.config.js`. Mock-urile native sunt în `jest.setup.js`.
 - **Tipuri Node:** codul aplicației nu le vede. Testele care folosesc `fs`/`path` încep cu `/// <reference types="node" />` și `@jest-environment node`.
 - **Fonturi:** fișierele poartă numele PostScript (`Inter-Regular`, `SpaceGrotesk-Bold`…), deci `fontFamily` e același pe ambele platforme. Space Grotesk nu are SemiBold static. Un font nou cere `npx react-native-asset`, iar `__tests__/fonts` verifică legarea.
 - **Splash:** se regenerează cu `npx react-native-bootsplash generate assets/brand/splash-logo.svg --platforms=android,ios --background=111316 --logo-width=96`. Generatorul rescrie `AndroidManifest.xml`; verifică după aceea comentariile și intent-filter-ul `abook://`.
 - **Manifest Android:** `INTERNET` există doar în `src/debug`, iar `src/release` scoate permisiunile de rețea. `__tests__/native` păzește regula.
-- **Commit din PowerShell 5.1:** mesajele cu ghilimele duble se strică în here-string. Scrie mesajul într-un fișier și folosește `git commit -F <fișier>`.
+- **Commit din PowerShell 5.1:** mesajele cu ghilimele duble se strică în here-string. Scrie mesajul într-un fișier și folosește `git commit -F <fișier>`. Scrie fișierul cu tool-ul Write, nu cu `Set-Content`, care pune BOM în mesaj.
+
+## Capcane descoperite în M1
+
+- **Line endings:** `core.autocrlf=true` din Git-ul global rescria working copy-ul cu CRLF la fiecare `git switch`, iar `prettier --check` pica pe tot repo-ul. `.gitattributes` are acum `* text=auto eol=lf`; nu scoate `eol=lf`.
+- **Reanimated 4.7 în Jest:** mock-ul oficial (`react-native-reanimated/mock`) crapă la import, pentru că `setCSSEventHandler` aruncă în JSReanimated. `jest.setup.js` are un mock manual minim; extinde-l când folosești un API Reanimated nou.
+- **Lucide în Jest:** Jest rezolvă `lucide-react-native` la build-ul `.mjs`, pe care transformul RN îl sare. `moduleNameMapper` îl trimite la `dist/cjs`. În Lucide 1.75, `MoreHorizontal` se numește `Ellipsis`.
+- **`StatusBar` în RN 0.88:** nu mai are `backgroundColor` (edge-to-edge). Fundalul îl dă root view-ul, cu `color.bg`.
+- **Roluri de grup:** un container `radiogroup` sau `tablist` rămâne neaccesibil (altfel TalkBack înghite copiii), deci `getByRole('radiogroup')` nu-l găsește. Caută-l după etichetă și verifică `props.accessibilityRole`.
+- **Regula `local/max-props`** (≤ 7, în `eslint-rules/max-props.js`): numără membrii proprii ai tipurilor `*Props` și proprietățile destructurate ale componentelor PascalCase. Grupează prop-urile înrudite într-un obiect (ex. `Slider.range`, `ScreenHeader.back`).
+- **Primitivele nu știu i18n:** primesc texte deja traduse, inclusiv etichetele de accesibilitate (ex. `BookCover.accessibilityLabel`). Unitățile pentru `formatBytes` / `formatDuration` vin din `ro.json` → `format.*`, ca parametru.
+- **Catalogul UI:** `abook://dev/ui` (doar `__DEV__`), cu toate primitivele. Pentru verificarea accesibilității pe emulator: `adb shell uiautomator dump /sdcard/ui.xml` (etichete, `checked`, `selected`, `enabled`, dimensiuni).
+- **Capturi de ecran din PowerShell:** `adb exec-out screencap -p > f.png` strică PNG-ul (encoding). Folosește `adb shell screencap -p /sdcard/x.png` + `adb pull`.
+- **`npm run check` cu emulatorul și Metro pornite** e mult mai lent (`eslint .` ~90 s); rulează-l în fundal, cu ieșirea într-un fișier, nu printr-un pipe care bufferează.
