@@ -1,5 +1,6 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { AppText } from '../AppText';
 import { styles } from './ScreenPlaceholder.styles';
 import type { ScreenPlaceholderProps } from './ScreenPlaceholder.types';
 
@@ -11,10 +12,10 @@ export function ScreenPlaceholder({
 }: ScreenPlaceholderProps) {
   return (
     <View style={styles.root} testID={testID}>
-      <Text accessibilityRole="header" style={styles.title}>
+      <AppText variant="display" accessibilityRole="header">
         {title}
-      </Text>
-      {detail ? <Text style={styles.detail}>{detail}</Text> : null}
+      </AppText>
+      {detail ? <AppText color="textMuted">{detail}</AppText> : null}
     </View>
   );
 }

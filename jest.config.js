@@ -15,7 +15,12 @@ const ESM_PACKAGES = [
 module.exports = {
   preset: '@react-native/jest-preset',
   setupFiles: ['<rootDir>/jest.setup.js'],
-  moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1' },
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+    // Jest resolves lucide to its .mjs build, which the RN transform (.js/.ts only) skips; use the CJS build
+    '^lucide-react-native$':
+      '<rootDir>/node_modules/lucide-react-native/dist/cjs/lucide-react-native.js',
+  },
   transformIgnorePatterns: [`node_modules/(?!(${ESM_PACKAGES.join('|')})/)`],
   testPathIgnorePatterns: [
     '/node_modules/',

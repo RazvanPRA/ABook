@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { color, space, type } from '@/shared/theme';
+import { color, space } from '@/shared/theme';
 
 export const styles = StyleSheet.create({
   root: {
@@ -9,13 +9,5 @@ export const styles = StyleSheet.create({
     gap: space.sm,
     padding: space.screenPadding,
     backgroundColor: color.bg,
-  },
-  title: {
-    ...type.display,
-    color: color.text,
-  },
-  detail: {
-    ...type.body,
-    color: color.textMuted,
   },
 });
