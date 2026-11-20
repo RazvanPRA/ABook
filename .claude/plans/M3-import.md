@@ -323,6 +323,39 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 - `services/` inside the feature: `runImport` orchestrates, one capability per file: copy (`storePdf`) → `createBook` (`processing`) → open → batches of 5 → clean → segment → chapters → `saveChapter` for each completed chapter (+ `processedPages`) → `saveToc` → `meta` `ready`. Title/author prefill from the PDF info.
 - **Tests (fake extractor + M2 fakes):** the exact write order, the first chapter is readable while extraction continues, the library slice gets the book (`bookUpserted`), yields between batches.
 
+**Done** (2026-11-20). Findings:
+
+- **Units in `features/import/services/`:**
+  - `runImport(context, file)` orchestrates;
+  - `planChapters` chooses once how chapters are cut;
+  - `createChapterAssembler` groups streamed pages into chapters;
+  - `chapterText` cleans and segments one chapter;
+  - `createChapterWriter` saves a chapter, records `processedPages` and keeps the toc;
+  - `formPatch` turns the form into a meta patch.
+
+  `state/thunks.ts` → `importPdf(file)` builds the `ImportContext` from `extra` and the store (uuid, clock, a `setTimeout(0)` yield) and always closes the extractor.
+- **Write order**, checked call by call:
+  1. `storePdf`, then `createBook` (`processing`, title from the file name, `pageCount` 0); the book is in the library from here (`bookUpserted`);
+  2. `updateMeta` with the page count and the form, prefilled from the PDF;
+  3. per completed chapter, `saveChapter` + `updateMeta { processedPages: endPage }` + `bookUpserted`;
+  4. `saveToc`;
+  5. `updateMeta` `ready`, with the form as it is then, `chapterCount`, `sentenceCount` and `processedPages = pageCount`.
+
+  `processedPages` is the last page of the last saved chapter, as decided at the top of this plan.
+- **The first 20 pages (the header sample) are read first.** They give the book-wide headers and the chapter plan: the outline if it has ≥ 2 usable entries, else headings if a sample page has one (with the sample's median body height), else every 10 pages. Then the remaining pages stream in batches of 5. The sample's pages are fed to the assembler like the others, so chapter 1 is saved as soon as its last page is in.
+  - **Limit:** a book whose first heading comes after page 20 is cut every 10 pages.
+- **Cleanup per chapter**, in the order checked in steps 11–11a: book headers, then `stripChapterRunningHeaders`, then `stripPageNumbers`, then `buildChapterChunk` (hyphens, normalization, sentences).
+  - A chapter with no text (blank or image-only pages) isn't saved and gets no toc entry, so indexes stay contiguous (`ch:{n}` = toc position). Its pages still count in `processedPages`.
+- **Progress and yields** (step 11 finding):
+  - `pagesExtracted` reaches the store every 10 pages and at the last page, not on every batch;
+  - no yield between bridge batches, since awaiting the bridge already frees the thread;
+  - `yieldToJs` after each chapter's CPU work (cleanup + segmentation).
+- **Form while importing:** the user may edit the form during the import, and `runImport` reads it (`getForm`) when it writes meta. An empty title is left out of the patch, so the meta keeps the file-name title (the schema needs one).
+- **Dependencies:** `ImportDependencies = Pick<AppDependencies, 'bookRepository'> & { pdfExtractor }`, a part of the app's `FeatureDependencies`, so the thunk runs on the app store unchanged. The library is updated through its public `bookUpserted` action.
+- **Feature-side fake:** features may not import the real repository, not even in tests. So `features/import/__fixtures__/MemoryBookRepository` implements `BookRepository` in memory with a call log; the storage-level write order stays covered by the M2 repository suites. `importSetup.ts` gives the sample book pages (running title, optional `Capitolul …` heading, two sentences naming their page, page number).
+- **Not handled yet (step 14):** every error ends as `importFailed('unknown')`; the copied file and keys stay; no scanned check, duplicate or cancel.
+- **Tests:** 932 in 87 suites (19 new: pipeline, chapter plan and assembler, form patch, thunk).
+
 #### 14. Failure cases and duplicates
 - Scanned (each of the first 5 pages < 20 characters), password, corrupt, timeout, cancellation: each ends in `failed(reason)` / `cancelled` with **no keys and no file left** (`deleteBook`).
 - Duplicate: fingerprint (`@noble/hashes`) compared with the existing books; the user is asked before importing a copy. `BookMeta.fingerprint` + migration `002` with its test.
