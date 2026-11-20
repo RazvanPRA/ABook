@@ -30,6 +30,12 @@ const FILE = {
   sizeBytes: 3_800_000,
 };
 
+const STORED_PDF = {
+  path: '/files/books/x.pdf',
+  sizeBytes: 10,
+  fingerprint: '10:ab',
+};
+
 type Action = Parameters<typeof importReducer>[1];
 const run = (...actions: readonly Action[]): ImportState =>
   actions.reduce(importReducer, initialImportState);
@@ -39,7 +45,11 @@ const opened = (
   title: string | null = 'Ion',
   author: string | null = 'Liviu Rebreanu',
 ) => documentOpened({ pageCount: 412, title, author });
-const toExtracting: readonly Action[] = [started, fileCopied(), opened()];
+const toExtracting: readonly Action[] = [
+  started,
+  fileCopied(STORED_PDF),
+  opened(),
+];
 const toSaving: readonly Action[] = [
   ...toExtracting,
   extractionFinished(),
@@ -72,7 +82,7 @@ describe('importSlice happy path', () => {
 
   it('goes copy → open → extract → split → save → ready', () => {
     const phases = [
-      run(started, fileCopied()),
+      run(started, fileCopied(STORED_PDF)),
       run(...toExtracting),
       run(...toExtracting, pagesExtracted(186)),
       run(...toExtracting, extractionFinished()),
@@ -113,11 +123,22 @@ describe('importSlice happy path', () => {
   });
 
   it('waits on a duplicate, then opens when the user keeps a copy', () => {
-    expect(run(started, duplicateFound(OTHER)).phase).toEqual({
+    expect(
+      run(
+        started,
+        duplicateFound({ existingBookId: OTHER, stored: STORED_PDF }),
+      ).phase,
+    ).toEqual({
       type: 'duplicate',
       existingBookId: OTHER,
     });
-    expect(run(started, duplicateFound(OTHER), duplicateKept()).phase).toEqual({
+    expect(
+      run(
+        started,
+        duplicateFound({ existingBookId: OTHER, stored: STORED_PDF }),
+        duplicateKept(),
+      ).phase,
+    ).toEqual({
       type: 'opening',
     });
   });
@@ -136,7 +157,7 @@ describe('importSlice form', () => {
     const typed = run(
       started,
       formChanged({ field: 'title', value: 'Ion (ediție)' }),
-      fileCopied(),
+      fileCopied(STORED_PDF),
       opened(),
     );
     expect(typed.form).toMatchObject({
@@ -147,7 +168,11 @@ describe('importSlice form', () => {
   });
 
   it('ignores empty or placeholder metadata', () => {
-    const anonymous = run(started, fileCopied(), opened('  ', '(anonymous)'));
+    const anonymous = run(
+      started,
+      fileCopied(STORED_PDF),
+      opened('  ', '(anonymous)'),
+    );
     expect(anonymous.form).toMatchObject({ title: 'ion-rebreanu', author: '' });
   });
 
@@ -178,8 +203,12 @@ describe('importSlice form', () => {
 describe('importSlice failures, cancel and reset', () => {
   it.each([
     ['copying', [started], 'copy'],
-    ['duplicate', [started, duplicateFound(OTHER)], 'copy'],
-    ['opening', [started, fileCopied()], 'extract'],
+    [
+      'duplicate',
+      [started, duplicateFound({ existingBookId: OTHER, stored: STORED_PDF })],
+      'copy',
+    ],
+    ['opening', [started, fileCopied(STORED_PDF)], 'extract'],
     ['extracting', toExtracting, 'extract'],
     ['splitting', [...toExtracting, extractionFinished()], 'split'],
     ['saving', toSaving, 'save'],
@@ -220,11 +249,15 @@ describe('importSlice failures, cancel and reset', () => {
 
 describe('importSlice invalid transitions', () => {
   it.each([
-    ['fileCopied', [], fileCopied()],
-    ['duplicateFound', [started, fileCopied()], duplicateFound(OTHER)],
+    ['fileCopied', [], fileCopied(STORED_PDF)],
+    [
+      'duplicateFound',
+      [started, fileCopied(STORED_PDF)],
+      duplicateFound({ existingBookId: OTHER, stored: STORED_PDF }),
+    ],
     ['duplicateKept', [started], duplicateKept()],
     ['documentOpened', [started], opened()],
-    ['pagesExtracted', [started, fileCopied()], pagesExtracted(3)],
+    ['pagesExtracted', [started, fileCopied(STORED_PDF)], pagesExtracted(3)],
     ['chapterSaved', [started], chapterSaved()],
     ['extractionFinished', [started], extractionFinished()],
     ['savingStarted', toExtracting, savingStarted()],

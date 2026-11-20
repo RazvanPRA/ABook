@@ -23,6 +23,11 @@ export const bookMetaSchema = z
     processedPages: countSchema,
     importedAt: isoDateSchema,
     coverColor: z.string().min(1),
+    /**
+     * Size + SHA-256 of the first 64 KB (`pdfFingerprint`), for the duplicate check; `null` for
+     * books imported before schema 2 (migration 002), which are never reported as duplicates.
+     */
+    fingerprint: z.string().min(1).nullable(),
   })
   .refine(meta => meta.processedPages <= meta.pageCount, {
     message: 'processedPages exceeds pageCount',

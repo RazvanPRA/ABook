@@ -1,59 +1,198 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { libraryReducer, selectBookCount } from '@/features/library';
-import { FakePdfTextExtractor } from '@/services/pdf/testing';
+import {
+  libraryReducer,
+  selectBookCount,
+  selectBooksInOrder,
+} from '@/features/library';
+import { FakePdfTextExtractor, type FakePdf } from '@/services/pdf/testing';
+import type { PageText } from '@/services/text';
 import { logger } from '@/shared/utils';
 import { PICKED, book } from '../../__fixtures__/importSetup';
 import { MemoryBookRepository } from '../../__fixtures__/memoryBookRepository';
 import type { ImportDependencies } from '../../model/dependencies';
+import { MAX_PDF_BYTES } from '../../model/limits';
 import { importReducer } from '../importSlice';
-import { importPdf } from '../thunks';
+import { cancelImport, importPdf, keepDuplicate } from '../thunks';
 
-function setup() {
+/** Book ids are uuids, so the stored path is unknown in advance: every opened path gets `pdf`. */
+function serve(extractor: FakePdfTextExtractor, pdf: FakePdf) {
+  const open = extractor.open.bind(extractor);
+  jest.spyOn(extractor, 'open').mockImplementation(path => {
+    extractor.addPdf(path, pdf);
+    return open(path);
+  });
+}
+
+function setup(pdf: FakePdf = { pages: book(30) }) {
   const bookRepository = new MemoryBookRepository();
   const pdfExtractor = new FakePdfTextExtractor();
+  serve(pdfExtractor, pdf);
   const extra: ImportDependencies = { bookRepository, pdfExtractor };
   const store = configureStore({
     reducer: { import: importReducer, library: libraryReducer },
     middleware: getDefault => getDefault({ thunk: { extraArgument: extra } }),
   });
-  return { store, bookRepository, pdfExtractor };
+  const closed = () => pdfExtractor.calls.at(-1)?.call === 'close';
+  return { store, repo: bookRepository, extractor: pdfExtractor, closed };
 }
 
-const storedPath = (repo: MemoryBookRepository) =>
-  repo.calls.flatMap(call =>
-    call.op === 'storePdf' ? [`/files/books/${call.id}.pdf`] : [],
-  )[0] ?? '';
+const tick = () => new Promise(resolve => setTimeout(resolve, 0));
+
+/** A page with exactly `chars` characters of text. */
+const pageWith = (page: number, chars: number): PageText => ({
+  page,
+  lines: chars === 0 ? [] : [{ text: 'x'.repeat(chars), y: 0.5, height: 11 }],
+});
+
+let warn: jest.SpyInstance;
+beforeEach(() => {
+  warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+});
+afterEach(() => warn.mockRestore());
 
 describe('importPdf', () => {
   it('imports with a fresh uuid, ends ready and closes the extractor', async () => {
-    const { store, bookRepository, pdfExtractor } = setup();
-    // The id is only known once the file is stored: register the PDF on every path
-    const open = pdfExtractor.open.bind(pdfExtractor);
-    jest.spyOn(pdfExtractor, 'open').mockImplementation(path => {
-      pdfExtractor.addPdf(path, { pages: book(12) });
-      return open(path);
-    });
+    const { store, repo, closed } = setup();
     await store.dispatch(importPdf(PICKED));
-    expect(store.getState().import.phase).toEqual({ type: 'ready' });
-    expect(store.getState().import.bookId).toMatch(/^[0-9a-f-]{36}$/);
-    expect(storedPath(bookRepository)).toContain(
-      store.getState().import.bookId,
-    );
-    expect(selectBookCount(store.getState())).toBe(1);
-    expect(pdfExtractor.calls.at(-1)?.call).toBe('close');
+    const { phase, bookId } = store.getState().import;
+    expect(phase).toEqual({ type: 'ready' });
+    expect(bookId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(selectBooksInOrder(store.getState())).toMatchObject([
+      { id: bookId, status: 'ready', fingerprint: `fp:${PICKED.uri}` },
+    ]);
+    expect(repo.files.size).toBe(1);
+    expect(closed()).toBe(true);
   });
 
-  it('marks the import failed on any error and still closes the extractor', async () => {
-    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
-    const { store, pdfExtractor } = setup();
-    await store.dispatch(importPdf(PICKED)); // no PDF registered: open rejects
+  it('refuses a file over 100 MB before copying anything', async () => {
+    const { store, repo } = setup();
+    await store.dispatch(
+      importPdf({ ...PICKED, sizeBytes: MAX_PDF_BYTES + 1 }),
+    );
     expect(store.getState().import.phase).toEqual({
       type: 'failed',
-      reason: 'unknown',
+      reason: 'too-large',
+      step: 'copy',
+    });
+    expect(repo.calls).toEqual([]);
+  });
+
+  it('imports a PDF whose first pages are mostly empty (The Clean Coder shape)', async () => {
+    const pages = [0, 1520, 30, 13, 443].map((chars, i) =>
+      pageWith(i + 1, chars),
+    );
+    const { store } = setup({ pages: [...pages, ...book(10).slice(5)] });
+    await store.dispatch(importPdf(PICKED));
+    expect(store.getState().import.phase).toEqual({ type: 'ready' });
+  });
+});
+
+const scan = [1, 2, 3, 4, 5, 6].map(page => pageWith(page, 19));
+
+describe('importPdf failures leave no keys and no file', () => {
+  it.each([
+    ['copy', 'copy', { pages: book(5) }, 'storePdf'],
+    ['scanned', 'extract', { pages: scan }, null],
+    ['corrupt', 'extract', { pages: [] }, null],
+    ['password', 'extract', { pages: [], openError: 'password' }, null],
+    ['corrupt', 'extract', { pages: [], openError: 'corrupt' }, null],
+    ['timeout', 'extract', { pages: book(30), failAtPage: 26 }, null],
+    ['storage', 'extract', { pages: book(30) }, 'saveChapter'],
+    ['storage', 'save', { pages: book(30) }, 'saveToc'],
+  ] as const)('%s at the %s step', async (reason, step, pdf, failing) => {
+    const { store, repo, closed } = setup(pdf);
+    if (failing) {
+      repo.failOn(failing);
+    }
+    await store.dispatch(importPdf(PICKED));
+    expect(store.getState().import.phase).toEqual({
+      type: 'failed',
+      reason,
+      step,
+    });
+    expect(repo.isEmpty()).toBe(true);
+    expect(selectBookCount(store.getState())).toBe(0);
+    expect(closed()).toBe(true);
+    expect(warn).toHaveBeenCalledWith('import failed', expect.anything());
+  });
+});
+
+describe('cancelImport', () => {
+  it('stops an import in the middle of extraction and removes what it wrote', async () => {
+    const { store, repo, extractor } = setup();
+    extractor.pauseAtPage(26);
+    const running = store.dispatch(importPdf(PICKED));
+    await tick();
+    expect(repo.chapters.size).toBeGreaterThan(0);
+
+    await store.dispatch(cancelImport());
+    await running;
+    expect(store.getState().import.phase).toEqual({
+      type: 'cancelled',
       step: 'extract',
     });
-    expect(pdfExtractor.calls.at(-1)?.call).toBe('close');
-    expect(warn).toHaveBeenCalledWith('import failed', expect.anything());
-    warn.mockRestore();
+    expect(repo.isEmpty()).toBe(true);
+    expect(selectBookCount(store.getState())).toBe(0);
+    expect(warn).not.toHaveBeenCalledWith('import failed', expect.anything());
+  });
+
+  it('is ignored when no import runs', async () => {
+    const { store, repo } = setup();
+    await store.dispatch(cancelImport());
+    expect(store.getState().import.phase).toEqual({ type: 'idle' });
+    expect(repo.calls).toEqual([]);
+    expect(warn).toHaveBeenCalledWith(
+      'import: importCancelled ignored in phase idle',
+    );
+  });
+});
+
+describe('duplicates', () => {
+  async function importTwice() {
+    const context = setup({ pages: book(12) });
+    await context.store.dispatch(importPdf(PICKED));
+    const first = context.store.getState().import.bookId;
+    await context.store.dispatch(importPdf(PICKED));
+    return { ...context, first };
+  }
+
+  it('waits for the user when the fingerprint matches a book in the library', async () => {
+    const { store, repo, first, closed } = await importTwice();
+    expect(store.getState().import.phase).toEqual({
+      type: 'duplicate',
+      existingBookId: first,
+    });
+    expect(selectBookCount(store.getState())).toBe(1);
+    expect(repo.files.size).toBe(2); // the new copy, until the user decides
+    expect(closed()).toBe(true);
+  });
+
+  it('imports a second copy when the user keeps it', async () => {
+    const { store } = await importTwice();
+    await store.dispatch(keepDuplicate());
+    expect(store.getState().import.phase).toEqual({ type: 'ready' });
+    expect(selectBookCount(store.getState())).toBe(2);
+  });
+
+  it('removes only the new copy when the user cancels', async () => {
+    const { store, repo, first } = await importTwice();
+    await store.dispatch(cancelImport());
+    expect(store.getState().import.phase).toEqual({
+      type: 'cancelled',
+      step: 'copy',
+    });
+    expect(selectBooksInOrder(store.getState()).map(b => b.id)).toEqual([
+      first,
+    ]);
+    expect([...repo.files]).toEqual([`/files/books/${first}.pdf`]);
+  });
+
+  it('ignores keepDuplicate when no duplicate is waiting', async () => {
+    const { store, repo } = setup();
+    await store.dispatch(keepDuplicate());
+    expect(repo.calls).toEqual([]);
+    expect(warn).toHaveBeenCalledWith(
+      'import: keepDuplicate ignored in phase idle',
+    );
   });
 });

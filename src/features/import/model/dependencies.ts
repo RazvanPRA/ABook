@@ -18,6 +18,8 @@ export interface ImportContext {
   readonly getForm: () => ImportForm;
   readonly newBookId: () => BookId;
   readonly now: () => Date;
+  /** The user cancelled: the pipeline stops at its next step (`throwIfCancelled`). */
+  readonly isCancelled: () => boolean;
   /** Frees the JS thread after the CPU-heavy work of a chapter (cleanup + segmentation). */
   readonly yieldToJs: () => Promise<void>;
 }

@@ -68,6 +68,7 @@ export function createImportContext() {
     pdfExtractor: extractor,
     dispatch: action => store.dispatch(action),
     getForm: () => store.getState().import.form,
+    isCancelled: () => store.getState().import.phase.type === 'cancelled',
     newBookId: () => BOOK,
     now: () => new Date('2026-11-20T10:00:00.000Z'),
     yieldToJs,

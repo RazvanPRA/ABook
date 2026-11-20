@@ -54,6 +54,7 @@ export const seedSampleBook = async ({
     processedPages: 0,
     importedAt: new Date().toISOString(),
     coverColor: pickCoverColor(id),
+    fingerprint: stored?.fingerprint ?? null,
   });
   await bookRepository.createBook(meta);
   for (const [index, size] of SIZES.entries()) {

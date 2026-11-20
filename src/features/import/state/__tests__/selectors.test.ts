@@ -30,6 +30,12 @@ import {
 const [BOOK, OTHER] = BOOK_IDS as [BookId, BookId];
 const FILE = { name: 'a.pdf', uri: 'content://a', sizeBytes: 10 };
 
+const STORED_PDF = {
+  path: '/files/books/x.pdf',
+  sizeBytes: 10,
+  fingerprint: '10:ab',
+};
+
 type Action = Parameters<typeof importReducer>[1];
 const root = (...actions: readonly Action[]) => ({
   import: actions.reduce(importReducer, initialImportState),
@@ -38,7 +44,7 @@ const root = (...actions: readonly Action[]) => ({
 const started = importStarted({ bookId: BOOK, file: FILE });
 const extracting: readonly Action[] = [
   started,
-  fileCopied(),
+  fileCopied(STORED_PDF),
   documentOpened({ pageCount: 200, title: null, author: null }),
 ];
 const ready: readonly Action[] = [
@@ -73,7 +79,14 @@ describe('import selectors', () => {
 
   it('tell whether an import runs, and why it failed', () => {
     expect(selectIsImporting(root())).toBe(false);
-    expect(selectIsImporting(root(started, duplicateFound(OTHER)))).toBe(true);
+    expect(
+      selectIsImporting(
+        root(
+          started,
+          duplicateFound({ existingBookId: OTHER, stored: STORED_PDF }),
+        ),
+      ),
+    ).toBe(true);
     expect(selectIsImporting(root(...ready))).toBe(false);
     expect(selectImportFailure(root(...extracting))).toBeNull();
     expect(
@@ -105,7 +118,14 @@ describe('import selectors', () => {
   it('enable the submit button while running or ready, with a title, once', () => {
     expect(selectCanSubmit(root())).toBe(false);
     expect(selectCanSubmit(root(started))).toBe(true);
-    expect(selectCanSubmit(root(started, duplicateFound(OTHER)))).toBe(false);
+    expect(
+      selectCanSubmit(
+        root(
+          started,
+          duplicateFound({ existingBookId: OTHER, stored: STORED_PDF }),
+        ),
+      ),
+    ).toBe(false);
     expect(selectCanSubmit(root(...ready))).toBe(true);
     expect(selectCanSubmit(root(...extracting, importSubmitted()))).toBe(false);
     expect(
@@ -127,7 +147,7 @@ describe('import selectors', () => {
       selectExtractProgress(
         root(
           started,
-          fileCopied(),
+          fileCopied(STORED_PDF),
           documentOpened({ pageCount: 0, title: null, author: null }),
         ),
       ),

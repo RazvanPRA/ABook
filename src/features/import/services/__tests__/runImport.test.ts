@@ -22,7 +22,10 @@ describe('runImport', () => {
     const { repo, extractor, context } = createImportContext();
     extractor.addPdf(STORED, { pages: book(30), outline: OUTLINE });
 
-    await expect(runImport(context, PICKED)).resolves.toBe(BOOK);
+    await expect(runImport(context, PICKED)).resolves.toEqual({
+      bookId: BOOK,
+      waitsOnDuplicate: false,
+    });
 
     expect(repo.calls.map(call => call.op)).toEqual([
       'storePdf',
@@ -124,13 +127,15 @@ describe('runImport', () => {
   it('skips a chapter with no text, keeping chapter indexes contiguous', async () => {
     const { repo, extractor, context } = createImportContext();
     const pages = book(30).map(page =>
-      page.page <= 10 ? { page: page.page, lines: [] } : page,
+      page.page >= 11 && page.page <= 25
+        ? { page: page.page, lines: [] }
+        : page,
     );
     extractor.addPdf(STORED, { pages, outline: OUTLINE });
     await runImport(context, PICKED);
     const toc = await repo.getToc(BOOK);
     expect(toc?.map(c => [c.index, c.title])).toEqual([
-      [0, 'Capitolul 2'],
+      [0, 'Capitolul 1'],
       [1, 'Capitolul 3'],
     ]);
     expect(await repo.getMeta(BOOK)).toMatchObject({ processedPages: 30 });

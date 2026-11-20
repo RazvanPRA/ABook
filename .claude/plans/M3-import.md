@@ -361,6 +361,38 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 - Duplicate: fingerprint (`@noble/hashes`) compared with the existing books; the user is asked before importing a copy. `BookMeta.fingerprint` + migration `002` with its test.
 - **Tests:** one per case, asserting the fakes are empty afterwards; the duplicate prompt; the migration (idempotent). A negative scanned case shaped like `The.Clean.Coder` (first 5 pages: 0, 1520, 30, 13, 443 characters) imports normally.
 
+**Done** (2026-11-20). Findings:
+
+- **Fingerprint:**
+  - **Computation:** `shared/utils/pdfFingerprint(size, head)` = `<size>:<sha256 hex>` (`@noble/hashes/sha2.js`, checked against the FIPS 180-2 `abc` vector).
+  - **Where:** the repository's `storePdf` computes it from the first 64 KB of **the app's copy** (`readBase64` → `base64ToBytes`) and returns it in `StoredPdf`. So the feature never reads files, and a `content://` URI is never read twice.
+  - **Schema:** `BookMeta.fingerprint: string | null`.
+- **Migration `002-fingerprint`:**
+  - It adds `fingerprint: null` to every schema-1 meta. A migration only sees key/value entries and can't read the PDFs, so books imported before are never reported as duplicates.
+  - Values that aren't JSON objects are left for the schema to reject.
+  - It is idempotent, and the runner writes only the changed metas.
+  - `CURRENT_SCHEMA_VERSION` is 2, and `rawMeta` (fixtures) gets `fingerprint: null`.
+- **Duplicates:** `copyPdf` = new id → `importStarted` → `storePdf` → `listBooks` compared by fingerprint.
+  - When a book matches, `duplicateFound({ existingBookId, stored })` and the import **stops there**: no meta yet, so the library doesn't show the copy while the user decides.
+  - `keepDuplicate()` continues from the stored copy (`importBook`); `cancelImport()` removes only the new copy.
+  - The slice now keeps `stored: StoredPdf` (`fileCopied` and `duplicateFound` carry it), which is a change to the step 12 payloads.
+- **Failures** (`failureReason`), each ending in `failed(reason, step)`:
+  - the pipeline's own `ImportError`: `scanned` and `corrupt` (0 pages);
+  - pdf.js codes `password`, `corrupt`, `timeout`; any other code becomes `unknown`;
+  - any other error is `copy` while copying, and `storage` afterwards (the text services are pure, so what else fails is a repository write).
+  - `too-large` (> 100 MB, `MAX_PDF_BYTES`) is refused before anything is copied.
+  - **Scanned:** each of the first 5 pages has < 20 characters (`isScannedPdf`), checked on the 20-page sample. The `Clean Coder` shape imports normally.
+- **Cleanup in one place:** the thunk's `guarded()` catches any error, records the reason (unless the user cancelled), then `deleteBook` + `bookRemoved`, and always closes the extractor.
+  - Cleaning up there, after the pipeline has stopped, guarantees no write lands after the delete.
+  - Every case is asserted on the fake repository: no meta, chapter, toc, library entry nor file (`isEmpty()`), and nothing in the library slice.
+- **Cancel:** `cancelImport()` dispatches `importCancelled` and closes the extractor, which rejects a pending batch.
+  - The pipeline also checks `isCancelled()` at every step boundary (`throwIfCancelled`: after the copy, after `createBook`, after open, before each chapter, before the toc, before the ready meta), so a cancel during a storage write never ends `ready`.
+  - A cancel during the duplicate prompt has no pipeline running, so it removes the copy itself. A cancel with no import running is ignored and logged.
+- **On the emulator:** `@noble/hashes` (ESM, now in the bundle through the repository) loads without any Babel or Metro change.
+  - The app starts, and migration 002 ran: `abook://dev/storage` shows `schemaVersion 2`.
+  - A book seeded from `ion-320.pdf` through `storePdf` stored `fingerprint` `1777753:d416d032…d450c8`, identical to Node's SHA-256 of the same file's first 64 KB (read from the app's SQLite with `run-as`).
+- **Tests:** 968 in 90 suites. New ones: one per failure case, cancel during extraction, cancel between steps (chapter, toc, copy), the duplicate prompt (keep / cancel / ignored), `failureReason`, `isScannedPdf`, the fingerprint, the migration through the runner.
+
 #### 15. Resume at boot
 - A `processing` book with its PDF present resumes from `processedPages` after `PdfExtractorHost` is mounted; without the PDF, or with an invalid meta, it becomes `failed` (the M2 behavior). `failInterruptedImports` is narrowed accordingly.
 - **Tests:** crash after chapter 2 → boot → the import continues from chapter 3 and the result equals an uninterrupted import.

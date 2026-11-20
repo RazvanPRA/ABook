@@ -3,6 +3,7 @@ import { bookUpserted } from '@/features/library';
 import { toChapterIndex, type BookId, type Chapter } from '@/shared/domain';
 import type { ImportContext } from '../model/dependencies';
 import { chapterSaved } from '../state/importSlice';
+import { throwIfCancelled } from './cancellation';
 import type { ChapterDraft } from './chapterAssembler';
 import { chapterText } from './chapterText';
 
@@ -27,6 +28,7 @@ export function createChapterWriter(
   const toc: Chapter[] = [];
   return {
     write: async draft => {
+      throwIfCancelled(context);
       const chunk = chapterText(draft, bookHeaders);
       if (chunk.sentences.length > 0) {
         const range = {

@@ -18,21 +18,52 @@ export type RepoCall =
 /**
  * A `BookRepository` in memory, for feature tests (features may not use the real one, even in
  * tests). `calls` logs the writes in order; the stored values are readable as the real ones.
+ * The copy's fingerprint is `fp:<source uri>`, so two picks of the same URI are duplicates;
+ * `failOn(op)` makes the next call of `op` reject, like a full disk.
  */
 export class MemoryBookRepository implements BookRepository {
   readonly calls: RepoCall[] = [];
   readonly metas = new Map<BookId, BookMeta>();
   readonly chapters = new Map<string, ChapterChunk>();
   readonly tocs = new Map<BookId, readonly Chapter[]>();
+  readonly files = new Set<string>();
   order: BookId[] = [];
+  private failing: RepoCall['op'] | null = null;
 
-  async storePdf(id: BookId, _sourceUri: string) {
+  failOn(op: RepoCall['op']): void {
+    this.failing = op;
+  }
+
+  /** Nothing left: no book, chapter, toc, library entry nor file. */
+  isEmpty(): boolean {
+    return (
+      this.metas.size +
+        this.chapters.size +
+        this.tocs.size +
+        this.files.size +
+        this.order.length ===
+      0
+    );
+  }
+
+  private check(op: RepoCall['op']): void {
+    if (this.failing === op) {
+      this.failing = null;
+      throw new Error(`${op} failed`);
+    }
+  }
+
+  async storePdf(id: BookId, sourceUri: string) {
     this.calls.push({ op: 'storePdf', id });
-    return { path: `/files/books/${id}.pdf`, sizeBytes: 3_800_000 };
+    this.check('storePdf');
+    const path = `/files/books/${id}.pdf`;
+    this.files.add(path);
+    return { path, sizeBytes: 3_800_000, fingerprint: `fp:${sourceUri}` };
   }
 
   async createBook(meta: BookMeta) {
     this.calls.push({ op: 'createBook', status: meta.status });
+    this.check('createBook');
     this.metas.set(meta.id, meta);
     this.order = [meta.id, ...this.order];
   }
@@ -43,11 +74,13 @@ export class MemoryBookRepository implements BookRepository {
       index,
       sentences: chunk.sentences.length,
     });
+    this.check('saveChapter');
     this.chapters.set(`${id}:${index}`, chunk);
   }
 
   async saveToc(id: BookId, toc: readonly Chapter[]) {
     this.calls.push({ op: 'saveToc', chapters: toc.length });
+    this.check('saveToc');
     this.tocs.set(id, toc);
   }
 
@@ -82,6 +115,7 @@ export class MemoryBookRepository implements BookRepository {
     this.calls.push({ op: 'deleteBook', id });
     this.metas.delete(id);
     this.tocs.delete(id);
+    this.files.delete(`/files/books/${id}.pdf`);
     this.order = this.order.filter(other => other !== id);
     [...this.chapters.keys()]
       .filter(key => key.startsWith(`${id}:`))

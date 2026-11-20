@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import type { StoredPdf } from '@/repositories';
 import type { BookId, BookLanguage } from '@/shared/domain';
 import { logger } from '@/shared/utils';
 import { titleFromFileName, usableMetadata } from '../model/metadata';
@@ -16,6 +17,8 @@ export interface ImportState {
   readonly phase: ImportPhase;
   readonly bookId: BookId | null;
   readonly file: PickedFile | null;
+  /** The app's copy of the file, once copied: a kept duplicate continues from it. */
+  readonly stored: StoredPdf | null;
   readonly pageCount: number;
   /** Chapters already in storage: the book is playable from the first one. */
   readonly chaptersSaved: number;
@@ -32,6 +35,7 @@ export const initialImportState: ImportState = {
   phase: { type: 'idle' },
   bookId: null,
   file: null,
+  stored: null,
   pageCount: 0,
   chaptersSaved: 0,
   form: { title: '', author: '', language: DEFAULT_IMPORT_LANGUAGE },
@@ -93,14 +97,21 @@ const importSlice = createSlice({
         },
       };
     },
-    fileCopied: state => {
+    fileCopied: (state, action: PayloadAction<StoredPdf>) => {
       if (allowed(state, 'fileCopied', ['copying'])) {
+        state.stored = action.payload;
         state.phase = { type: 'opening' };
       }
     },
-    duplicateFound: (state, action: PayloadAction<BookId>) => {
+    /** The copy has the fingerprint of a book in the library: the user decides. */
+    duplicateFound: (
+      state,
+      action: PayloadAction<{ existingBookId: BookId; stored: StoredPdf }>,
+    ) => {
       if (allowed(state, 'duplicateFound', ['copying'])) {
-        state.phase = { type: 'duplicate', existingBookId: action.payload };
+        const { existingBookId, stored } = action.payload;
+        state.stored = stored;
+        state.phase = { type: 'duplicate', existingBookId };
       }
     },
     /** The user keeps a second copy of a book already in the library. */
