@@ -397,6 +397,30 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 - A `processing` book with its PDF present resumes from `processedPages` after `PdfExtractorHost` is mounted; without the PDF, or with an invalid meta, it becomes `failed` (the M2 behavior). `failInterruptedImports` is narrowed accordingly.
 - **Tests:** crash after chapter 2 → boot → the import continues from chapter 3 and the result equals an uninterrupted import.
 
+**Done** (2026-11-22). Findings:
+- **Write order change (reported):** the toc is now saved with every chapter: chunk → toc (the chapters so far) → `processedPages`, then the `ready` meta. The final `saveToc` is gone, because the last chapter already wrote the full toc.
+  - Why: a resumed import needs the saved chapters' titles and page ranges, and the chunks don't hold them. Without the toc it would have to extract those pages again, the slow part. A toc during processing also lets M4 list the chapters of a book still importing.
+  - Storage rule 4 still holds: the toc is written after the chunks it lists, and `ready` comes last.
+- **Resume point** (`resumePoint`): after the later of `processedPages` and the last toc chapter's `endPage`.
+  - A kill between `saveToc` and `updateMeta` leaves the toc one chapter ahead, never behind.
+  - With no toc (a toc is written with every chapter, empty ones included), the import restarts from page 1 and overwrites what it saved.
+- **How a resume reads pages:** it always reads the 20-page sample again (scan check, book headers, chapter plan), so it cuts and cleans exactly like an uninterrupted import. It then feeds only the pages after the resume point.
+  - On a heading plan, the next chapter starts on a heading page, so the assembler starts clean there.
+  - Tested on outline, every-10-pages and heading plans. The result (meta, toc, chunks, file, order) is equal to an uninterrupted import's.
+- **Boot:** `failInterruptedImports` → `failUnresumableImports`. Only a `processing` book whose file is gone becomes `failed`; a book with an invalid meta is not in the snapshot (M2).
+  - After hydration, `useBootstrap` dispatches `resumeImports(books)` without waiting: the app opens and the books resume one after the other.
+  - `PdfExtractorHost` is rendered by `AppProviders` outside the `ready` gate, so the WebView can mount during boot.
+- **Slice:** `importResumed` (from a finished phase) starts at `opening` with the form taken from the meta. Title and author count as edited, so PDF metadata doesn't overwrite them. It also sets `submitted` and `chaptersSaved` = the saved toc length.
+- **When a resume fails or is cancelled,** the book is removed, like a new import (one rule: a failed import leaves nothing). While another import is running (or a duplicate waits), the resume is postponed to the next boot and logged.
+- **Not checked on the emulator yet:** there is no import UI until step 17. The kill → relaunch → resume check on the real 522-page PDF is part of step 18.
+- **Tests:** 984 in 91 suites. New ones:
+  - the resume (3 chapter plans);
+  - pages read on resume;
+  - a kill before `processedPages`, and a kill after the last chapter;
+  - `resumePoint`, `importResumed`, `resumeImports` (in turn, failure removes, postponed);
+  - boot keeps a resumable book `processing`.
+  - `MemoryBookRepository.failOn(op, skip)` can now fail the n-th call.
+
 #### 16. `TextField` and `Select` primitives
 - `shared/ui/TextField` (label, value, error, a11y label) and `shared/ui/Select` (label, options, opens a list; role and state), on tokens, ≤ 7 props, in the `abook://dev/ui` catalog.
 - **Tests:** render, typing / choosing, accessibility state, font scaling.

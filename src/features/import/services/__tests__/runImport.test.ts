@@ -18,7 +18,7 @@ const OUTLINE = [
 ];
 
 describe('runImport', () => {
-  it('writes in the storage order: file, processing meta, chapters as they complete, toc, ready', async () => {
+  it('writes in the storage order: file, processing meta, each chapter with the toc, ready', async () => {
     const { repo, extractor, context } = createImportContext();
     extractor.addPdf(STORED, { pages: book(30), outline: OUTLINE });
 
@@ -32,12 +32,14 @@ describe('runImport', () => {
       'createBook',
       'updateMeta', // page count + form
       'saveChapter',
+      'saveToc',
       'updateMeta', // processedPages 10
       'saveChapter',
+      'saveToc',
       'updateMeta', // 25
       'saveChapter',
-      'updateMeta', // 30
       'saveToc',
+      'updateMeta', // 30
       'updateMeta', // ready
     ]);
     expect(repo.calls[1]).toEqual({ op: 'createBook', status: 'processing' });

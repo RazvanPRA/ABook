@@ -70,9 +70,9 @@ describe('bootstrap', () => {
     expect(reads).toHaveLength(2); // schema version + the snapshot
   });
 
-  it('marks a book left processing as failed, in memory and in storage', async () => {
+  it('marks a book left processing without its PDF as failed, in memory and in storage', async () => {
     const { kv, repo, boot } = await library([A]);
-    await repo.createBook(makeMeta(B)); // import killed after the meta was written
+    await repo.createBook(makeMeta(B)); // its file is gone: nothing to resume from
     const result = await bootstrap(boot);
     expect(result.books.map(b => [b.id, b.status])).toEqual([
       [B, 'failed'],
@@ -80,6 +80,20 @@ describe('bootstrap', () => {
     ]);
     expect(JSON.parse(kv.snapshot()[bookKey(B, 'meta')] ?? '{}').status).toBe(
       'failed',
+    );
+  });
+
+  it('keeps a book left processing with its PDF as processing, to be resumed', async () => {
+    const { kv, repo, boot } = await library([A]);
+    const stored = await repo.storePdf(B, SOURCE_URI);
+    await repo.createBook(makeMeta(B, { fileUri: stored.path }));
+    const result = await bootstrap(boot);
+    expect(result.books.map(b => [b.id, b.status])).toEqual([
+      [B, 'processing'],
+      [A, 'ready'],
+    ]);
+    expect(JSON.parse(kv.snapshot()[bookKey(B, 'meta')] ?? '{}').status).toBe(
+      'processing',
     );
   });
 
@@ -144,7 +158,7 @@ describe('bootstrap', () => {
     it.each([
       'migrate',
       'repairOrder',
-      'failInterruptedImports',
+      'failUnresumableImports',
       'sweepOrphans',
     ] as const)('still hydrates the library when %s fails', async stage => {
       const { boot } = await library([A, B]);

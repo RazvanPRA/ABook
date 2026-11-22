@@ -19,7 +19,7 @@ export type RepoCall =
  * A `BookRepository` in memory, for feature tests (features may not use the real one, even in
  * tests). `calls` logs the writes in order; the stored values are readable as the real ones.
  * The copy's fingerprint is `fp:<source uri>`, so two picks of the same URI are duplicates;
- * `failOn(op)` makes the next call of `op` reject, like a full disk.
+ * `failOn(op, skip)` makes a later call of `op` reject (after `skip` calls), like a full disk.
  */
 export class MemoryBookRepository implements BookRepository {
   readonly calls: RepoCall[] = [];
@@ -28,10 +28,10 @@ export class MemoryBookRepository implements BookRepository {
   readonly tocs = new Map<BookId, readonly Chapter[]>();
   readonly files = new Set<string>();
   order: BookId[] = [];
-  private failing: RepoCall['op'] | null = null;
+  private failing: { op: RepoCall['op']; skip: number } | null = null;
 
-  failOn(op: RepoCall['op']): void {
-    this.failing = op;
+  failOn(op: RepoCall['op'], skip = 0): void {
+    this.failing = { op, skip };
   }
 
   /** Nothing left: no book, chapter, toc, library entry nor file. */
@@ -47,10 +47,15 @@ export class MemoryBookRepository implements BookRepository {
   }
 
   private check(op: RepoCall['op']): void {
-    if (this.failing === op) {
-      this.failing = null;
-      throw new Error(`${op} failed`);
+    if (this.failing?.op !== op) {
+      return;
     }
+    if (this.failing.skip > 0) {
+      this.failing.skip -= 1;
+      return;
+    }
+    this.failing = null;
+    throw new Error(`${op} failed`);
   }
 
   async storePdf(id: BookId, sourceUri: string) {
@@ -86,6 +91,7 @@ export class MemoryBookRepository implements BookRepository {
 
   async updateMeta(id: BookId, patch: BookMetaPatch) {
     this.calls.push({ op: 'updateMeta', patch });
+    this.check('updateMeta');
     const meta = this.metas.get(id);
     if (!meta) {
       return null;

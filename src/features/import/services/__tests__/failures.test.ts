@@ -1,6 +1,7 @@
 import { PdfExtractionError } from '@/services/pdf';
 import type { PageText } from '@/services/text';
 import {
+  BOOK,
   STORED,
   book,
   createImportContext,
@@ -80,21 +81,25 @@ describe('cancellation between steps', () => {
     expect(repo.calls.filter(call => call.op === 'saveChapter')).toHaveLength(
       1,
     );
-    expect(repo.calls.some(call => call.op === 'saveToc')).toBe(false);
+    expect(repo.calls.filter(call => call.op === 'saveToc')).toHaveLength(1);
+    expect(repo.metas.get(BOOK)?.status).toBe('processing');
   });
 
-  it('stops before the ready meta when cancelled after the toc', async () => {
-    const { store, repo, extractor, context } = createImportContext();
+  it('stops before the ready meta when cancelled after the last chapter', async () => {
+    const { store, repo, extractor, context, yieldToJs } =
+      createImportContext();
     extractor.addPdf(STORED, { pages: book(5) });
-    const saveToc = repo.saveToc.bind(repo);
-    jest.spyOn(repo, 'saveToc').mockImplementation(async (id, toc) => {
-      await saveToc(id, toc);
+    yieldToJs.mockImplementationOnce(async () => {
       store.dispatch(importCancelled());
     });
     await expect(runImport(context, PICKED)).rejects.toBeInstanceOf(
       ImportCancelledError,
     );
-    expect(repo.calls.at(-1)?.op).toBe('saveToc');
+    expect(repo.calls.at(-1)).toEqual({
+      op: 'updateMeta',
+      patch: { processedPages: 5 },
+    });
+    expect(repo.metas.get(BOOK)?.status).toBe('processing');
   });
 
   it('stops right after the copy when cancelled while copying', async () => {

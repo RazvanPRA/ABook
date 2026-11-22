@@ -1,6 +1,11 @@
 export { ImportScreen } from './screens/ImportScreen';
 export { importReducer } from './state/importSlice';
-export { cancelImport, importPdf, keepDuplicate } from './state/thunks';
+export {
+  cancelImport,
+  importPdf,
+  keepDuplicate,
+  resumeImports,
+} from './state/thunks';
 export type { ImportState } from './state/importSlice';
 export {
   selectCanListen,

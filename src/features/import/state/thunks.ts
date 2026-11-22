@@ -1,12 +1,14 @@
 import type { ThunkAction, UnknownAction } from '@reduxjs/toolkit';
 import { v4 as uuidv4 } from 'uuid';
 import { bookRemoved } from '@/features/library';
-import { toBookId } from '@/shared/domain';
+import { toBookId, type BookMeta } from '@/shared/domain';
 import { logger } from '@/shared/utils';
 import type { ImportContext, ImportDependencies } from '../model/dependencies';
 import { MAX_PDF_BYTES } from '../model/limits';
+import { isActivePhase } from '../model/steps';
 import type { PickedFile } from '../model/types';
 import { failureReason } from '../services/failureReason';
+import { resumeImport } from '../services/resumeImport';
 import { importBook, runImport } from '../services/runImport';
 import {
   duplicateKept,
@@ -122,6 +124,25 @@ export const keepDuplicate =
     await guarded({ dispatch, getState, extra }, context =>
       importBook(context, { bookId, stored }),
     );
+  };
+
+/**
+ * Resumes, one after the other, the books a killed import left `processing` (the boot already
+ * marked `failed` those without a PDF). A resumed import fails, or is cancelled, like a new one:
+ * it removes the book. Stops when another import is running: the rest resume on the next boot.
+ */
+export const resumeImports =
+  (books: readonly BookMeta[]): ImportThunk =>
+  async (dispatch, getState, extra) => {
+    for (const meta of books.filter(book => book.status === 'processing')) {
+      if (isActivePhase(getState().import.phase)) {
+        logger.warn('import: resume postponed, another import is running');
+        return;
+      }
+      await guarded({ dispatch, getState, extra }, context =>
+        resumeImport(context, meta),
+      );
+    }
   };
 
 /**

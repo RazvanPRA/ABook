@@ -33,8 +33,9 @@ const attempt = async <T, F>(
 
 /**
  * Migrations → boot snapshot (one read) → repair of an unreadable library order → interrupted
- * imports marked `failed` → orphan sweep. Never rejects: if storage can't be read at all, the app
- * starts with an empty library and the default settings.
+ * imports without their PDF marked `failed` (the others are resumed after hydration) → orphan
+ * sweep. Never rejects: if storage can't be read at all, the app starts with an empty library and
+ * the default settings.
  */
 export const bootstrap = async (boot: BootRepository): Promise<BootResult> => {
   await attempt('migrations', () => boot.migrate(), null);
@@ -45,7 +46,7 @@ export const bootstrap = async (boot: BootRepository): Promise<BootResult> => {
   await attempt('order repair', () => boot.repairOrder(snapshot), null);
   const books = await attempt(
     'interrupted imports',
-    () => boot.failInterruptedImports(snapshot.books),
+    () => boot.failUnresumableImports(snapshot.books),
     snapshot.books,
   );
   await attempt('orphan sweep', () => boot.sweepOrphans(snapshot), null);

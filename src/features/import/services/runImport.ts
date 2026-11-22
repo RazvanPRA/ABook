@@ -15,6 +15,7 @@ import { throwIfCancelled } from './cancellation';
 import { copyPdf } from './copyPdf';
 import { extractChapters } from './extractChapters';
 import { formPatch } from './formPatch';
+import { START, type ResumePoint } from './resumePoint';
 
 export interface ImportTarget {
   readonly bookId: BookId;
@@ -37,9 +38,9 @@ export async function runImport(
 }
 
 /**
- * The book from its copied file, in the storage write order: `meta` (`processing`) → each chapter
- * as it completes (+ `processedPages`) → `toc` → `meta` (`ready`). Also the path of a kept
- * duplicate. Stops with `ImportCancelledError` at the next step after a cancel.
+ * The book from its copied file, in the storage write order: `meta` (`processing`) → for each
+ * chapter as it completes: chunk, toc, `processedPages` → `meta` (`ready`). Also the path of a
+ * kept duplicate. Stops with `ImportCancelledError` at the next step after a cancel.
  */
 export async function importBook(
   context: ImportContext,
@@ -47,13 +48,31 @@ export async function importBook(
 ): Promise<void> {
   await createProcessingBook(context, { bookId, stored });
   throwIfCancelled(context);
-  const { document, outline } = await openDocument(context, { bookId, stored });
+  await continueBook(context, { bookId, path: stored.path, resume: START });
+}
+
+export interface BookInProgress {
+  readonly bookId: BookId;
+  /** The app's copy of the PDF. */
+  readonly path: string;
+  readonly resume: ResumePoint;
+}
+
+/** Opens the copy, extracts the chapters after `resume` and marks the book `ready`. */
+export async function continueBook(
+  context: ImportContext,
+  { bookId, path, resume }: BookInProgress,
+): Promise<void> {
+  const { document, outline } = await openDocument(context, { bookId, path });
   throwIfCancelled(context);
-  const toc = await extractChapters(context, { bookId, document, outline });
+  const toc = await extractChapters(context, {
+    bookId,
+    document,
+    outline,
+    resume,
+  });
   throwIfCancelled(context);
   context.dispatch(savingStarted());
-  await context.bookRepository.saveToc(bookId, toc);
-  throwIfCancelled(context);
   const meta = await context.bookRepository.updateMeta(bookId, {
     ...formPatch(context.getForm()),
     status: 'ready',
@@ -96,10 +115,10 @@ async function createProcessingBook(
 /** Opens the copy, prefills the form from its metadata and records the page count. */
 async function openDocument(
   context: ImportContext,
-  { bookId, stored }: ImportTarget,
+  { bookId, path }: Pick<BookInProgress, 'bookId' | 'path'>,
 ): Promise<{ document: PdfDocument; outline: OutlineItem[] }> {
   const { bookRepository, pdfExtractor } = context;
-  const document = await pdfExtractor.open(stored.path);
+  const document = await pdfExtractor.open(path);
   const outline = await pdfExtractor.getOutline();
   const { pageCount, info } = document;
   context.dispatch(documentOpened({ pageCount, ...info }));

@@ -57,10 +57,12 @@ export function createTestStore() {
   });
 }
 
-/** The pipeline's context over in-memory fakes and a real store; the yield is counted. */
-export function createImportContext() {
+/**
+ * The pipeline's context over in-memory fakes and a real store; the yield is counted. Pass the
+ * repository of an earlier context to continue from what it stored (a relaunch after a kill).
+ */
+export function createImportContext(repo = new MemoryBookRepository()) {
   const store = createTestStore();
-  const repo = new MemoryBookRepository();
   const extractor = new FakePdfTextExtractor();
   const yieldToJs = jest.fn(async () => undefined);
   const context: ImportContext = {

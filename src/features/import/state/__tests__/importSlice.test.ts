@@ -14,6 +14,7 @@ import {
   importFinished,
   importReducer,
   importReset,
+  importResumed,
   importStarted,
   importSubmitted,
   initialImportState,
@@ -55,6 +56,18 @@ const toSaving: readonly Action[] = [
   extractionFinished(),
   savingStarted(),
 ];
+
+const RESUMED_FORM = {
+  title: 'Ion',
+  author: 'Liviu Rebreanu',
+  language: 'ro-RO' as const,
+};
+const resumed = importResumed({
+  bookId: OTHER,
+  file: FILE,
+  form: RESUMED_FORM,
+  chaptersSaved: 2,
+});
 
 let warn: jest.SpyInstance;
 beforeEach(() => {
@@ -265,6 +278,7 @@ describe('importSlice invalid transitions', () => {
     ['importFailed', [], importFailed('corrupt')],
     ['importCancelled', [started, importCancelled()], importCancelled()],
     ['importStarted', [started], importStarted({ bookId: OTHER, file: FILE })],
+    ['importResumed', toExtracting, resumed],
     ['importSubmitted', [], importSubmitted()],
   ] as const)(
     'ignores %s in the wrong phase and logs it',
@@ -276,4 +290,31 @@ describe('importSlice invalid transitions', () => {
       );
     },
   );
+});
+
+describe('importSlice resume', () => {
+  it('resumes from opening with the saved form and chapters, after any finished import', () => {
+    for (const before of [
+      [],
+      [...toSaving, importFinished()],
+      [started, importFailed('copy')],
+    ]) {
+      const state = run(...before, resumed);
+      expect(state).toMatchObject({
+        phase: { type: 'opening' },
+        bookId: OTHER,
+        file: FILE,
+        stored: null,
+        form: RESUMED_FORM,
+        chaptersSaved: 2,
+        submitted: true,
+      });
+    }
+  });
+
+  it('keeps the saved title and author over the PDF metadata', () => {
+    const state = run(resumed, opened('Alt titlu', 'Alt autor'));
+    expect(state.form).toEqual(RESUMED_FORM);
+    expect(state.phase).toEqual({ type: 'extracting', page: 0, total: 412 });
+  });
 });

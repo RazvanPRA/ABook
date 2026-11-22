@@ -2,7 +2,7 @@ import { MIGRATIONS, runMigrations, type Migration } from '@/storage';
 import type { BookStores } from '../book';
 import { orderEntry } from '../book/bookOrder';
 import type { BootRepository } from './BootRepository';
-import { failInterruptedImports } from './failInterruptedImports';
+import { failUnresumableImports } from './failUnresumableImports';
 import { loadBootSnapshot } from './loadBootSnapshot';
 import { sweepOrphans } from './sweepOrphans';
 
@@ -18,6 +18,6 @@ export const createLocalBootRepository = (
       await stores.kv.setMany(orderEntry(snapshot.order));
     }
   },
-  failInterruptedImports: books => failInterruptedImports(stores.kv, books),
+  failUnresumableImports: books => failUnresumableImports(stores, books),
   sweepOrphans: snapshot => sweepOrphans(stores, snapshot),
 });

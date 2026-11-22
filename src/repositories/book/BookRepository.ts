@@ -19,8 +19,9 @@ export type BookMetaPatch = Partial<Omit<BookMeta, 'id'>>;
 
 /**
  * A book's file, metadata, table of contents and chapter text. The import writes in this order:
- * `storePdf` → `createBook` (`processing`) → `saveChapter`… → `saveToc` → `updateMeta` (`ready`),
- * so a crash at any point leaves a `processing` book whose saved chapters are readable.
+ * `storePdf` → `createBook` (`processing`) → per chapter: `saveChapter`, `saveToc` (the chapters so
+ * far), `updateMeta` (`processedPages`) → `updateMeta` (`ready`), so a crash at any point leaves a
+ * `processing` book whose saved chapters are readable and listed, and the import can resume.
  */
 export interface BookRepository {
   /** Copies the picked file to `books/{id}.pdf` and fingerprints the copy. */

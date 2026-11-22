@@ -29,6 +29,13 @@ export interface ImportState {
   readonly submitted: boolean;
 }
 
+export interface ResumedImport {
+  readonly bookId: BookId;
+  readonly file: PickedFile;
+  readonly form: ImportForm;
+  readonly chaptersSaved: number;
+}
+
 export const DEFAULT_IMPORT_LANGUAGE: BookLanguage = 'ro-RO';
 
 export const initialImportState: ImportState = {
@@ -95,6 +102,26 @@ const importSlice = createSlice({
           ...initialImportState.form,
           title: titleFromFileName(file.name),
         },
+      };
+    },
+    /**
+     * A book a killed import left `processing` is resumed at boot: its file is already copied and
+     * its form already saved in the meta, so the import goes on from opening the PDF.
+     */
+    importResumed: (state, action: PayloadAction<ResumedImport>) => {
+      if (!allowed(state, 'importResumed', FINISHED)) {
+        return state;
+      }
+      const { bookId, file, form, chaptersSaved } = action.payload;
+      return {
+        ...initialImportState,
+        phase: { type: 'opening' },
+        bookId,
+        file,
+        form,
+        chaptersSaved,
+        edited: { title: true, author: true },
+        submitted: true,
       };
     },
     fileCopied: (state, action: PayloadAction<StoredPdf>) => {
@@ -224,6 +251,7 @@ const importSlice = createSlice({
 
 export const {
   importStarted,
+  importResumed,
   fileCopied,
   duplicateFound,
   duplicateKept,
