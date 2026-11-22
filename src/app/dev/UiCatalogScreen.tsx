@@ -6,6 +6,7 @@ import { styles } from './catalog.styles';
 import { ButtonsSection } from './sections/ButtonsSection';
 import { ControlsSection } from './sections/ControlsSection';
 import { DisplaySection } from './sections/DisplaySection';
+import { FormSection } from './sections/FormSection';
 import { FoundationsSection } from './sections/FoundationsSection';
 import { StatesSection } from './sections/StatesSection';
 
@@ -28,6 +29,7 @@ export function UiCatalogScreen() {
         <FoundationsSection />
         <ButtonsSection />
         <ControlsSection />
+        <FormSection />
         <DisplaySection />
         <StatesSection />
       </ScrollView>

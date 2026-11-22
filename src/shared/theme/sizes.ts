@@ -9,6 +9,8 @@ export const size = {
   tabBarHeight: 64,
   /** Large button (pill CTAs). */
   buttonLg: 52,
+  /** Text field and select height (grows with the font scale). */
+  input: 52,
   progressBar: 4,
   coverSm: { width: 48, height: 64 },
   coverLg: { width: 160, height: 220 },

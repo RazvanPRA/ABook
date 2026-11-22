@@ -14,6 +14,7 @@ import {
   type ChapterAssembler,
 } from './chapterAssembler';
 import { createChapterWriter, type ChapterWriter } from './chapterWriter';
+import { throwIfCancelled } from './cancellation';
 import { isScannedPdf } from './isScannedPdf';
 import { planChapters } from './planChapters';
 import type { ResumePoint } from './resumePoint';
@@ -65,6 +66,7 @@ export async function extractChapters(
     const to = Math.min(from + PAGES_PER_BATCH - 1, pageCount);
     await feed.pages(await readPages(context, { from, to, pageCount }));
   }
+  throwIfCancelled(context);
   context.dispatch(extractionFinished());
   return feed.finish();
 }

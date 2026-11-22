@@ -9,4 +9,6 @@ export const opacity = {
   highlight: 0.18,
   disabled: 0.4,
   pressed: 0.7,
+  /** Backdrop behind a sheet (`color.bg` at this opacity). */
+  scrim: 0.85,
 } as const;

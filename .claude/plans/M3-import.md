@@ -425,6 +425,26 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 - `shared/ui/TextField` (label, value, error, a11y label) and `shared/ui/Select` (label, options, opens a list; role and state), on tokens, ≤ 7 props, in the `abook://dev/ui` catalog.
 - **Tests:** render, typing / choosing, accessibility state, font scaling.
 
+**Done** (2026-11-22). Findings:
+- **`TextField`** (6 props: `label`, `value`, `onChangeText`, `error`, `placeholder`, `editable`):
+  - The input carries the label as its name. The visible label is hidden from screen readers, so it isn't read twice.
+  - An error turns the outline `danger`, shows a caption under the field (a polite live region) and becomes the input's hint.
+  - The outline turns amber while focused (`useTextField`).
+- **`Select<T>`** (6 props: `label`, `options`, `value`, `onChange`, `closeLabel`, `disabled`):
+  - The field is a `combobox` with the chosen option as its value and `expanded`.
+  - It opens a `Modal` (`SelectSheet`) with one `radio` row per option, and the chosen one is `checked`.
+  - The backdrop ("Închide", passed in, since primitives don't know i18n) and the back button close it without a change. Picking the current option changes nothing.
+- **Shared look:** `field.styles.ts` (`fieldBox`) is used by both, so the select looks like a text field (mockup). It sets `minHeight` (`size.input` = 52) and no `height`, so the box grows with the system font scale.
+- **New tokens:** `size.input`, and `opacity.scrim` (`color.bg` at 0.85 behind the list). No new color.
+- **Catalog:** `FormSection` holds title, author (placeholder), language, a field with an error and a read-only field.
+- **On the emulator (`uiautomator`):**
+  - The inputs are `EditText` with `content-desc` = label. The read-only one is `enabled=false`.
+  - The select reads "Limba vocii, Română (ro-RO)". Android has no combobox class, so it is a `View` and `expanded` doesn't show in the dump.
+  - The open list has `RadioButton`s with `checked`, and choosing English updates the value.
+  - At `font_scale 2.0` the boxes grow from 156 to 200 px and the text fits. The font change recreates the activity (the app returns to the Library); the scale was set back to 1.0.
+- **Pipeline fix found here:** a cancel after the last chapter still dispatched `extractionFinished` (a "ignored in phase cancelled" warning in the test output). `extractChapters` now runs `throwIfCancelled` before it.
+- **Tests:** 1001 in 93 suites. New ones: TextField (label, typing, focus, error, read-only, placeholder, font scale, hook) and Select (value, open, choose, close without change, disabled, look, hook).
+
 #### 17. Import screen
 - Per `02-import-pdf.png`: file card (name, size, pages) + "Schimbă", "Procesare locală" step list (copy / extract with page X/Y and bar / chapters and sentences / save), "Detalii carte" form, "Adaugă în bibliotecă" + the note. States: per-step error, scanned, duplicate, cancellation. Texts in `ro.json`. A placeholder Author from the PDF info (`(anonymous)`, as in `Clean_Architecture_Notite.pdf`) leaves the field empty.
 - Picker: `@react-native-documents/picker` with `types.pdf`, the 100 MB limit (a constant), and the `content://` question from M2 step 4 (`keepLocalCopy` vs. a direct `copyFile`) answered on the emulator.
