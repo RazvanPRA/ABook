@@ -10,7 +10,8 @@ export interface ScreenHeaderBack {
 }
 
 /**
- * `large`: display title on the left ("Biblioteca mea", "Setări").
+ * `large`: display title on the left ("Biblioteca mea", "Setări"), after the back button if any
+ * ("Importă PDF").
  * `compact`: back button, centered overline + title (Player, Book details).
  */
 export type ScreenHeaderVariant = 'large' | 'compact';

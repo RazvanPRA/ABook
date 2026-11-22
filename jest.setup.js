@@ -142,3 +142,21 @@ jest.mock('react-native-bootsplash', () => ({
   isVisible: jest.fn(() => false),
   useHideAnimation: jest.fn(() => ({ container: {}, logo: {}, brand: {} })),
 }));
+
+// Native module: the app uses only pick() through services/picker, whose tests inject their own pick.
+jest.mock('@react-native-documents/picker', () => {
+  const errorCodes = {
+    OPERATION_CANCELED: 'OPERATION_CANCELED',
+    IN_PROGRESS: 'ASYNC_OP_IN_PROGRESS',
+    UNABLE_TO_OPEN_FILE_TYPE: 'UNABLE_TO_OPEN_FILE_TYPE',
+    NULL_PRESENTER: 'NULL_PRESENTER',
+  };
+  return {
+    pick: jest.fn(() => Promise.reject(new Error('pick is not mocked'))),
+    keepLocalCopy: jest.fn(),
+    types: { pdf: 'application/pdf' },
+    errorCodes,
+    isErrorWithCode: error =>
+      typeof error === 'object' && error !== null && 'code' in error,
+  };
+});

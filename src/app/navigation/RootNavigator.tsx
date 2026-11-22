@@ -20,13 +20,19 @@ function BookRoute({
   return <BookScreen bookId={route.params.id} />;
 }
 
+function ImportRoute({
+  navigation,
+}: NativeStackScreenProps<RootStackParamList, 'Import'>) {
+  return <ImportScreen onClose={navigation.goBack} />;
+}
+
 export function RootNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Tabs" component={TabsNavigator} />
       <Stack.Screen
         name="Import"
-        component={ImportScreen}
+        component={ImportRoute}
         options={{ presentation: 'modal' }}
       />
       <Stack.Screen name="Book" component={BookRoute} />

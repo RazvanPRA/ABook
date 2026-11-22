@@ -12,6 +12,10 @@ export const size = {
   /** Text field and select height (grows with the font scale). */
   input: 52,
   progressBar: 4,
+  /** Status circle of an import step. */
+  stepIndicator: 28,
+  /** "PDF" badge of the picked file card. */
+  fileBadge: 44,
   coverSm: { width: 48, height: 64 },
   coverLg: { width: 160, height: 220 },
   emptyStateIcon: 88,

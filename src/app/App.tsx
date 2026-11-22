@@ -16,7 +16,10 @@ export interface AppProps {
   services?: AppServices;
 }
 
-export function App({ services = getAppServices() }: AppProps) {
+export function App({ services: given }: AppProps) {
+  // Both pinned on the first render: a Fast Refresh of dependencies.ts would otherwise hand the
+  // PDF host a new transport while the store's extractor still uses the old one (M3 step 17)
+  const [services] = useState(() => given ?? getAppServices());
   const [store] = useState(() => createAppStore(featureDependencies(services)));
   const ready = useBootstrap(services.bootRepository, store.dispatch);
   // The navigator mounts only after hydration, so onReady (and the splash hide) comes after it too

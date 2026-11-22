@@ -6,6 +6,7 @@ import {
   selectBooksInOrder,
 } from '@/features/library';
 import { FakePdfTextExtractor, type FakePdf } from '@/services/pdf/testing';
+import { FakePdfPicker } from '@/services/picker/testing';
 import type { PageText } from '@/services/text';
 import type { BookId } from '@/shared/domain';
 import { BOOK_IDS, makeMeta } from '@/shared/domain/__fixtures__/books';
@@ -14,7 +15,8 @@ import { PICKED, book } from '../../__fixtures__/importSetup';
 import { MemoryBookRepository } from '../../__fixtures__/memoryBookRepository';
 import type { ImportDependencies } from '../../model/dependencies';
 import { MAX_PDF_BYTES } from '../../model/limits';
-import { importReducer } from '../importSlice';
+import { formChanged, importReducer } from '../importSlice';
+import { pickPdf, submitImport } from '../screenThunks';
 import {
   cancelImport,
   importPdf,
@@ -35,13 +37,20 @@ function setup(pdf: FakePdf = { pages: book(30) }) {
   const bookRepository = new MemoryBookRepository();
   const pdfExtractor = new FakePdfTextExtractor();
   serve(pdfExtractor, pdf);
-  const extra: ImportDependencies = { bookRepository, pdfExtractor };
+  const pdfPicker = new FakePdfPicker();
+  const extra: ImportDependencies = { bookRepository, pdfExtractor, pdfPicker };
   const store = configureStore({
     reducer: { import: importReducer, library: libraryReducer },
     middleware: getDefault => getDefault({ thunk: { extraArgument: extra } }),
   });
   const closed = () => pdfExtractor.calls.at(-1)?.call === 'close';
-  return { store, repo: bookRepository, extractor: pdfExtractor, closed };
+  return {
+    store,
+    repo: bookRepository,
+    extractor: pdfExtractor,
+    picker: pdfPicker,
+    closed,
+  };
 }
 
 const tick = () => new Promise(resolve => setTimeout(resolve, 0));
@@ -267,6 +276,119 @@ describe('resumeImports', () => {
     expect(store.getState().import.phase.type).toBe('duplicate');
     expect(warn).toHaveBeenCalledWith(
       'import: resume postponed, another import is running',
+    );
+  });
+});
+
+describe('pickPdf', () => {
+  it('does nothing when the user closes the picker', async () => {
+    const { store, repo, picker } = setup();
+    picker.next(null);
+    await store.dispatch(pickPdf());
+    expect(picker.picks).toBe(1);
+    expect(store.getState().import.phase).toEqual({ type: 'idle' });
+    expect(repo.calls).toEqual([]);
+  });
+
+  it('logs a picker failure and changes nothing', async () => {
+    const { store, picker } = setup();
+    picker.fail(new Error('ASYNC_OP_IN_PROGRESS'));
+    await store.dispatch(pickPdf());
+    expect(store.getState().import.phase).toEqual({ type: 'idle' });
+    expect(warn).toHaveBeenCalledWith(
+      'import: the picker failed',
+      expect.any(Error),
+    );
+  });
+
+  it('imports the picked PDF', async () => {
+    const { store, picker } = setup();
+    picker.next(PICKED);
+    await store.dispatch(pickPdf());
+    expect(store.getState().import).toMatchObject({
+      phase: { type: 'ready' },
+      file: PICKED,
+    });
+  });
+
+  it('replaces a running import: the old one stops and is removed before the new one starts', async () => {
+    const { store, repo, extractor, picker } = setup();
+    extractor.pauseAtPage(26);
+    const first = store.dispatch(importPdf(PICKED));
+    await tick();
+    const oldId = store.getState().import.bookId;
+    const other = { ...PICKED, name: 'alta.pdf', uri: 'content://alta' };
+    picker.next(other);
+    await store.dispatch(pickPdf());
+    await first;
+    const { bookId, phase, file } = store.getState().import;
+    expect(phase).toEqual({ type: 'ready' });
+    expect(file).toEqual(other);
+    expect(bookId).not.toBe(oldId);
+    expect(selectBooksInOrder(store.getState()).map(b => b.id)).toEqual([
+      bookId,
+    ]);
+    expect([...repo.files]).toEqual([`/files/books/${bookId}.pdf`]);
+  });
+});
+
+describe('submitImport', () => {
+  it('only marks the form submitted while the import runs; the pipeline writes it', async () => {
+    const { store, repo, extractor } = setup();
+    extractor.pauseAtPage(26);
+    const running = store.dispatch(importPdf(PICKED));
+    await tick();
+    store.dispatch(formChanged({ field: 'title', value: 'Ion (ediție)' }));
+    const writes = repo.calls.length;
+    await store.dispatch(submitImport());
+    expect(store.getState().import.submitted).toBe(true);
+    expect(repo.calls.length).toBe(writes);
+    extractor.resume();
+    await running;
+    const { bookId } = store.getState().import;
+    expect(repo.metas.get(bookId as BookId)?.title).toBe('Ion (ediție)');
+  });
+
+  it('writes the form into the meta once the import is over', async () => {
+    const { store, repo } = setup();
+    await store.dispatch(importPdf(PICKED));
+    store.dispatch(formChanged({ field: 'author', value: 'L. Rebreanu' }));
+    await store.dispatch(submitImport());
+    const { bookId } = store.getState().import;
+    expect(repo.metas.get(bookId as BookId)?.author).toBe('L. Rebreanu');
+    expect(selectBooksInOrder(store.getState())[0]?.author).toBe('L. Rebreanu');
+  });
+
+  it('shows the edited title in the library while the import runs', async () => {
+    const { store, extractor } = setup();
+    extractor.pauseAtPage(16);
+    const running = store.dispatch(importPdf(PICKED));
+    await tick();
+    store.dispatch(formChanged({ field: 'title', value: 'Ion' }));
+    extractor.resume();
+    await running;
+    expect(selectBooksInOrder(store.getState())[0]?.title).toBe('Ion');
+  });
+
+  it('is ignored without a title', async () => {
+    const { store, repo } = setup();
+    await store.dispatch(importPdf(PICKED));
+    store.dispatch(formChanged({ field: 'title', value: '  ' }));
+    const writes = repo.calls.length;
+    await store.dispatch(submitImport());
+    expect(store.getState().import.submitted).toBe(false);
+    expect(repo.calls.length).toBe(writes);
+  });
+
+  it('logs a failed write and keeps the screen state', async () => {
+    const { store, repo } = setup();
+    await store.dispatch(importPdf(PICKED));
+    repo.failOn('updateMeta');
+    await store.dispatch(submitImport());
+    expect(store.getState().import.submitted).toBe(true);
+    expect(warn).toHaveBeenCalledWith(
+      'import: saving the book details failed',
+      expect.any(Error),
     );
   });
 });

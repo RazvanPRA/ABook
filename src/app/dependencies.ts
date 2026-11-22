@@ -13,6 +13,7 @@ import {
   type PdfTextExtractor,
   type WebViewTransport,
 } from '@/services/pdf';
+import { createDocumentsPdfPicker, type PdfPicker } from '@/services/picker';
 import {
   createAsyncStorageKeyValueStore,
   createReactNativeFsFileStore,
@@ -25,6 +26,7 @@ import {
  */
 export interface FeatureDependencies extends AppDependencies {
   pdfExtractor: PdfTextExtractor;
+  pdfPicker: PdfPicker;
 }
 
 /** Everything the app wires: what features get plus what only `app/` uses. */
@@ -54,6 +56,7 @@ export const createAppServices = (
       readChunk: (path, offset, length) =>
         stores.files.readBase64(path, offset, length),
     }),
+    pdfPicker: createDocumentsPdfPicker(),
     stores,
     pdfTransport,
   };
@@ -73,9 +76,11 @@ export const featureDependencies = ({
   progressRepository,
   settingsRepository,
   pdfExtractor,
+  pdfPicker,
 }: AppServices): FeatureDependencies => ({
   bookRepository,
   progressRepository,
   settingsRepository,
   pdfExtractor,
+  pdfPicker,
 });

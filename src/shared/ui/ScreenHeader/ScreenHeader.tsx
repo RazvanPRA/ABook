@@ -17,7 +17,8 @@ export function ScreenHeader({
   const safeTop = useScreenHeader();
   if (variant === 'large') {
     return (
-      <View style={[styles.root, safeTop]}>
+      <View style={[styles.root, styles.largeRoot, safeTop]}>
+        {back ? <IconButton {...back} /> : null}
         <AppText
           variant="display"
           accessibilityRole="header"

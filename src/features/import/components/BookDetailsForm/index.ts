@@ -1,0 +1,1 @@
+export { BookDetailsForm } from './BookDetailsForm';

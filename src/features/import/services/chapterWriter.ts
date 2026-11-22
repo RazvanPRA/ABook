@@ -6,9 +6,10 @@ import { chapterSaved } from '../state/importSlice';
 import { throwIfCancelled } from './cancellation';
 import type { ChapterDraft } from './chapterAssembler';
 import { chapterText } from './chapterText';
+import { formPatch } from './formPatch';
 
 export interface ChapterWriter {
-  /** Cleans, segments and saves a completed chapter, then the toc, then `processedPages`. */
+  /** Cleans, segments and saves a completed chapter, then the toc, then `processedPages` + form. */
   write(draft: ChapterDraft): Promise<void>;
   /** The table of contents so far: one entry per saved chapter. */
   toc(): readonly Chapter[];
@@ -48,7 +49,9 @@ export function createChapterWriter(
       throwIfCancelled(context);
       await save(draft);
       await bookRepository.saveToc(bookId, toc);
+      // The form goes with it: what the user typed shows in the library while the import runs
       const meta = await bookRepository.updateMeta(bookId, {
+        ...formPatch(context.getForm()),
         processedPages: draft.endPage,
       });
       if (meta) {

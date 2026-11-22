@@ -450,6 +450,43 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 - Picker: `@react-native-documents/picker` with `types.pdf`, the 100 MB limit (a constant), and the `content://` question from M2 step 4 (`keepLocalCopy` vs. a direct `copyFile`) answered on the emulator.
 - **Tests:** each state from the screens table with a fake pipeline; the screen stays ≤ 120 lines (sections in components).
 
+**Done** (2026-11-22). Findings:
+- **Screen** (`ImportScreen`, 86 lines, `onClose` from `ImportRoute` in `RootNavigator`; the feature doesn't see navigation types). It is built from these components:
+  - `ImportPickCard`, shown before a file is picked;
+  - `ImportFileCard`: name, size and pages, plus "Schimbă";
+  - `ImportSteps` (`ImportStepRow` + `StepIndicator`): each row is one accessible element ("Extragere text, în curs, pagina 186 din 412");
+  - `ImportNotice`: failure, scanned, cancel or duplicate, as a polite live region, always saying that nothing was left behind;
+  - `BookDetailsForm`, which says why the button is off when the title is empty;
+  - `ImportFooter`: "Adaugă în bibliotecă", the note, and "Anulează importul" while running.
+  - Hooks: `useImportScreen`, `useBookDetailsForm`, `useByteUnits`, `useImportDispatch`.
+  - `ScreenHeader`'s `large` variant now takes `back` (the mockup has a back arrow next to a large title).
+- **Behavior:**
+  - Back closes the modal and the import goes on in the background.
+  - "Adaugă" marks the form submitted and closes the screen. The form is written with every chapter (`processedPages` + `formPatch`), so an edited title shows in the library during the import. After `ready`, `submitImport` writes it.
+  - When the screen opens, a `ready` or `cancelled` import is cleared. A failure stays visible, since it may have happened in the background.
+- **"Schimbă" during an import:** it cancels the import, then the new one waits for the old pipeline to stop and clean up (`waitForPipeline`). Without that wait, the old pipeline would read the new `copying` phase as "not cancelled" and keep writing.
+  - `guarded` moved to `state/pipelineRunner.ts`, which tracks the running pipeline per dependencies object (`WeakMap`).
+  - The screen thunks are in `state/screenThunks.ts` (`pickPdf`, `submitImport`).
+- **Picker:** `services/picker` (`PdfPicker`, `createDocumentsPdfPicker` in import mode, `FakePdfPicker`), wired as `FeatureDependencies.pdfPicker`.
+  - Closing the picker returns `null`; any other picker error is logged.
+  - A missing name falls back to `document.pdf`, a missing size to 0.
+  - Jest mocks the native module in `jest.setup.js`.
+- **The `content://` question (M2 step 4):** the URI from DocumentsUI (Downloads) is copied directly by `copyFile` in `storePdf`, so no `keepLocalCopy` is needed.
+- **Romanian plurals:** Hermes' `Intl` gives `other` for every count on the device ("6 de pagini"). `romanianPlural` (`shared/utils`, no Intl) picks `import.file.pages.{one,few,other}`: "o pagină", "412 pagini", "320 de pagini".
+- **Fast Refresh pitfall:** a hot reload of `dependencies.ts` re-created `getAppServices()`. The PDF host then subscribed to a new transport while the store's extractor kept the old one, and every open failed with "WebView did not start" (`boot`) until a full reload. `App` now pins its services on the first render, like the store.
+- **On the emulator** (DocumentsUI → Downloads):
+  - `ion-320.pdf` showed progress every 10 pages, ended with all four steps done and the form prefilled from the PDF info. "Adaugă" closed the screen.
+  - `scanat-6.pdf` → "PDF scanat".
+  - The protected PDF → the password message.
+  - `corupt-trunchiat.pdf` → "deteriorat".
+  - Picking `ion-320.pdf` again → the duplicate prompt with the existing book's title; "Renunță" → "Import anulat".
+  - After all of these, `files/books` holds only the imported book's PDF.
+  - The very first attempt of the session stayed on "Extragere text" without pages, then the app showed the Library with the book `ready`. This was most likely a reload (Fast Refresh banner) followed by the step-15 resume. It was not reproduced and is left for step 18.
+- **Tests:** 1042 in 96 suites. New ones:
+  - the screen in each state (pick, import to ready, closed picker, steps as in the mockup, submit, language, missing title, cancel, reopen after submit, 4 failures, duplicate, reset of a finished import);
+  - `pickPdf` (closed, failing, import, replace a running import), `submitImport`, the picker adapter, `romanianPlural`, the large header with back, the navigator's Import back.
+  - `FakePdfTextExtractor`'s pause is now one-shot and dropped by `close`.
+
 #### 18. Emulator verification
 - A real 300+ page PDF imports without freezing the UI; the first chapter is readable (dev storage screen) before the end; kill mid-import → relaunch → it resumes; scanned / protected / corrupt PDFs show clear messages and leave nothing (`adb shell run-as com.abook ls files/books`, key count on `abook://dev/storage`).
 - Real samples (see "Sample PDFs"): `Microservices_Patterns.pdf` for 300+ pages and the kill/resume test, `Clean_Architecture_Notite.pdf` for Romanian text and the fallback chapters, both books for chapters from the outline and the `en-US` language.

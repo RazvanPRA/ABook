@@ -8,4 +8,6 @@ export type { DurationUnits } from './formatDuration';
 export { formatPercent } from './formatPercent';
 export { FINGERPRINT_HEAD_BYTES, pdfFingerprint } from './pdfFingerprint';
 export { logger } from './logger';
+export { romanianPlural } from './romanianPlural';
+export type { RomanianPlural } from './romanianPlural';
 export { utf8ByteLength } from './utf8ByteLength';

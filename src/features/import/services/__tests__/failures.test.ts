@@ -95,7 +95,7 @@ describe('cancellation between steps', () => {
     await expect(runImport(context, PICKED)).rejects.toBeInstanceOf(
       ImportCancelledError,
     );
-    expect(repo.calls.at(-1)).toEqual({
+    expect(repo.calls.at(-1)).toMatchObject({
       op: 'updateMeta',
       patch: { processedPages: 5 },
     });

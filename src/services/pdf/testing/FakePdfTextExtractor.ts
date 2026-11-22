@@ -35,7 +35,7 @@ export class FakePdfTextExtractor implements PdfTextExtractor {
     return this;
   }
 
-  /** The next `getPages` whose range includes `page` waits until `resume` or `close`. */
+  /** The next `getPages` whose range includes `page` waits until `resume` or `close` (which also drops a pause not reached yet). */
   pauseAtPage(page: number): void {
     this.pauseAt = page;
   }
@@ -72,6 +72,7 @@ export class FakePdfTextExtractor implements PdfTextExtractor {
     this.calls.push({ call: 'getPages', args: [from, to] });
     const pdf = this.document();
     if (this.pauseAt !== null && from <= this.pauseAt && this.pauseAt <= to) {
+      this.pauseAt = null; // one pause: a later import over the same fake runs through
       await this.pause();
     }
     if (pdf.failAtPage !== undefined && pdf.failAtPage <= to) {
@@ -88,6 +89,7 @@ export class FakePdfTextExtractor implements PdfTextExtractor {
   async close(): Promise<void> {
     this.calls.push({ call: 'close', args: [] });
     this.current = null;
+    this.pauseAt = null;
     const waiting = this.waiting;
     this.waiting = null;
     waiting?.reject(new PdfExtractionError('cancelled', 'closed'));

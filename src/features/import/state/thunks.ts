@@ -1,13 +1,9 @@
-import type { ThunkAction, UnknownAction } from '@reduxjs/toolkit';
 import { v4 as uuidv4 } from 'uuid';
-import { bookRemoved } from '@/features/library';
 import { toBookId, type BookMeta } from '@/shared/domain';
 import { logger } from '@/shared/utils';
-import type { ImportContext, ImportDependencies } from '../model/dependencies';
 import { MAX_PDF_BYTES } from '../model/limits';
 import { isActivePhase } from '../model/steps';
 import type { PickedFile } from '../model/types';
-import { failureReason } from '../services/failureReason';
 import { resumeImport } from '../services/resumeImport';
 import { importBook, runImport } from '../services/runImport';
 import {
@@ -16,84 +12,11 @@ import {
   importFailed,
   importStarted,
 } from './importSlice';
-import type { ImportRootState } from './selectors';
-
-type ImportThunk = ThunkAction<
-  Promise<void>,
-  ImportRootState,
-  ImportDependencies,
-  UnknownAction
->;
-type Dispatch = Parameters<ImportThunk>[0];
-type GetState = Parameters<ImportThunk>[1];
-
-/** A macrotask, so React can render between two chapters' cleanup and segmentation. */
-const yieldToJs = () =>
-  new Promise<void>(resolve => {
-    setTimeout(resolve, 0);
-  });
-
-function createContext(
-  dispatch: Dispatch,
-  getState: GetState,
-  extra: ImportDependencies,
-): ImportContext {
-  return {
-    bookRepository: extra.bookRepository,
-    pdfExtractor: extra.pdfExtractor,
-    dispatch,
-    getForm: () => getState().import.form,
-    isCancelled: () => getState().import.phase.type === 'cancelled',
-    newBookId: () => toBookId(uuidv4()),
-    now: () => new Date(),
-    yieldToJs,
-  };
-}
-
-/** Takes the book out of the library and storage (keys and file); never throws. */
-async function removeImportedBook(
-  dispatch: Dispatch,
-  getState: GetState,
-  extra: ImportDependencies,
-): Promise<void> {
-  const { bookId } = getState().import;
-  if (bookId === null) {
-    return;
-  }
-  try {
-    await extra.bookRepository.deleteBook(bookId);
-  } catch (error) {
-    logger.warn('import: cleanup failed', error);
-  }
-  dispatch(bookRemoved(bookId));
-}
-
-/**
- * Runs pipeline work; on any error (a failure, or the stop after a cancel) records why, unless
- * cancelled, and removes everything the import wrote. Cleaning up here, once the pipeline has
- * stopped, means no write can land after the delete. The extractor is always closed.
- */
-async function guarded(
-  {
-    dispatch,
-    getState,
-    extra,
-  }: { dispatch: Dispatch; getState: GetState; extra: ImportDependencies },
-  work: (context: ImportContext) => Promise<unknown>,
-): Promise<void> {
-  try {
-    await work(createContext(dispatch, getState, extra));
-  } catch (error) {
-    const { phase } = getState().import;
-    if (phase.type !== 'cancelled') {
-      logger.warn('import failed', error);
-      dispatch(importFailed(failureReason(error, phase.type)));
-    }
-    await removeImportedBook(dispatch, getState, extra);
-  } finally {
-    await extra.pdfExtractor.close();
-  }
-}
+import {
+  guarded,
+  removeImportedBook,
+  type ImportThunk,
+} from './pipelineRunner';
 
 /**
  * Imports a picked PDF in the background: the screen dispatches it and only reads the import
@@ -157,7 +80,7 @@ export const cancelImport =
       return;
     }
     if (waiting) {
-      await removeImportedBook(dispatch, getState, extra);
+      await removeImportedBook({ dispatch, getState, extra });
     } else {
       await extra.pdfExtractor.close();
     }
