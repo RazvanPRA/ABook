@@ -252,17 +252,71 @@ describe('resumeImports', () => {
     expect(closed()).toBe(true);
   });
 
-  it('removes a book whose resume fails, like a new import', async () => {
+  it.each([
+    ['corrupt', 'failed', { pages: [], openError: 'corrupt' }],
+    ['timeout', 'processing', { pages: book(30), failAtPage: 1 }],
+  ] as const)(
+    'keeps a book whose resume fails (%s → %s)',
+    async (reason, status, pdf) => {
+      const { store, repo } = setup(pdf);
+      const meta = await killedBook(repo, BOOK_IDS[0] as BookId);
+      store.dispatch(libraryHydrated([meta]));
+      await store.dispatch(resumeImports([meta]));
+      expect(store.getState().import.phase).toMatchObject({
+        type: 'failed',
+        reason,
+      });
+      expect(repo.metas.get(meta.id)?.status).toBe(status);
+      expect(selectBooksInOrder(store.getState())[0]?.status).toBe(status);
+      expect(repo.files.size).toBe(1);
+    },
+  );
+
+  it('logs when a failed resume cannot be marked', async () => {
     const { store, repo } = setup({ pages: [], openError: 'corrupt' });
     const meta = await killedBook(repo, BOOK_IDS[0] as BookId);
-    store.dispatch(libraryHydrated([meta]));
+    repo.failOn('updateMeta');
     await store.dispatch(resumeImports([meta]));
-    expect(store.getState().import.phase).toMatchObject({
-      type: 'failed',
-      reason: 'corrupt',
+    expect(warn).toHaveBeenCalledWith(
+      'import: marking the book failed did not work',
+      expect.any(Error),
+    );
+  });
+
+  it('never touches the book resumed before when the next one fails to start', async () => {
+    const { store, repo } = setup({ pages: book(12) });
+    const a = await killedBook(repo, BOOK_IDS[0] as BookId);
+    const b = await killedBook(repo, BOOK_IDS[1] as BookId);
+    const getToc = repo.getToc.bind(repo);
+    jest
+      .spyOn(repo, 'getToc')
+      .mockImplementation(id =>
+        id === b.id ? Promise.reject(new Error('read failed')) : getToc(id),
+      );
+    await store.dispatch(resumeImports([a, b]));
+    expect(repo.metas.get(a.id)?.status).toBe('ready');
+    expect(repo.metas.get(b.id)?.status).toBe('processing');
+    expect(repo.files.size).toBe(2);
+  });
+
+  it('a pick during a resume cancels it, leaves the other books for the next boot and imports the file', async () => {
+    const { store, repo, extractor, picker } = setup();
+    const a = await killedBook(repo, BOOK_IDS[0] as BookId);
+    const b = await killedBook(repo, BOOK_IDS[1] as BookId);
+    extractor.pauseAtPage(1);
+    const resuming = store.dispatch(resumeImports([a, b]));
+    await tick();
+    picker.next(PICKED);
+    await store.dispatch(pickPdf());
+    await resuming;
+    expect(store.getState().import).toMatchObject({
+      phase: { type: 'ready' },
+      file: PICKED,
+      resumed: false,
     });
-    expect(repo.isEmpty()).toBe(true);
-    expect(selectBookCount(store.getState())).toBe(0);
+    expect(repo.metas.has(a.id)).toBe(false);
+    expect(repo.metas.get(b.id)?.status).toBe('processing');
+    expect(repo.metas.size).toBe(2);
   });
 
   it('waits for the next boot while another import is running', async () => {

@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { BOOK_IDS } from '@/shared/domain/__fixtures__/books';
 import type { BookId } from '@/shared/domain';
 import { libraryHydrated } from '@/features/library';
@@ -16,6 +16,7 @@ import {
   importCancelled,
   importFailed,
   importFinished,
+  importResumed,
   importStarted,
   importSubmitted,
   pagesExtracted,
@@ -201,6 +202,30 @@ describe('ImportScreen when the import stopped', () => {
       type: 'cancelled',
       step: 'copy',
     });
+  });
+
+  it('a resumed import can be submitted, and its failure says the chapters are kept', async () => {
+    const setup = createScreenStore();
+    const { dispatch } = setup.store;
+    const form = { title: 'Ion', author: '', language: 'ro-RO' as const };
+    dispatch(
+      importResumed({
+        bookId: BOOK,
+        file: PICKED,
+        form,
+        chaptersSaved: 2,
+        metadataRead: true,
+      }),
+    );
+    await renderImportScreen(setup);
+    expect(button('Adaugă în bibliotecă')).toBeEnabled();
+    await act(async () => {
+      dispatch(importFailed('timeout'));
+    });
+    expect(
+      screen.getByText('Capitolele salvate până acum au rămas în bibliotecă.'),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText(/Nu a rămas nimic/)).toBeNull();
   });
 
   it('clears a finished import when it opens again', async () => {

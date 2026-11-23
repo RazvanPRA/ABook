@@ -51,8 +51,9 @@ export const keepDuplicate =
 
 /**
  * Resumes, one after the other, the books a killed import left `processing` (the boot already
- * marked `failed` those without a PDF). A resumed import fails, or is cancelled, like a new one:
- * it removes the book. Stops when another import is running: the rest resume on the next boot.
+ * marked `failed` those without a PDF). A cancel removes the book, a failure keeps it. Stops when
+ * another import is running or the user cancelled (they may be picking another file): the rest
+ * resume on the next boot.
  */
 export const resumeImports =
   (books: readonly BookMeta[]): ImportThunk =>
@@ -65,6 +66,9 @@ export const resumeImports =
       await guarded({ dispatch, getState, extra }, context =>
         resumeImport(context, meta),
       );
+      if (getState().import.phase.type === 'cancelled') {
+        return;
+      }
     }
   };
 

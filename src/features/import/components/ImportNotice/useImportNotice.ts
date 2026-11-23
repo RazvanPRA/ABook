@@ -8,6 +8,15 @@ export interface NoticeActions {
   onDiscard: () => void;
 }
 
+/** What the notice talks about. */
+export interface NoticeSubject {
+  phase: ImportPhase;
+  /** Title of the library book a duplicate matches. */
+  existingTitle: string;
+  /** A resumed import: what it saved before stays after a failure. */
+  resumed: boolean;
+}
+
 export interface NoticeAction {
   label: string;
   variant: ButtonVariant;
@@ -25,8 +34,7 @@ export interface Notice {
  * behind, a cancel, or a duplicate with the user's two choices. `null` while all goes well.
  */
 export function useImportNotice(
-  phase: ImportPhase,
-  existingTitle: string,
+  { phase, existingTitle, resumed }: NoticeSubject,
   actions: NoticeActions,
 ): Notice | null {
   const { t } = useTranslation();
@@ -44,7 +52,9 @@ export function useImportNotice(
             : t('import.failed.title'),
         lines: [
           t(`import.failed.reasons.${phase.reason}`),
-          t('import.failed.nothingLeft'),
+          resumed
+            ? t('import.failed.chaptersKept')
+            : t('import.failed.nothingLeft'),
         ],
         actions: [retry],
       };

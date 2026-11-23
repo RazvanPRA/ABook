@@ -14,7 +14,9 @@ export interface Sentence {
 const BOUNDARY = /[.!?…]+[”"»’')\]]*\s+/g;
 
 /** What may come before the first letter of a new sentence: opening quotes, dialogue dashes. */
-const SENTENCE_OPENERS = /^[„«“"'([—–-]*\s*/;
+const SENTENCE_OPENERS = /[„«“"'([—–-]*\s*/y;
+
+const WHITESPACE = /\s/;
 
 /** Opening punctuation stripped from the word before a period, so `(n.r.` gives `n.r`. */
 const WORD_OPENERS = /^[„«“"'([—–-]+/;
@@ -56,10 +58,10 @@ export function segmentSentences(text: string): Sentence[] {
 }
 
 function isBoundary(text: string, candidate: Candidate): boolean {
-  const firstLetter = text
-    .slice(candidate.next)
-    .replace(SENTENCE_OPENERS, '')
-    .charAt(0);
+  // Sticky: reads only the openers, where a `slice` would copy the rest of the chapter every time
+  SENTENCE_OPENERS.lastIndex = candidate.next;
+  SENTENCE_OPENERS.test(text);
+  const firstLetter = text.charAt(SENTENCE_OPENERS.lastIndex);
   if (!isUppercaseLetter(firstLetter)) {
     return false;
   }
@@ -69,10 +71,16 @@ function isBoundary(text: string, candidate: Candidate): boolean {
   return !(singlePeriod && isAbbreviation(wordBefore(text, candidate.at)));
 }
 
-/** The word that ends right before `index`, without its opening punctuation, lowercased. */
+/**
+ * The word that ends right before `index`, without its opening punctuation, lowercased. Walks back
+ * from `index`: a regex search would scan the chapter from its start for every period.
+ */
 function wordBefore(text: string, index: number): string {
-  const before = text.slice(0, index);
-  const word = before.slice(before.search(/\S*$/));
+  let from = index;
+  while (from > 0 && !WHITESPACE.test(text.charAt(from - 1))) {
+    from -= 1;
+  }
+  const word = text.slice(from, index);
   return word.replace(WORD_OPENERS, '').toLowerCase();
 }
 

@@ -29,6 +29,7 @@ export async function resumeImport(
         language: meta.language,
       },
       chaptersSaved: resume.toc.length,
+      metadataRead: meta.pageCount > 0,
     }),
   );
   await continueBook(context, {

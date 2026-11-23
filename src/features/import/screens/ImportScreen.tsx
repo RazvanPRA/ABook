@@ -23,7 +23,8 @@ export interface ImportScreenProps {
 export function ImportScreen({ onClose }: ImportScreenProps) {
   const { t } = useTranslation();
   const model = useImportScreen(onClose);
-  const { file, phase, pageCount } = model.state;
+  const { file, phase, pageCount, resumed } = model.state;
+  const { existingTitle } = model;
   const showForm = file !== null && !model.stopped;
   const noticeActions = useMemo(
     () => ({
@@ -58,8 +59,7 @@ export function ImportScreen({ onClose }: ImportScreenProps) {
         )}
         {file !== null ? <ImportSteps steps={model.steps} /> : null}
         <ImportNotice
-          phase={phase}
-          existingTitle={model.existingTitle}
+          subject={{ phase, existingTitle, resumed }}
           actions={noticeActions}
         />
         {showForm ? <BookDetailsForm /> : null}

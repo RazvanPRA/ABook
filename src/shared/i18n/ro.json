@@ -67,6 +67,7 @@
     "failed": {
       "title": "Importul nu a reușit",
       "nothingLeft": "Nu a rămas nimic salvat pe telefon.",
+      "chaptersKept": "Capitolele salvate până acum au rămas în bibliotecă.",
       "retry": "Alege alt PDF",
       "reasons": {
         "too-large": "Fișierul are peste 100 MB. Alege un PDF mai mic.",

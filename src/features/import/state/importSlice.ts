@@ -27,6 +27,8 @@ export interface ImportState {
   readonly edited: Readonly<Record<ImportFormField, boolean>>;
   /** "Adaugă în bibliotecă" was pressed: the form is saved into the book's meta. */
   readonly submitted: boolean;
+  /** Resumed at boot: if it fails, the book and its saved chapters stay in the library. */
+  readonly resumed: boolean;
 }
 
 export interface ResumedImport {
@@ -34,6 +36,8 @@ export interface ResumedImport {
   readonly file: PickedFile;
   readonly form: ImportForm;
   readonly chaptersSaved: number;
+  /** The PDF was opened before the kill: the form already holds its metadata, or the user's edits. */
+  readonly metadataRead: boolean;
 }
 
 export const DEFAULT_IMPORT_LANGUAGE: BookLanguage = 'ro-RO';
@@ -48,6 +52,7 @@ export const initialImportState: ImportState = {
   form: { title: '', author: '', language: DEFAULT_IMPORT_LANGUAGE },
   edited: { title: false, author: false },
   submitted: false,
+  resumed: false,
 };
 
 const FINISHED: readonly ImportPhaseType[] = [
@@ -112,7 +117,8 @@ const importSlice = createSlice({
       if (!allowed(state, 'importResumed', FINISHED)) {
         return state;
       }
-      const { bookId, file, form, chaptersSaved } = action.payload;
+      const { bookId, file, form, chaptersSaved, metadataRead } =
+        action.payload;
       return {
         ...initialImportState,
         phase: { type: 'opening' },
@@ -120,8 +126,8 @@ const importSlice = createSlice({
         file,
         form,
         chaptersSaved,
-        edited: { title: true, author: true },
-        submitted: true,
+        edited: { title: metadataRead, author: metadataRead },
+        resumed: true,
       };
     },
     fileCopied: (state, action: PayloadAction<StoredPdf>) => {

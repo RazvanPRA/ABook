@@ -2,27 +2,24 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { space } from '@/shared/theme';
 import { AppText, Button, Card } from '@/shared/ui';
-import type { ImportPhase } from '../../model/types';
-import { useImportNotice, type NoticeActions } from './useImportNotice';
+import {
+  useImportNotice,
+  type NoticeActions,
+  type NoticeSubject,
+} from './useImportNotice';
 
 interface ImportNoticeProps {
-  phase: ImportPhase;
-  /** Title of the library book a duplicate matches. */
-  existingTitle: string;
+  subject: NoticeSubject;
   actions: NoticeActions;
 }
 
 /** A failure, a cancel or a duplicate, announced when it appears; nothing otherwise. */
-export function ImportNotice({
-  phase,
-  existingTitle,
-  actions,
-}: ImportNoticeProps) {
-  const notice = useImportNotice(phase, existingTitle, actions);
+export function ImportNotice({ subject, actions }: ImportNoticeProps) {
+  const notice = useImportNotice(subject, actions);
   if (notice === null) {
     return null;
   }
-  const tone = phase.type === 'failed' ? 'danger' : 'text';
+  const tone = subject.phase.type === 'failed' ? 'danger' : 'text';
   return (
     <Card variant="raised" testID="import-notice">
       <View style={styles.body} accessibilityLiveRegion="polite">

@@ -67,6 +67,7 @@ const resumed = importResumed({
   file: FILE,
   form: RESUMED_FORM,
   chaptersSaved: 2,
+  metadataRead: true,
 });
 
 let warn: jest.SpyInstance;
@@ -307,9 +308,21 @@ describe('importSlice resume', () => {
         stored: null,
         form: RESUMED_FORM,
         chaptersSaved: 2,
-        submitted: true,
+        submitted: false,
+        resumed: true,
       });
     }
+  });
+
+  it('takes title and author from the PDF when the kill came before it was opened', () => {
+    const early = importResumed({
+      bookId: OTHER,
+      file: FILE,
+      form: { ...RESUMED_FORM, title: 'ion-rebreanu', author: '' },
+      chaptersSaved: 0,
+      metadataRead: false,
+    });
+    expect(run(early, opened()).form).toEqual(RESUMED_FORM);
   });
 
   it('keeps the saved title and author over the PDF metadata', () => {

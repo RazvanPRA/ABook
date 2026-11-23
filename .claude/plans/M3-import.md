@@ -33,6 +33,7 @@ Folder `C:\ModDeInvatare\Book-PDF`, analyzed on 2026-11-19 with the repo's pdf.j
 | `The.Clean.Coder-A.Code.of.Conduct.for.Professional.Programmers.pdf` | 6.0 MB (12 chunks, the largest file), 244 p. | 23 top entries (`Contents`, `Foreword`… `Chapter 1 Professionalism`…) | **English** (`en-US`). The first 5 pages have 0, 1520, 30, 13 and 443 characters: the **negative case** for the scanned rule (some pages under 20, not all). A blank page ("This page intentionally left blank"). Letter-spaced headings (`P R E FA C E`, `A B O U T T H E A U T H O R`, `D EBUGGING`). Roman page numbers in the footer (`xxix`, y 0.955), then Arabic. A running header in the top band (`ABOUT THE AUTHOR`, y 0.075). Numbers `73.124`, `48,000`. |
 | `Microservices_Patterns.pdf` | 5.4 MB (11 chunks), 522 p., ~1 M characters | 22 top entries, front matter included (`brief contents`, `preface`…), then `1 Escaping monolithic hell`… | **The real 300+ page PDF** (steps 11 and 18, M7 performance). English. Alternating running header `70 CHAPTER 3 …` (y 0.05), 30 pt chapter openers, page number alone in the footer, URLs (long tokens for `splitLongSentence`). A **licence watermark with the owner's name and email on 521 of 522 pages** (bottom band, y ≈ 0.97): `stripRepeatedHeaders` must remove it, otherwise TTS reads it on every page. |
 
+- **Since 2026-11-23** the folder holds only the two English books: `Clean_Architecture_Notite.pdf` was removed by the owner, and the other is now `Microservices-Patterns.pdf`. Romanian text is covered by the generated `ion-320.pdf` and the `services/text` tests.
 - **None is scanned, protected or corrupt:** those stay generated (step 11). A corrupt PDF can also be a truncated copy of any of these, as in the spike.
 - **Privacy and copyright:** two are commercial books and one carries personal data in its watermark. The files, and text copied from them, never go into the repo, fixtures or tests. Docs refer to them by file name only and never quote the watermark.
 - **On the emulator:** `MSYS_NO_PATHCONV=1 adb push "C:/ModDeInvatare/Book-PDF/<file>" /sdcard/Download/`, then pick them from Downloads.
@@ -490,6 +491,21 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 #### 18. Emulator verification
 - A real 300+ page PDF imports without freezing the UI; the first chapter is readable (dev storage screen) before the end; kill mid-import → relaunch → it resumes; scanned / protected / corrupt PDFs show clear messages and leave nothing (`adb shell run-as com.abook ls files/books`, key count on `abook://dev/storage`).
 - Real samples (see "Sample PDFs"): `Microservices_Patterns.pdf` for 300+ pages and the kill/resume test, `Clean_Architecture_Notite.pdf` for Romanian text and the fallback chapters, both books for chapters from the outline and the `en-US` language.
+
+**Done** (2026-11-23). Findings:
+- **The 522-page book** imports to 22 chapters and 9155 sentences, with no watermark line in any chapter. Chapter 1 is readable on `abook://dev/storage` while the book is `processing`.
+- **Kill and resume:** killed at page 175 (11 chapters) and at page 212 (12 chapters), then relaunched. The SHA-256 of all chapters plus the toc equals that of an uninterrupted import.
+- **JS-thread stalls** (debug build, temporary 16 ms ticker): up to 650 ms per chapter, all in `segmentSentences`. `wordBefore` searched the chapter from its start for every period, and `isBoundary` copied the rest of it. Both now read only the neighborhood: at most 67 ms per chapter, no stall over 100 ms while extracting, identical output hash.
+  - Stalls of 1.0–1.5 s remain around the first import after a start. They include the dev reload below and the 2.4 MB page module; a second import in the session showed 189 ms. Release is not measured (M7).
+- **The unexplained case of step 17 is a dev-only reload:** while the system picker is open, the HMR socket drops; the next dynamic `import()` (the WebView page) then calls `DevSettings.reload('Bundle Splitting – Metro disconnected')` (`HMRClient.js:325`). The resume finishes the import, but form edits made before the reload are lost. Release builds have no HMR.
+- **Failure PDFs** (scanned, password, truncated, not a PDF): a clear message each, the key count and `files/books` unchanged. A cancel at page 62: 157 keys and 7 files before and after.
+- **Language:** `en-US` chosen during the extraction reaches the meta with the next chapter and survives a kill; chosen after the end, it is saved by "Adaugă". A first failed attempt was the LogBox toast covering the button.
+- **Resume fixes (they correct steps 15 and 17):**
+  - A failed resume no longer removes the book. A permanent failure (scanned, password, corrupt) marks it `failed`; any other leaves it `processing` for the next boot. The notice then says that the saved chapters are kept (`ImportState.resumed`). A cancel still removes the book.
+  - A resume that fails before it starts (unreadable toc) no longer cleans up the book of the previous import.
+  - After a cancel, the other books wait for the next boot, and `guarded` queues pipelines, so a pick can't overlap the next resume.
+  - "Adaugă" works on a resumed import. When the kill came before the PDF was opened, its title and author are still taken from the metadata.
+- **Known limit:** a long title in `TextField` shows its end, not its start.
 
 #### 19. Closing
 - `modular-architecture` §10 checklist, the summary (new / reused units / `arch-exception`), `PLAN.md` (M3 ✅) and `CLAUDE.md` (M3 pitfalls).
