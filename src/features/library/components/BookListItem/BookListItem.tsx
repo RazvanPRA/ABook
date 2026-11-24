@@ -1,7 +1,7 @@
 import React, { memo, useCallback } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import type { BookId } from '@/shared/domain';
-import { AppText, BookCover, ProgressBar } from '@/shared/ui';
+import { AppText, BookCover, PressableRow, ProgressBar } from '@/shared/ui';
 import type { BookWithProgress } from '../../model/types';
 import { styles } from './BookListItem.styles';
 import { useBookListItem } from './useBookListItem';
@@ -11,7 +11,7 @@ interface BookListItemProps {
   onOpen: (id: BookId) => void;
 }
 
-/** A book in the list: one button for screen readers, its parts hidden from them. */
+/** A book in the list. */
 export const BookListItem = memo(function BookListItemView({
   item,
   onOpen,
@@ -20,13 +20,8 @@ export const BookListItem = memo(function BookListItemView({
   const { id } = item.book;
   const open = useCallback(() => onOpen(id), [onOpen, id]);
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      onPress={open}
-      style={({ pressed }) => pressed && styles.pressed}
-    >
-      <View style={styles.row} importantForAccessibility="no-hide-descendants">
+    <PressableRow label={label} onPress={open}>
+      <View style={styles.row}>
         <BookCover id={id} title={title} accessibilityLabel={title} />
         <View style={styles.text}>
           <AppText variant="bodyStrong" numberOfLines={2}>
@@ -43,6 +38,6 @@ export const BookListItem = memo(function BookListItemView({
           </AppText>
         </View>
       </View>
-    </Pressable>
+    </PressableRow>
   );
 });

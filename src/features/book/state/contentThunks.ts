@@ -24,14 +24,21 @@ async function attempt<T>(read: Promise<T>, fallback: T): Promise<T> {
 /** Reads the book's table of contents and bookmarks; again as its import saves chapters. */
 export const loadBookContent =
   (bookId: BookId): BookThunk =>
-  async (dispatch, _getState, extra) => {
+  async (dispatch, getState, extra) => {
+    const book = selectBookById(getState(), bookId);
+    if (book === null) {
+      return;
+    }
     const request = nanoid();
     dispatch(contentRequested({ bookId, request }));
-    const [toc, bookmarks] = await Promise.all([
+    const [hasPdf, toc, bookmarks] = await Promise.all([
+      attempt(extra.bookRepository.hasPdf(book), false),
       attempt(extra.bookRepository.getToc(bookId), null),
       attempt(extra.progressRepository.getBookmarks(bookId), []),
     ]);
-    dispatch(contentLoaded({ bookId, request, toc: toc ?? [], bookmarks }));
+    dispatch(
+      contentLoaded({ bookId, request, hasPdf, toc: toc ?? [], bookmarks }),
+    );
   };
 
 /**

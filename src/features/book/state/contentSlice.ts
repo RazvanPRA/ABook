@@ -7,6 +7,8 @@ export interface BookContent {
   request: string;
   /** `false` until the first answer. */
   loaded: boolean;
+  /** The app's copy of the PDF is there: a failed import may be retried. */
+  hasPdf: boolean;
   toc: Chapter[];
   bookmarks: Bookmark[];
 }
@@ -31,7 +33,12 @@ const contentSlice = createSlice({
     ) => {
       const { bookId, request } = action.payload;
       state[bookId] = {
-        ...(state[bookId] ?? { loaded: false, toc: [], bookmarks: [] }),
+        ...(state[bookId] ?? {
+          loaded: false,
+          hasPdf: false,
+          toc: [],
+          bookmarks: [],
+        }),
         request,
       };
     },
@@ -41,13 +48,14 @@ const contentSlice = createSlice({
       action: PayloadAction<{
         bookId: BookId;
         request: string;
+        hasPdf: boolean;
         toc: Chapter[];
         bookmarks: Bookmark[];
       }>,
     ) => {
-      const { bookId, request, toc, bookmarks } = action.payload;
-      if (state[bookId]?.request === request) {
-        state[bookId] = { request, loaded: true, toc, bookmarks };
+      const { bookId, ...read } = action.payload;
+      if (state[bookId]?.request === read.request) {
+        state[bookId] = { ...read, loaded: true };
       }
     },
     bookmarksChanged: (

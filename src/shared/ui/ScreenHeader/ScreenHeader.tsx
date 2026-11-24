@@ -39,14 +39,16 @@ export function ScreenHeader({
             {overline}
           </AppText>
         ) : null}
-        <AppText
-          variant="bodyStrong"
-          accessibilityRole="header"
-          maxFontSizeMultiplier={size.maxFontScaleHeader}
-          numberOfLines={1}
-        >
-          {title}
-        </AppText>
+        {title === '' ? null : (
+          <AppText
+            variant="bodyStrong"
+            accessibilityRole="header"
+            maxFontSizeMultiplier={size.maxFontScaleHeader}
+            numberOfLines={1}
+          >
+            {title}
+          </AppText>
+        )}
       </View>
       <View style={[styles.side, styles.sideRight]}>{right}</View>
     </View>

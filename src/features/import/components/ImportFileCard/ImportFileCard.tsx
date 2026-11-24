@@ -25,7 +25,7 @@ export function ImportFileCard({
   const meta = [formatBytes(file.sizeBytes, units)];
   if (pageCount > 0) {
     meta.push(
-      t(`import.file.pages.${romanianPlural(pageCount)}`, { count: pageCount }),
+      t(`format.pages.${romanianPlural(pageCount)}`, { count: pageCount }),
     );
   }
   return (

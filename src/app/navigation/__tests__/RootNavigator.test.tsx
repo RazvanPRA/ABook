@@ -5,7 +5,7 @@ import {
   getStateFromPath,
   NavigationContainer,
 } from '@react-navigation/native';
-import { bookUpserted } from '@/features/library';
+import { bookUpserted, loadLibraryProgress } from '@/features/library';
 import { toBookId, type BookId } from '@/shared/domain';
 import { BOOK_IDS, makeMeta } from '@/shared/domain/__fixtures__/books';
 import { fakeServices } from '../../__fixtures__/fakeServices';
@@ -48,10 +48,13 @@ describe('RootNavigator', () => {
     const id = BOOK_IDS[0] as BookId;
     await act(async () => {
       ref.store.dispatch(bookUpserted(makeMeta(id)));
+      await ref.store.dispatch(loadLibraryProgress());
       ref.navigate('Book', { id });
     });
     expect(await screen.findByTestId('screen-book')).toBeOnTheScreen();
-    expect(screen.getAllByText(makeMeta(id).title).length).toBeGreaterThan(0);
+    expect(
+      await screen.findByRole('header', { name: makeMeta(id).title }),
+    ).toBeOnTheScreen();
   });
 
   it.each([

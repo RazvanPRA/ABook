@@ -17,6 +17,7 @@ export interface ScreenHeaderBack {
 export type ScreenHeaderVariant = 'large' | 'compact';
 
 export interface ScreenHeaderProps {
+  /** Empty in a compact header whose screen shows the title below (Book details). */
   title: string;
   variant?: ScreenHeaderVariant;
   /** Small line above the title in the compact variant (chapter name). */

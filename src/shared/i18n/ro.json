@@ -61,11 +61,6 @@
     },
     "file": {
       "badge": "PDF",
-      "pages": {
-        "one": "o pagină",
-        "few": "{{count}} pagini",
-        "other": "{{count}} de pagini"
-      },
       "change": "Schimbă"
     },
     "steps": {
@@ -132,7 +127,89 @@
     }
   },
   "book": {
-    "title": "Detalii carte",
+    "back": "Înapoi",
+    "more": "Mai multe opțiuni",
+    "close": "Închide",
+    "loading": "Se încarcă cartea",
+    "cover": "Copertă: {{title}}",
+    "offline": "Offline",
+    "unknownAuthor": "Autor necunoscut",
+    "languages": {
+      "ro-RO": "Română",
+      "en-US": "Engleză"
+    },
+    "play": {
+      "start": "Începe să asculți",
+      "continue": "Continuă de la pagina {{page}}",
+      "again": "Ascultă din nou"
+    },
+    "listened": "{{percent}}% ascultat",
+    "restart": {
+      "title": "Asculți din nou?",
+      "detail": "Cartea pornește de la început, iar locul unde ai rămas se pierde. Semnele de carte rămân.",
+      "confirm": "De la început",
+      "cancel": "Renunță"
+    },
+    "chapters": {
+      "title": "Cuprins",
+      "untitled": "Capitolul {{number}}",
+      "pages": "p. {{from}}–{{to}}",
+      "page": "p. {{from}}",
+      "pagesLabel": "paginile {{from}}–{{to}}",
+      "pageLabel": "pagina {{from}}",
+      "empty": "Niciun capitol salvat încă.",
+      "status": {
+        "done": "ascultat",
+        "current": "în curs de ascultare",
+        "pending": "neascultat"
+      },
+      "saved": {
+        "one": "Un capitol salvat.",
+        "few": "{{count}} capitole salvate.",
+        "other": "{{count}} de capitole salvate."
+      }
+    },
+    "bookmarks": {
+      "title": "Semne de carte",
+      "page": "Pagina {{page}}",
+      "remove": "Șterge semnul de la pagina {{page}}",
+      "removed": "Semn de carte șters",
+      "undo": "Anulează"
+    },
+    "import": {
+      "running": "Se importă",
+      "preparing": "Se pregătește.",
+      "page": "Pagina {{page}} din {{total}}.",
+      "progress": "Progres import",
+      "stalled": "Import întrerupt",
+      "stalledDetail": "Importul s-a oprit la pagina {{page}} din {{total}}.",
+      "stalledEarly": "Importul s-a oprit înainte de prima pagină.",
+      "resume": "Reia importul"
+    },
+    "failed": {
+      "title": "Import eșuat",
+      "retry": "Reîncearcă",
+      "kept": "Capitolele salvate pot fi ascultate.",
+      "reasons": {
+        "scanned": "PDF-ul pare scanat: paginile lui nu conțin text.",
+        "password": "PDF-ul este protejat cu parolă.",
+        "corrupt": "Fișierul este deteriorat sau nu este un PDF.",
+        "missing-file": "Fișierul PDF nu mai este pe dispozitiv.",
+        "unknown": "Importul s-a oprit dintr-un motiv necunoscut."
+      }
+    },
+    "delete": {
+      "action": "Șterge de pe dispozitiv",
+      "title": "Ștergi „{{title}}”?",
+      "space": "Se eliberează {{size}}.",
+      "importing": "Importul în curs se oprește.",
+      "final": "Cartea, progresul și semnele ei se șterg definitiv.",
+      "confirm": "Șterge",
+      "cancel": "Renunță",
+      "failedTitle": "Cartea nu a putut fi ștearsă",
+      "failedDetail": "A apărut o eroare la ștergerea de pe dispozitiv.",
+      "retry": "Încearcă din nou"
+    },
     "missing": {
       "title": "Cartea nu mai există",
       "detail": "Poate a fost ștearsă de pe dispozitiv sau linkul e greșit.",
@@ -140,6 +217,11 @@
     }
   },
   "format": {
+    "pages": {
+      "one": "o pagină",
+      "few": "{{count}} pagini",
+      "other": "{{count}} de pagini"
+    },
     "bytes": {
       "B": "B",
       "KB": "KB",

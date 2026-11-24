@@ -27,7 +27,18 @@ function BookRoute({
     () => navigation.popTo('Tabs', { screen: 'Library' }),
     [navigation],
   );
-  return <BookScreen bookId={bookId} onLibrary={toLibrary} />;
+  const toPlayer = useCallback(
+    () => navigation.popTo('Tabs', { screen: 'Player' }),
+    [navigation],
+  );
+  return (
+    <BookScreen
+      bookId={bookId}
+      onBack={navigation.goBack}
+      onLibrary={toLibrary}
+      onPlay={toPlayer}
+    />
+  );
 }
 
 function ImportRoute({

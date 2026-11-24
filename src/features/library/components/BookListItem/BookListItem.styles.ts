@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { opacity, space } from '@/shared/theme';
+import { space } from '@/shared/theme';
 
 export const styles = StyleSheet.create({
   row: {
@@ -8,6 +8,5 @@ export const styles = StyleSheet.create({
     gap: space.lg,
     paddingVertical: space.md,
   },
-  pressed: { opacity: opacity.pressed },
   text: { flex: 1, gap: space.xs },
 });

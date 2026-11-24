@@ -26,6 +26,8 @@ export { ListRow } from './ListRow';
 export type { ListRowProps, ListRowTone } from './ListRow';
 export { MenuSheet } from './MenuSheet';
 export type { MenuItem, MenuSheetProps } from './MenuSheet';
+export { PressableRow } from './PressableRow';
+export type { PressableRowProps } from './PressableRow';
 export { ProgressBar } from './ProgressBar';
 export type { ProgressBarProps, ProgressTone } from './ProgressBar';
 export { ScreenHeader } from './ScreenHeader';

@@ -187,6 +187,15 @@ Each step ends with a green `npm run check` and a separate commit; its section i
 - Chapter row: "Partea a II-a, paginile 22–43, în curs de ascultare".
 - **Tests:** each state in the table; reset progress only after confirmation; undo and leave.
 
+**Done** (2026-11-24). Findings:
+
+- `useBookDetails` gives one of five views (missing, loading, loaded, delete-failed); while a delete runs the screen shows the skeleton, not "missing". After the delete it leads to the Library, unless the user already left.
+- "Reîncearcă" also needs the PDF, so `bookContent` keeps `hasPdf`, read with the toc.
+- `PressableRow` (one labelled button, parts hidden) is shared by the library rows, chapters and bookmarks; `ListRow` already has 7 props.
+- `ScreenHeader` with an empty title renders no header text. A cover title with a word over 10 letters uses the smaller size (seen on the emulator: "Micros/ervices").
+- The tests run over the real repositories (`app/__tests__/BookScreen.test.tsx`). "Continuă" opens the Ascultă tab through `playbackRequested`.
+- Page counts use the Romanian plural ("82 de pagini"), unlike the mockup's "82 pagini".
+
 ### M4e – Closing
 
 #### 13. Emulator verification

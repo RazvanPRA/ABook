@@ -1,0 +1,1 @@
+export { BookContentView } from './BookContentView';

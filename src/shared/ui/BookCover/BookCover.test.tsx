@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet } from 'react-native';
 import { render, screen } from '@testing-library/react-native';
 import { toBookId } from '@/shared/domain';
-import { pickCoverColor, size } from '@/shared/theme';
+import { pickCoverColor, size, type } from '@/shared/theme';
 import { BookCover } from './BookCover';
 
 const id = toBookId('3f1c2d9e-0b7a-4c55-9a1e-6d2f8b4c7e10');
@@ -10,6 +10,25 @@ const LABEL = 'Copertă: Amintiri din copilărie, Ion Creangă';
 const cover = () => screen.getByRole('image', { name: LABEL });
 
 describe('BookCover', () => {
+  it.each([
+    ['Amintiri din copilărie', type.title.fontSize],
+    ['Microservices Patterns', type.bodyStrong.fontSize],
+  ])('fits the words of "%s" on the large cover', async (title, fontSize) => {
+    await render(
+      <BookCover
+        id={toBookId('x')}
+        title={title}
+        author=""
+        size="lg"
+        accessibilityLabel="Copertă"
+      />,
+    );
+    const { style } = screen.getByText(title, {
+      includeHiddenElements: true,
+    }).props;
+    expect(StyleSheet.flatten(style).fontSize).toBe(fontSize);
+  });
+
   it('shows author and title on the large cover', async () => {
     await render(
       <BookCover
