@@ -225,9 +225,20 @@ Emulator, the largest chapter of `Microservices-Patterns.pdf` (922 sentences), t
 - `PlayerScreen` with every row of the states table; the voice-fallback notice in a `Snackbar`. Route adapter in `TabsNavigator`; `TabBarAdapter` hides the bar on a player with a book; the chevron and Android back return to the previous tab, also after a cold `abook://player`.
 - **Tests:** every state over the real repositories (`app/__tests__`, `fakeApp`).
 
+**Done** (2026-11-24). Findings:
+
+- `playerView` (pure) maps the session to the states table; `PlayerBody` shows the skeleton, the text or a `PlayerMessage`.
+- The tabs' `backBehavior` is now `history`. The chevron and Android's back (`PlayerRoute`) go to the last other tab visited, the Library after a cold link.
+- All tests run through the real navigator (`renderPlayerApp`).
+
 #### 14. Mini-player
 - `MiniPlayer` (cover, title, chapter, play / pause, progress; tap opens the player), drawn by `TabBarAdapter` above the bar on Library and Settings while `loading`, `playing`, `paused` or `error`. The FAB and the last list row stay reachable.
 - **Tests:** visibility per state and tab; only the mini-player re-renders at a sentence.
+
+**Done** (2026-11-24). Findings:
+
+- Drawn by `TabBarAdapter` in the tab bar's own space, so the FAB and the last row stay above it without any padding. Committed with step 13, because both change the adapter.
+- A render-count test proves that a new sentence renders neither the tab bar nor the library list.
 
 ### M5d – Closing
 

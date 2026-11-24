@@ -47,6 +47,7 @@ const styles = StyleSheet.create({
     minHeight: size.buttonLg,
     flexDirection: 'row',
     flexWrap: 'wrap',
+    alignContent: 'center',
     alignItems: 'center',
     justifyContent: 'center',
     gap: space.sm,
