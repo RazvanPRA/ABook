@@ -1,8 +1,9 @@
 import { bookmarksSchema, progressSchema } from '@/shared/domain';
 import { bookKey, type KeyValueStore } from '@/storage';
+import { readJson } from '../readJson';
 import { readValue } from '../readValue';
 import { serialize } from '../serialize';
-import type { ProgressRepository } from './ProgressRepository';
+import type { ProgressByBook, ProgressRepository } from './ProgressRepository';
 
 /** `ProgressRepository` over `abk:book:{id}:progress` and `abk:book:{id}:bookmarks`. */
 export const createLocalProgressRepository = ({
@@ -12,10 +13,25 @@ export const createLocalProgressRepository = ({
 }): ProgressRepository => ({
   getProgress: id => readValue(kv, bookKey(id, 'progress'), progressSchema),
 
+  async listProgress(ids) {
+    const raw = await kv.getMany(ids.map(id => bookKey(id, 'progress')));
+    const byBook: ProgressByBook = {};
+    ids.forEach(id => {
+      const key = bookKey(id, 'progress');
+      const progress = readJson(raw[key], progressSchema, key);
+      if (progress !== null) {
+        byBook[id] = progress;
+      }
+    });
+    return byBook;
+  },
+
   async saveProgress(id, progress) {
     const key = bookKey(id, 'progress');
     await kv.setMany({ [key]: serialize(key, progressSchema.parse(progress)) });
   },
+
+  resetProgress: id => kv.removeMany([bookKey(id, 'progress')]),
 
   async getBookmarks(id) {
     return (

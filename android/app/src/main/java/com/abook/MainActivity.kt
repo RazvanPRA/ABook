@@ -1,5 +1,6 @@
 package com.abook
 
+import android.content.Intent
 import android.os.Bundle
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
@@ -25,6 +26,15 @@ class MainActivity : ReactActivity() {
     supportFragmentManager.fragmentFactory = RNScreensFragmentFactory()
     RNBootSplash.init(this, R.style.BootTheme)
     super.onCreate(savedInstanceState)
+  }
+
+  /**
+   * A link can arrive while JS is still loading, when nobody listens for it. Keeping its intent
+   * makes `Linking.getInitialURL` return it instead of the one the app was started with.
+   */
+  override fun onNewIntent(intent: Intent) {
+    super.onNewIntent(intent)
+    setIntent(intent)
   }
 
   /**

@@ -10,6 +10,6 @@ export type {
 export { createLocalBootRepository } from './boot';
 export type { BootRepository, BootSnapshot, OrphanSweep } from './boot';
 export { createLocalProgressRepository } from './progress';
-export type { ProgressRepository } from './progress';
+export type { ProgressByBook, ProgressRepository } from './progress';
 export { createLocalSettingsRepository } from './settings';
 export type { SettingsRepository } from './settings';

@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import {
+  bookUpserted,
   libraryHydrated,
   libraryReducer,
   selectBookCount,
@@ -267,6 +268,9 @@ describe('resumeImports', () => {
         reason,
       });
       expect(repo.metas.get(meta.id)?.status).toBe(status);
+      expect(repo.metas.get(meta.id)?.failure).toBe(
+        status === 'failed' ? reason : null,
+      );
       expect(selectBooksInOrder(store.getState())[0]?.status).toBe(status);
       expect(repo.files.size).toBe(1);
     },
@@ -276,6 +280,7 @@ describe('resumeImports', () => {
     const { store, repo } = setup({ pages: [], openError: 'corrupt' });
     const meta = await killedBook(repo, BOOK_IDS[0] as BookId);
     repo.failOn('updateMeta');
+    store.dispatch(libraryHydrated([meta]));
     await store.dispatch(resumeImports([meta]));
     expect(warn).toHaveBeenCalledWith(
       'import: marking the book failed did not work',
@@ -293,6 +298,7 @@ describe('resumeImports', () => {
       .mockImplementation(id =>
         id === b.id ? Promise.reject(new Error('read failed')) : getToc(id),
       );
+    store.dispatch(libraryHydrated([a, b]));
     await store.dispatch(resumeImports([a, b]));
     expect(repo.metas.get(a.id)?.status).toBe('ready');
     expect(repo.metas.get(b.id)?.status).toBe('processing');
@@ -304,6 +310,7 @@ describe('resumeImports', () => {
     const a = await killedBook(repo, BOOK_IDS[0] as BookId);
     const b = await killedBook(repo, BOOK_IDS[1] as BookId);
     extractor.pauseAtPage(1);
+    store.dispatch(libraryHydrated([a, b]));
     const resuming = store.dispatch(resumeImports([a, b]));
     await tick();
     picker.next(PICKED);
@@ -325,6 +332,7 @@ describe('resumeImports', () => {
     await store.dispatch(importPdf(PICKED)); // a duplicate, waiting for the user
     const meta = await killedBook(repo, BOOK_IDS[0] as BookId);
     const calls = repo.calls.length;
+    store.dispatch(bookUpserted(meta));
     await store.dispatch(resumeImports([meta]));
     expect(repo.calls.length).toBe(calls);
     expect(store.getState().import.phase.type).toBe('duplicate');

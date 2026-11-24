@@ -16,6 +16,11 @@ const removes = (xml: string, permission: string) =>
     `<uses-permission[^>]*android\\.permission\\.${permission}"[^>]*tools:node="remove"`,
   ).test(xml);
 
+it('MainActivity keeps a link that arrives while JS is loading', () => {
+  const activity = read('android/app/src/main/java/com/abook/MainActivity.kt');
+  expect(activity).toMatch(/onNewIntent[^}]*setIntent\(intent\)/);
+});
+
 describe('Android manifests', () => {
   const main = read('android/app/src/main/AndroidManifest.xml');
   const release = read('android/app/src/release/AndroidManifest.xml');

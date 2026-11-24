@@ -1,20 +1,33 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
+import { StyleSheet, View } from 'react-native';
 import type { BookId } from '@/shared/domain';
-import { ScreenPlaceholder } from '@/shared/ui';
+import { color } from '@/shared/theme';
+import { BookDetails } from '../components/BookDetails';
+import { MissingBook } from '../components/MissingBook';
 
 export interface BookScreenProps {
-  bookId: BookId;
+  /** `null` when the link's id isn't one. */
+  bookId: BookId | null;
+  onBack: () => void;
+  /** Leads to the Library tab. */
+  onLibrary: () => void;
+  /** Leads to the player; what to play is already requested. */
+  onPlay: () => void;
 }
 
 /** The navigator passes the route param in; the feature does not depend on navigation types. */
-export function BookScreen({ bookId }: BookScreenProps) {
-  const { t } = useTranslation();
+export function BookScreen({ bookId, ...actions }: BookScreenProps) {
   return (
-    <ScreenPlaceholder
-      title={t('book.title')}
-      detail={bookId}
-      testID="screen-book"
-    />
+    <View style={styles.screen} testID="screen-book">
+      {bookId === null ? (
+        <MissingBook onLibrary={actions.onLibrary} />
+      ) : (
+        <BookDetails key={bookId} bookId={bookId} {...actions} />
+      )}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: color.bg },
+});

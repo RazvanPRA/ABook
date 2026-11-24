@@ -12,6 +12,7 @@ describe('bookMetaSchema', () => {
       { status: 'processing', pageCount: 0, processedPages: 0 },
     ],
     ['failed half-way', { status: 'failed', processedPages: 60 }],
+    ['failed with a reason', { status: 'failed', failure: 'scanned' }],
     ['english, no author', { language: 'en-US', author: '' }],
   ])('accepts %s', (_case, overrides) => {
     expect(bookMetaSchema.safeParse(rawMeta(overrides)).success).toBe(true);
@@ -21,6 +22,8 @@ describe('bookMetaSchema', () => {
     ['a non-UUID id', { id: 'book-1' }],
     ['an empty title', { title: '' }],
     ['an unknown language', { language: 'fr-FR' }],
+    ['an unknown failure', { failure: 'timeout' }],
+    ['a missing failure', { failure: undefined }],
     ['an unknown status', { status: 'importing' }],
     ['a negative size', { fileSizeBytes: -1 }],
     ['a fractional page count', { pageCount: 1.5 }],

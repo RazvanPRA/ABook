@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   createNativeStackNavigator,
   type NativeStackScreenProps,
 } from '@react-navigation/native-stack';
 import { BookScreen } from '@/features/book';
 import { ImportScreen } from '@/features/import';
+import { bookIdSchema } from '@/shared/domain';
 import { PdfDebugScreen } from '../dev/pdf/PdfDebugScreen';
 import { StorageDebugScreen } from '../dev/storage/StorageDebugScreen';
 import { UiCatalogScreen } from '../dev/UiCatalogScreen';
@@ -13,11 +14,31 @@ import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-/** Adapts the route param to the feature screen's own props (features do not import navigation types). */
+/**
+ * Adapts the route param to the feature screen's own props (features do not import navigation
+ * types). The id may come from a link, so a malformed one is a book that doesn't exist.
+ */
 function BookRoute({
   route,
+  navigation,
 }: NativeStackScreenProps<RootStackParamList, 'Book'>) {
-  return <BookScreen bookId={route.params.id} />;
+  const { data: bookId = null } = bookIdSchema.safeParse(route.params.id);
+  const toLibrary = useCallback(
+    () => navigation.popTo('Tabs', { screen: 'Library' }),
+    [navigation],
+  );
+  const toPlayer = useCallback(
+    () => navigation.popTo('Tabs', { screen: 'Player' }),
+    [navigation],
+  );
+  return (
+    <BookScreen
+      bookId={bookId}
+      onBack={navigation.goBack}
+      onLibrary={toLibrary}
+      onPlay={toPlayer}
+    />
+  );
 }
 
 function ImportRoute({

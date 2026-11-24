@@ -75,6 +75,7 @@ export const createLocalBookRepository = ({
 
   listBooks: async () => readMetas(kv, await readOrder(kv)),
   getMeta: id => readMeta(kv, id),
+  hasPdf: book => files.exists(book.fileUri),
   getToc: id => readValue(kv, bookKey(id, 'toc'), tocSchema),
   getChapter: (id, index) => readChapter(kv, { id, index }),
   deleteBook: id => deleteBook({ kv, files }, id),

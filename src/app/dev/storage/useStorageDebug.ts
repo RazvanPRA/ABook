@@ -1,16 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  bookRemoved,
-  bookUpserted,
-  selectBooksInOrder,
-} from '@/features/library';
+import { bookRemoved, selectBooksInOrder } from '@/features/library';
 import { useAppServices } from '../../providers/ServicesProvider';
 import type { AppDispatch, RootState } from '../../store';
 import { readStorageStats, type StorageStats } from './readStorageStats';
-import { seedSampleBook } from './seedSampleBook';
 
-/** Dev only: storage stats plus seed / delete-all / refresh actions, keeping the store in sync. */
+/** Dev only: storage stats plus delete-all / refresh actions, keeping the store in sync. */
 export const useStorageDebug = () => {
   const services = useAppServices();
   const dispatch = useDispatch<AppDispatch>();
@@ -35,14 +30,6 @@ export const useStorageDebug = () => {
     }
   }, []);
 
-  const seed = useCallback(
-    () =>
-      run(async () => {
-        dispatch(bookUpserted(await seedSampleBook(services)));
-      }),
-    [dispatch, run, services],
-  );
-
   const deleteAll = useCallback(
     () =>
       run(async () => {
@@ -54,5 +41,5 @@ export const useStorageDebug = () => {
     [books, dispatch, run, services],
   );
 
-  return { books, stats, busy, seed, deleteAll, refresh };
+  return { books, stats, busy, deleteAll, refresh };
 };

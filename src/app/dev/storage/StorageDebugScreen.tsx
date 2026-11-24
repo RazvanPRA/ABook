@@ -11,7 +11,7 @@ import { useStorageDebug } from './useStorageDebug';
 /** Dev-only storage inspector (abook://dev/storage): real storage vs. the hydrated store. */
 export function StorageDebugScreen() {
   const navigation = useNavigation();
-  const { books, stats, busy, seed, deleteAll, refresh } = useStorageDebug();
+  const { books, stats, busy, deleteAll, refresh } = useStorageDebug();
   return (
     <View style={styles.screen} testID="screen-dev-storage">
       <ScreenHeader
@@ -26,12 +26,11 @@ export function StorageDebugScreen() {
       />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.row}>
-          <Button label="Adaugă carte de test" onPress={seed} loading={busy} />
           <Button
             label="Șterge tot"
             variant="danger"
             onPress={deleteAll}
-            disabled={busy}
+            loading={busy}
           />
           <Button
             label="Reîncarcă"

@@ -1,18 +1,24 @@
 import type { ThunkAction, UnknownAction } from '@reduxjs/toolkit';
 import { v4 as uuidv4 } from 'uuid';
-import { bookRemoved, bookUpserted } from '@/features/library';
-import { toBookId } from '@/shared/domain';
+import {
+  bookRemoved,
+  bookUpserted,
+  type LibraryRootState,
+} from '@/features/library';
+import { toBookId, type BookId } from '@/shared/domain';
 import { logger } from '@/shared/utils';
 import type { ImportContext, ImportDependencies } from '../model/dependencies';
+import { ImportCancelledError } from '../model/errors';
 import { isActivePhase } from '../model/steps';
 import type { ImportFailure } from '../model/types';
 import { failureReason } from '../services/failureReason';
+import { isDiscarded } from './discardedBooks';
 import { importFailed } from './importSlice';
 import type { ImportRootState } from './selectors';
 
 export type ImportThunk = ThunkAction<
   Promise<void>,
-  ImportRootState,
+  ImportRootState & LibraryRootState,
   ImportDependencies,
   UnknownAction
 >;
@@ -38,6 +44,7 @@ function createContext({ dispatch, getState, extra }: ThunkApi): ImportContext {
     dispatch,
     getForm: () => getState().import.form,
     isCancelled: () => getState().import.phase.type === 'cancelled',
+    isDiscarded: id => isDiscarded(extra, id),
     newBookId: () => toBookId(uuidv4()),
     now: () => new Date(),
     yieldToJs,
@@ -63,7 +70,12 @@ export async function removeImportedBook({
 }
 
 /** Failures that would come back on every retry: the file itself can't be imported. */
-const PERMANENT: readonly ImportFailure[] = ['scanned', 'password', 'corrupt'];
+const PERMANENT = ['scanned', 'password', 'corrupt'] as const;
+
+const isPermanent = (
+  reason: ImportFailure,
+): reason is (typeof PERMANENT)[number] =>
+  (PERMANENT as readonly ImportFailure[]).includes(reason);
 
 /**
  * A resumed book keeps what it has. A permanent failure marks it `failed`; after any other (the
@@ -74,12 +86,13 @@ async function keepResumedBook(
   reason: ImportFailure,
 ): Promise<void> {
   const { bookId } = getState().import;
-  if (bookId === null || !PERMANENT.includes(reason)) {
+  if (bookId === null || !isPermanent(reason)) {
     return;
   }
   try {
     const meta = await extra.bookRepository.updateMeta(bookId, {
       status: 'failed',
+      failure: reason,
     });
     if (meta) {
       dispatch(bookUpserted(meta));
@@ -102,6 +115,26 @@ export async function waitForPipeline(
   await running.get(extra);
 }
 
+interface ActiveRun {
+  readonly promise: Promise<void>;
+  /** The book, when known before the work starts (not for a newly picked file). */
+  readonly bookId: BookId | null;
+}
+
+/** The pipeline actually running, at the head of the queue. */
+const active = new WeakMap<ImportDependencies, ActiveRun>();
+
+/** Resolves once no pipeline works on the book, cleanup included; doesn't wait for other books. */
+export async function waitForBook(
+  { getState, extra }: ThunkApi,
+  bookId: BookId,
+): Promise<void> {
+  const run = active.get(extra);
+  if (run && (run.bookId ?? getState().import.bookId) === bookId) {
+    await run.promise;
+  }
+}
+
 /**
  * Runs pipeline work, after the pipeline already running, if any (one extractor, one slice). On any
  * error (a failure, or the stop after a cancel) records why, unless cancelled, and removes
@@ -111,9 +144,14 @@ export async function waitForPipeline(
 export async function guarded(
   api: ThunkApi,
   work: (context: ImportContext) => Promise<unknown>,
+  bookId: BookId | null = null,
 ): Promise<void> {
   const previous = running.get(api.extra);
-  const start = () => runGuarded(api, work);
+  const start = () => {
+    const promise = runGuarded(api, work);
+    active.set(api.extra, { promise, bookId });
+    return promise;
+  };
   const run = previous ? previous.then(start, start) : start();
   running.set(api.extra, run);
   try {
@@ -121,6 +159,7 @@ export async function guarded(
   } finally {
     if (running.get(api.extra) === run) {
       running.delete(api.extra);
+      active.delete(api.extra);
     }
   }
 }
@@ -143,6 +182,9 @@ async function cleanUp(api: ThunkApi, error: unknown): Promise<void> {
   if (phase.type === 'cancelled') {
     await removeImportedBook(api);
     return;
+  }
+  if (error instanceof ImportCancelledError && !isActivePhase(phase)) {
+    return; // the book was deleted before its resume started: nothing to clean up
   }
   logger.warn('import failed', error);
   if (!isActivePhase(phase)) {

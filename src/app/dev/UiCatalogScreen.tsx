@@ -8,6 +8,7 @@ import { ControlsSection } from './sections/ControlsSection';
 import { DisplaySection } from './sections/DisplaySection';
 import { FormSection } from './sections/FormSection';
 import { FoundationsSection } from './sections/FoundationsSection';
+import { OverlaysSection } from './sections/OverlaysSection';
 import { StatesSection } from './sections/StatesSection';
 
 /** Dev-only catalog of every shared/ui primitive (abook://dev/ui), for comparison with the mockups. */
@@ -31,6 +32,7 @@ export function UiCatalogScreen() {
         <ControlsSection />
         <FormSection />
         <DisplaySection />
+        <OverlaysSection />
         <StatesSection />
       </ScrollView>
     </View>

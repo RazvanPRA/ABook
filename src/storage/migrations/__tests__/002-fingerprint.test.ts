@@ -4,7 +4,7 @@ import { rawMeta } from '@/shared/domain/__fixtures__/rawValues';
 import { bookKey, rootKey } from '../../keys';
 import { InMemoryKeyValueStore } from '../../testing';
 import { fingerprintMigration } from '../002-fingerprint';
-import { CURRENT_SCHEMA_VERSION, MIGRATIONS, runMigrations } from '..';
+import { MIGRATIONS, runMigrations } from '..';
 
 const [A, B, C] = BOOK_IDS as [
   (typeof BOOK_IDS)[number],
@@ -31,7 +31,6 @@ describe('002-fingerprint', () => {
   it('is version 2, registered after 001', () => {
     expect(fingerprintMigration.version).toBe(2);
     expect(MIGRATIONS[1]).toBe(fingerprintMigration);
-    expect(CURRENT_SCHEMA_VERSION).toBe(2);
   });
 
   it('gives schema-1 metas a null fingerprint, valid for the new schema', () => {
@@ -66,7 +65,7 @@ describe('002-fingerprint', () => {
       ...entries,
       [rootKey('schemaVersion')]: '1',
     });
-    await runMigrations(kv, MIGRATIONS);
+    await runMigrations(kv, MIGRATIONS.slice(0, 2));
     expect(kv.snapshot()[rootKey('schemaVersion')]).toBe('2');
     const dataWrite = kv.calls.find(
       c =>

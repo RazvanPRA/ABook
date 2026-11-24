@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { AppText, Button, Card } from '@/shared/ui';
 import { formatBytes, romanianPlural } from '@/shared/utils';
 import type { PickedFile } from '../../model/types';
-import { useByteUnits } from '../../hooks/useByteUnits';
+import { useByteUnits } from '@/shared/i18n';
 import { styles } from './ImportFileCard.styles';
 
 interface ImportFileCardProps {
@@ -25,7 +25,7 @@ export function ImportFileCard({
   const meta = [formatBytes(file.sizeBytes, units)];
   if (pageCount > 0) {
     meta.push(
-      t(`import.file.pages.${romanianPlural(pageCount)}`, { count: pageCount }),
+      t(`format.pages.${romanianPlural(pageCount)}`, { count: pageCount }),
     );
   }
   return (

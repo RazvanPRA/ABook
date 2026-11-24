@@ -9,6 +9,8 @@ export const size = {
   tabBarHeight: 64,
   /** Large button (pill CTAs). */
   buttonLg: 52,
+  /** Floating action button. */
+  fab: 56,
   /** Text field and select height (grows with the font scale). */
   input: 52,
   progressBar: 4,

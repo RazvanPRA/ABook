@@ -53,6 +53,29 @@ describe('LocalProgressRepository', () => {
     expect(await repo.getProgress(OTHER)).toBeNull();
   });
 
+  it('lists every progress in one read, skipping missing and corrupt ones', async () => {
+    const third = BOOK_IDS[2] as BookId;
+    const { kv, repo } = setup({ [bookKey(OTHER, 'progress')]: '{"page":0}' });
+    await repo.saveProgress(ID, progress(3));
+    kv.calls.length = 0;
+    expect(await repo.listProgress([ID, OTHER, third])).toEqual({
+      [ID]: progress(3),
+    });
+    expect(kv.calls.map(c => c.operation)).toEqual(['getMany']);
+    expect(warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('resets the progress of one book, keeping its bookmarks', async () => {
+    const { repo } = setup();
+    await repo.saveProgress(ID, progress(3));
+    await repo.saveProgress(OTHER, progress(4));
+    await repo.saveBookmarks(ID, [bookmark('a')]);
+    await repo.resetProgress(ID);
+    expect(await repo.getProgress(ID)).toBeNull();
+    expect(await repo.getProgress(OTHER)).toEqual(progress(4));
+    expect(await repo.getBookmarks(ID)).toEqual([bookmark('a')]);
+  });
+
   it('round-trips bookmarks; none stored is an empty list', async () => {
     const { repo } = setup();
     expect(await repo.getBookmarks(ID)).toEqual([]);
