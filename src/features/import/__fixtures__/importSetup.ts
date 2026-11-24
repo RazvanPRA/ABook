@@ -71,6 +71,7 @@ export function createImportContext(repo = new MemoryBookRepository()) {
     dispatch: action => store.dispatch(action),
     getForm: () => store.getState().import.form,
     isCancelled: () => store.getState().import.phase.type === 'cancelled',
+    isDiscarded: () => false,
     newBookId: () => BOOK,
     now: () => new Date('2026-11-20T10:00:00.000Z'),
     yieldToJs,

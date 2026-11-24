@@ -1,4 +1,5 @@
 import { createSelector } from '@reduxjs/toolkit';
+import type { BookId } from '@/shared/domain';
 import { deriveSteps, isActivePhase } from '../model/steps';
 import type { ImportFailure, ImportPhase, ImportStep } from '../model/types';
 import type { ImportState } from './importState';
@@ -21,6 +22,10 @@ export const selectImportSteps: (state: ImportRootState) => ImportStep[] =
 /** An import is running, or waiting for the user's answer on a duplicate. */
 export const selectIsImporting = (state: ImportRootState): boolean =>
   isActivePhase(state.import.phase);
+
+/** The book whose import is running, `null` when none is. */
+export const selectImportingBookId = (state: ImportRootState): BookId | null =>
+  selectIsImporting(state) ? state.import.bookId : null;
 
 /** Why the import stopped, `null` unless it failed. */
 export const selectImportFailure = (

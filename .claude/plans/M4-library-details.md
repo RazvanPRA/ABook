@@ -96,6 +96,13 @@ Each step ends with a green `npm run check` and a separate commit; its section i
 - `resumeImports` re-reads each book from the store before it starts, so a book deleted while queued is skipped. Cancelling one book for a delete must not stop the remaining resumes; a user cancel still does.
 - **Tests:** cancel during extraction leaves no keys or file; another book's import isn't touched; queued and deleted; the remaining books still resume; continue equals an uninterrupted import; continue fails again (transient, permanent).
 
+**Done** (2026-11-24). Findings:
+
+- **A book being deleted is marked first** (`discardedBooks.ts`), because it stays in the store until storage is done: an import of it that is queued, or has started but not yet told the slice, would otherwise write after the delete. `resumeImports` also uses the mark to tell a cancel-for-delete (the others go on) from a user cancel (they wait for the next boot).
+- **Waiting is per book** (`waitForBook`): `guarded` now remembers the pipeline at the head of its queue and its book. `waitForPipeline` waits for the whole queue, so a delete would have waited for other imports.
+- `continueImport` is one pipeline run, so a second tap is queued and finds nothing left to do. Without the PDF it marks the book `failed` (`missing-file`).
+- Import thunks now read the library slice, so `ImportThunk` needs `LibraryRootState`.
+
 #### 5. Delete thunk
 - `features/book`: `cancelImportOf` → `bookRepository.deleteBook` → `bookRemoved`. `deleteBook` is idempotent: one retry, then an error the screen shows; leftovers are swept at boot.
 - **Tests:** no key or file remains (ready, processing, queued, failed); failure at each storage step; retry.

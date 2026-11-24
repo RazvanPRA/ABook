@@ -1,5 +1,6 @@
 import type { BookMeta } from '@/shared/domain';
 import type { ImportContext } from '../model/dependencies';
+import { ImportCancelledError } from '../model/errors';
 import { importResumed } from '../state/importSlice';
 import { resumePoint } from './resumePoint';
 import { continueBook } from './runImport';
@@ -14,6 +15,9 @@ export async function resumeImport(
   meta: BookMeta,
 ): Promise<void> {
   const toc = await context.bookRepository.getToc(meta.id);
+  if (context.isDiscarded(meta.id)) {
+    throw new ImportCancelledError(); // deleted during the read, before the slice knew the book
+  }
   const resume = resumePoint(meta, toc);
   context.dispatch(
     importResumed({
