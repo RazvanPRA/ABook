@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { View } from 'react-native';
-import { pickCoverColor, size as tokens } from '@/shared/theme';
+import { pickCoverColor } from '@/shared/theme';
 import { AppText } from '../AppText';
 import { backgroundFor, sizeStyles } from './BookCover.styles';
 import type { BookCoverProps } from './BookCover.types';
@@ -11,7 +11,10 @@ const MAX_TITLE_WORD = 10;
 const hasLongWord = (title: string): boolean =>
   title.split(/\s+/).some(word => word.length > MAX_TITLE_WORD);
 
-/** Generated cover: author on top, title at the bottom (lg) or the title initial (sm). */
+/**
+ * Generated cover: author on top, title at the bottom (lg) or the title initial (sm). Its size is
+ * fixed, so the text on the large one does not scale; screens repeat the title next to it.
+ */
 export const BookCover = memo(function BookCoverView({
   id,
   title,
@@ -29,10 +32,16 @@ export const BookCover = memo(function BookCoverView({
     >
       {size === 'lg' ? (
         <>
-          <AppText variant="caption">{author}</AppText>
+          <AppText
+            variant="caption"
+            maxFontSizeMultiplier={1}
+            numberOfLines={2}
+          >
+            {author}
+          </AppText>
           <AppText
             variant={hasLongWord(title) ? 'bodyStrong' : 'title'}
-            maxFontSizeMultiplier={tokens.maxFontScaleHeader}
+            maxFontSizeMultiplier={1}
             numberOfLines={4}
           >
             {title}

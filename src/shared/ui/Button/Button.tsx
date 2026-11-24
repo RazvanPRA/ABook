@@ -12,6 +12,13 @@ import {
 } from './Button.styles';
 import type { ButtonProps } from './Button.types';
 
+/**
+ * Android measures a label it has shown before a fraction too narrow (RN 0.88), and wraps its last
+ * word out of sight. A no-break space makes room for the missing fraction; screen readers get
+ * the accessibility label instead.
+ */
+const WIDTH_SLACK = String.fromCharCode(0xa0);
+
 export function Button({
   label,
   onPress,
@@ -44,6 +51,7 @@ export function Button({
       {!loading && icon ? <Icon name={icon} color={tint} /> : null}
       <AppText variant="bodyStrong" color={tint}>
         {label}
+        {WIDTH_SLACK}
       </AppText>
     </Pressable>
   );

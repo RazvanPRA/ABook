@@ -203,14 +203,26 @@ Each step ends with a green `npm run check` and a separate commit; its section i
 - Kill mid-import, relaunch, delete a queued book. With two interrupted books, delete the one resuming: the other still resumes. Stalled → "Reia importul". Only with the two PDFs from Book-PDF, and deleting only books imported for this check. The failure reasons, progress and bookmarks stay in Jest.
 - `uiautomator` labels and sizes, font scale 2.0, comparison with both mockups.
 
+**Done** (2026-11-24), with `Microservices-Patterns.pdf`. Findings:
+
+- **Deletes:** a ready book, one during its import and one resuming after a kill each leave the same 8 files and 181 keys as before. The import's live page and saved chapters show on the book's screen; the kill resumes at boot.
+- **A clipped button label** ("Începe să", without "asculți"): from the second time a label is shown, Android measures it a fraction too narrow (RN 0.88) and wraps its last word out of sight. `Button` adds a no-break space; padding, `textBreakStrategy` and the disabled state make no difference.
+- **Font scale 2.0:** both screens are usable. The large cover's text no longer scales (fixed size). No touch target under 44 pt.
+- **Mockups:** 03 matches except the plural ("522 de pagini") and the pill button, as in M1. 01 (empty library) was compared in code and tests only: the emulator has the owner's books.
+- **Not verified on a device** (Jest only): two interrupted imports (a pick cancels the import before, so it can't be set up without editing the database, which holds the owner's books), "Reia importul" (needs a transient failure), the failure reasons, listening states and bookmarks (M5), 200 books, TalkBack itself, iOS.
+
 #### 14. Closing
 - `modular-architecture` §10 checklist, summary of units, `PLAN.md` (M4 ✅, risks), `CLAUDE.md` (M4 pitfalls).
 
+**Done** (2026-11-24). `modular-architecture` §10: limits, layers and cycles are enforced by lint; the longest file is `pipelineRunner.ts` (196 lines). **0 `arch-exception`**, no new `eslint-disable`. No hard-coded text, color or key. The library and book components are tested through their screens, not one by one.
+
+**Summary of units.** New: `features/library` (progress, filter, screen), `features/book` (content, delete, screen), `bookThunks` and `discardedBooks` in the import feature, migration 003, `playbackRequested`, `isRetryableFailure`, `usePendingLink`, and the primitives `Skeleton`, `SearchField`, `Fab`, `ConfirmDialog`, `Snackbar`, `MenuSheet`, `SheetModal`, `PressableRow`. Extended: `BookRepository.hasPdf`, `ProgressRepository.listProgress` / `resetProgress`, `ScreenHeader`, `BookCover`, `Button`. Reused: `ListRow`, `ChipGroup`, `EmptyState`, `Card`, `ProgressBar`, `normalizeDiacritics`, `useByteUnits` (moved to `shared/i18n`), the M2–M3 fakes.
+
 ## Definition of done – M4
 
-- [ ] Every state in the two tables is built and tested; both mockups match.
-- [ ] Deleting a book, during an import too, leaves no keys or files (emulator).
-- [ ] A stalled import continues from where it stopped.
-- [ ] Search and filters work with Romanian diacritics; a list of 200 books renders in Jest.
-- [ ] A deep link during bootstrap isn't lost.
-- [ ] No circular or internal cross-feature imports; `npm run check` green; one commit per step.
+- [x] Every state in the two tables is built and tested; both mockups match (01 in code and tests only).
+- [x] Deleting a book, during an import too, leaves no keys or files (emulator).
+- [x] A stalled import continues from where it stopped (Jest; not seen on a device).
+- [x] Search and filters work with Romanian diacritics; a list of 200 books renders in Jest.
+- [x] A deep link during bootstrap isn't lost.
+- [x] No circular or internal cross-feature imports; `npm run check` green; one commit per step.
