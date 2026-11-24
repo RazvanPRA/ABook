@@ -174,6 +174,12 @@ Each step ends with a green `npm run check` and a separate commit; its section i
 - `addBookmark` in `features/book` (excerpt of ~120 characters, id from `uuid`, refused while deleting, rollback on a failed write). The header button toggles the current sentence; a second add of the same sentence changes nothing.
 - **Tests:** add, duplicate, failure, add while a removal waits for its undo.
 
+**Done** (2026-11-24). Findings:
+
+- Bookmark writes live in `bookmarkThunks.ts`; add and remove share `replaceBookmarks`. The list stays in the order of the book.
+- A content read that started before a bookmark changed keeps the newer bookmarks (`editedIn`), or the header button would have flickered back.
+- The header button and the toggle come with the screen (steps 12–13).
+
 ### M5c – Player screen
 
 #### 10. Highlight spike (emulator)

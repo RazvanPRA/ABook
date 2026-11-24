@@ -2,11 +2,9 @@ export { BookScreen } from './screens/BookScreen';
 export type { BookScreenProps } from './screens/BookScreen';
 export { bookContentReducer, selectBookContent } from './state/contentSlice';
 export type { BookContentRootState } from './state/contentSlice';
-export {
-  loadBookContent,
-  removeBookmark,
-  resetProgress,
-} from './state/contentThunks';
+export { addBookmark, removeBookmark } from './state/bookmarkThunks';
+export type { BookmarkPlace } from './state/bookmarkThunks';
+export { loadBookContent, resetProgress } from './state/contentThunks';
 export { deleteBook } from './state/deleteBook';
 export { bookDeletionReducer } from './state/deletionSlice';
 export type { BookDependencies, BookRootState } from './model/dependencies';

@@ -3,13 +3,7 @@ import { progressChanged, selectBookById } from '@/features/library';
 import type { BookId } from '@/shared/domain';
 import { logger } from '@/shared/utils';
 import type { BookThunk } from '../model/dependencies';
-import {
-  bookmarksChanged,
-  contentLoaded,
-  contentRequested,
-  selectBookContent,
-} from './contentSlice';
-import { selectDeletion } from './deletionSlice';
+import { contentLoaded, contentRequested } from './contentSlice';
 
 /** A read that failed is logged and shows as empty: the rest of the screen still works. */
 async function attempt<T>(read: Promise<T>, fallback: T): Promise<T> {
@@ -39,32 +33,6 @@ export const loadBookContent =
     dispatch(
       contentLoaded({ bookId, request, hasPdf, toc: toc ?? [], bookmarks }),
     );
-  };
-
-/**
- * Removes a bookmark for good; if it can't be written, it comes back. Ignored for a book deleted,
- * or being deleted: the write would leave a key behind.
- */
-export const removeBookmark =
-  (bookId: BookId, bookmarkId: string): BookThunk =>
-  async (dispatch, getState, extra) => {
-    const state = getState();
-    const content = selectBookContent(state, bookId);
-    const writable =
-      selectBookById(state, bookId) !== null &&
-      selectDeletion(state, bookId) === null;
-    if (content === null || !writable) {
-      return;
-    }
-    const before = content.bookmarks;
-    const bookmarks = before.filter(({ id }) => id !== bookmarkId);
-    dispatch(bookmarksChanged({ bookId, bookmarks }));
-    try {
-      await extra.progressRepository.saveBookmarks(bookId, bookmarks);
-    } catch (error) {
-      logger.warn('book: removing a bookmark failed', error);
-      dispatch(bookmarksChanged({ bookId, bookmarks: before }));
-    }
   };
 
 /** "Ascultă din nou": the book is as if never played. Returns whether it worked. */

@@ -11,6 +11,8 @@ export interface BookContent {
   hasPdf: boolean;
   toc: Chapter[];
   bookmarks: Bookmark[];
+  /** The read during which the bookmarks changed: what it found of them is older. */
+  editedIn?: string;
 }
 
 /** What the details screen shows of the books opened so far. */
@@ -54,8 +56,14 @@ const contentSlice = createSlice({
       }>,
     ) => {
       const { bookId, ...read } = action.payload;
-      if (state[bookId]?.request === read.request) {
-        state[bookId] = { ...read, loaded: true };
+      const content = state[bookId];
+      if (content?.request === read.request) {
+        const edited = content.loaded && content.editedIn === read.request;
+        state[bookId] = {
+          ...read,
+          bookmarks: edited ? content.bookmarks : read.bookmarks,
+          loaded: true,
+        };
       }
     },
     bookmarksChanged: (
@@ -65,6 +73,7 @@ const contentSlice = createSlice({
       const content = state[action.payload.bookId];
       if (content) {
         content.bookmarks = action.payload.bookmarks;
+        content.editedIn = content.request;
       }
     },
   },

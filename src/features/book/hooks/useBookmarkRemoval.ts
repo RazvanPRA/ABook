@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { BookId, Bookmark } from '@/shared/domain';
-import { removeBookmark } from '../state/contentThunks';
+import { removeBookmark } from '../state/bookmarkThunks';
 import { useBookDispatch } from './useBookDispatch';
 
 export const UNDO_MS = 5000;
