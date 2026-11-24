@@ -1,4 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
+import { bookDeletionReducer } from '@/features/book';
 import { importReducer } from '@/features/import';
 import { libraryProgressReducer, libraryReducer } from '@/features/library';
 import { settingsReducer } from '@/features/settings';
@@ -13,6 +14,7 @@ export const createAppStore = (dependencies: FeatureDependencies) =>
     reducer: {
       library: libraryReducer,
       libraryProgress: libraryProgressReducer,
+      bookDeletion: bookDeletionReducer,
       import: importReducer,
       settings: settingsReducer,
     },

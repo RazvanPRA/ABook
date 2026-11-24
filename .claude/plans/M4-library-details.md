@@ -107,6 +107,12 @@ Each step ends with a green `npm run check` and a separate commit; its section i
 - `features/book`: `cancelImportOf` → `bookRepository.deleteBook` → `bookRemoved`. `deleteBook` is idempotent: one retry, then an error the screen shows; leftovers are swept at boot.
 - **Tests:** no key or file remains (ready, processing, queued, failed); failure at each storage step; retry.
 
+**Done** (2026-11-24). Findings:
+
+- The outcome is kept in `bookDeletion` (`deleting` / `failed`), because the import's own cleanup takes the book out of the library before the delete is over: the screen can't tell the two apart from the library alone.
+- The tests run over the real repositories and in-memory stores, so they live in `app/__tests__/deleteBook.test.ts` with `fakeApp` (features can't import repositories).
+- A book whose delete failed can't continue its import in that session; it can only be deleted again.
+
 ### M4b – Primitives and navigation
 
 #### 6. Missing primitives
