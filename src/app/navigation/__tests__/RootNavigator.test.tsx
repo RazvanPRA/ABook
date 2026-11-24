@@ -57,6 +57,7 @@ describe('RootNavigator', () => {
       'Butoane',
       'Chips, comutatoare, glisoare',
       'Coperți, progres, rânduri',
+      'Căutare, schelet, meniuri',
       'Header-e și stare goală',
     ]) {
       expect(screen.getByRole('header', { name: section })).toBeOnTheScreen();

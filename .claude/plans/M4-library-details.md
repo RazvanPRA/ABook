@@ -119,6 +119,12 @@ Each step ends with a green `npm run check` and a separate commit; its section i
 - `Skeleton`, `SearchField`, `Fab`, `ConfirmDialog`, `Snackbar`, and a menu sheet for "⋯" (reuse the `SelectSheet` look). Added to `abook://dev/ui`.
 - **Tests:** render, interaction, a11y state, ≥ 44 pt, font scale; reduced motion for the skeleton.
 
+**Done** (2026-11-24). Findings:
+
+- `SheetModal` (scrim, back button) was extracted from `SelectSheet`; `Select`, `MenuSheet` and `ConfirmDialog` share it. `SearchField` reuses `useTextField` and `fieldBox`.
+- `Fab` caps its label at 1.4×, so it doesn't cover the list at font scale 2.0. `Snackbar` has no timer: whoever shows it hides it.
+- The Reanimated mock in `jest.setup.js` gained `withRepeat` and `useReducedMotion`.
+
 #### 7. Deep links
 - A link that arrives during bootstrap isn't lost (risk in `PLAN.md`). `abook://book/<id>` is validated; a bad id reaches the missing state.
 - **Tests:** link during bootstrap, cold start, bad id. **Emulator:** `adb shell am start` while booting.

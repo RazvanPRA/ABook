@@ -23,6 +23,8 @@ jest.mock('react-native-reanimated', () => {
     useDerivedValue: factory => ({ value: factory() }),
     withTiming: instant,
     withSpring: instant,
+    withRepeat: instant,
+    useReducedMotion: jest.fn(() => false),
     cancelAnimation: () => {},
     runOnJS: fn => fn,
     Easing: { linear: instant, ease: instant },

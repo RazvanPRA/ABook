@@ -20,6 +20,10 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     gap: space.md,
   },
+  // Dev-only: Fab and Snackbar float over their parent
+  floatingBox: {
+    height: 96,
+  },
   // Dev-only: EmptyState fills its parent (flex: 1), so the catalog gives it a phone-like height
   emptyStateBox: {
     height: 520,
