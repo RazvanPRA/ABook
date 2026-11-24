@@ -1,2 +1,2 @@
-export type { ProgressRepository } from './ProgressRepository';
+export type { ProgressByBook, ProgressRepository } from './ProgressRepository';
 export { createLocalProgressRepository } from './LocalProgressRepository';

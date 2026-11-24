@@ -1,8 +1,13 @@
 import { renderHook, waitFor } from '@testing-library/react-native';
-import { selectBooksInOrder } from '@/features/library';
+import {
+  selectBookProgress,
+  selectBooksInOrder,
+  selectProgressLoaded,
+} from '@/features/library';
 import { selectSettings } from '@/features/settings';
 import { DEFAULT_SETTINGS, type BookId } from '@/shared/domain';
 import { BOOK_IDS, makeMeta } from '@/repositories/__fixtures__/books';
+import { makeProgress } from '@/shared/domain/__fixtures__/progress';
 import { fakeServices } from '../__fixtures__/fakeServices';
 import { featureDependencies } from '../dependencies';
 import { createAppStore } from '../store';
@@ -30,6 +35,22 @@ describe('useBootstrap', () => {
       [A, 'failed'],
     ]);
     expect(selectSettings(store.getState())).toEqual(settings);
+  });
+
+  it('reads every progress after hydration, in one read', async () => {
+    const { services } = fakeServices();
+    await services.bookRepository.createBook(makeMeta(A));
+    await services.progressRepository.saveProgress(A, makeProgress());
+    const list = jest.spyOn(services.progressRepository, 'listProgress');
+    const store = createAppStore(featureDependencies(services));
+    await renderHook(() =>
+      useBootstrap(services.bootRepository, store.dispatch),
+    );
+    await waitFor(() =>
+      expect(selectProgressLoaded(store.getState())).toBe(true),
+    );
+    expect(list).toHaveBeenCalledTimes(1);
+    expect(selectBookProgress(store.getState(), A)).toEqual(makeProgress());
   });
 
   it('runs bootstrap only once across re-renders', async () => {

@@ -85,6 +85,12 @@ Each step ends with a green `npm run check` and a separate commit; its section i
 - Pure services: `listenedPercent`, `bookListStatus`, `pickContinueListening`, `sortByLastPlayed`; memoized selectors.
 - **Tests:** one `getMany` call, corrupt progress, pageCount 0, finished, ties, no progress; boot still doesn't read progress.
 
+**Done** (2026-11-24). Findings:
+
+- The slice is `libraryProgress` (`byBook`, `loaded`). A `null` entry means "started over since the boot", so a late read doesn't bring the old progress back; a book removed during the read is left out too.
+- "Boot doesn't read progress" was already guarded by `loadBootSnapshot.test.ts`.
+- `listenedPercent` returns a whole percent; `bookListStatus` puts the import status before the listening one.
+
 #### 4. Cancel and continue one book's import
 - `import/index.ts`: `cancelImportOf(bookId)` (cancels if this book's import is active or waits on a duplicate, then awaits `waitForPipeline`) and `continueImport(bookId)` (guarded, for stalled and retryable books), `selectImportingBookId`.
 - `resumeImports` re-reads each book from the store before it starts, so a book deleted while queued is skipped. Cancelling one book for a delete must not stop the remaining resumes; a user cancel still does.

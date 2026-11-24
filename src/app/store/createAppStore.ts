@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { importReducer } from '@/features/import';
-import { libraryReducer } from '@/features/library';
+import { libraryProgressReducer, libraryReducer } from '@/features/library';
 import { settingsReducer } from '@/features/settings';
 import type { FeatureDependencies } from '../dependencies';
 
@@ -12,6 +12,7 @@ export const createAppStore = (dependencies: FeatureDependencies) =>
   configureStore({
     reducer: {
       library: libraryReducer,
+      libraryProgress: libraryProgressReducer,
       import: importReducer,
       settings: settingsReducer,
     },
