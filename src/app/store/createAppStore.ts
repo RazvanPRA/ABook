@@ -6,6 +6,7 @@ import {
   libraryProgressReducer,
   libraryReducer,
 } from '@/features/library';
+import { createPlayerListeners, playerReducer } from '@/features/player';
 import { settingsReducer } from '@/features/settings';
 import type { FeatureDependencies } from '../dependencies';
 
@@ -22,10 +23,13 @@ export const createAppStore = (dependencies: FeatureDependencies) =>
       bookContent: bookContentReducer,
       bookDeletion: bookDeletionReducer,
       import: importReducer,
+      player: playerReducer,
       settings: settingsReducer,
     },
     middleware: getDefaultMiddleware =>
-      getDefaultMiddleware({ thunk: { extraArgument: dependencies } }),
+      getDefaultMiddleware({
+        thunk: { extraArgument: dependencies },
+      }).prepend(createPlayerListeners(dependencies)),
   });
 
 export type AppStore = ReturnType<typeof createAppStore>;

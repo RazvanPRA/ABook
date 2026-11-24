@@ -72,6 +72,7 @@ export const resetProgress =
   (bookId: BookId): BookThunk<boolean> =>
   async (dispatch, _getState, extra) => {
     try {
+      await extra.bookRelease.release(bookId, 'restarted');
       await extra.progressRepository.resetProgress(bookId);
     } catch (error) {
       logger.warn('book: resetting the progress failed', error);

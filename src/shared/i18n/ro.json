@@ -46,7 +46,10 @@
     }
   },
   "player": {
-    "title": "Ascultă"
+    "title": "Ascultă",
+    "play": "Redă",
+    "pause": "Pauză",
+    "notification": "Redare"
   },
   "settings": {
     "title": "Setări"

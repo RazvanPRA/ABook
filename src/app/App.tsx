@@ -9,6 +9,7 @@ import {
 import { navigationTheme, RootNavigator, usePendingLink } from './navigation';
 import { AppProviders } from './providers/AppProviders';
 import { createAppStore } from './store';
+import { useAppBackground } from './useAppBackground';
 import { useBootstrap } from './useBootstrap';
 
 export interface AppProps {
@@ -22,6 +23,7 @@ export function App({ services: given }: AppProps) {
   const [services] = useState(() => given ?? getAppServices());
   const [store] = useState(() => createAppStore(featureDependencies(services)));
   const ready = useBootstrap(services.bootRepository, store.dispatch);
+  useAppBackground(store.dispatch);
   // The navigator mounts only after hydration, so onReady (and the splash hide) comes after it too
   const { linking, release } = usePendingLink();
   const onReady = useCallback(() => {

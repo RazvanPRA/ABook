@@ -13,6 +13,7 @@ import {
   type PdfTextExtractor,
   type WebViewTransport,
 } from '@/services/pdf';
+import { createBookRelease, type BookRelease } from '@/services/bookRelease';
 import { createDocumentsPdfPicker, type PdfPicker } from '@/services/picker';
 import {
   createNativePlaybackNotifier,
@@ -35,6 +36,7 @@ export interface FeatureDependencies extends AppDependencies {
   pdfPicker: PdfPicker;
   ttsEngine: TtsEngine;
   playbackNotifier: PlaybackNotifier;
+  bookRelease: BookRelease;
 }
 
 /** Everything the app wires: what features get plus what only `app/` uses. */
@@ -67,6 +69,7 @@ export const createAppServices = (
     pdfPicker: createDocumentsPdfPicker(),
     ttsEngine: createNativeTtsEngine(),
     playbackNotifier: createNativePlaybackNotifier(),
+    bookRelease: createBookRelease(),
     stores,
     pdfTransport,
   };
@@ -89,6 +92,7 @@ export const featureDependencies = ({
   pdfPicker,
   ttsEngine,
   playbackNotifier,
+  bookRelease,
 }: AppServices): FeatureDependencies => ({
   bookRepository,
   progressRepository,
@@ -97,4 +101,5 @@ export const featureDependencies = ({
   pdfPicker,
   ttsEngine,
   playbackNotifier,
+  bookRelease,
 });

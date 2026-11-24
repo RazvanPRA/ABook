@@ -11,8 +11,13 @@ const settingsSlice = createSlice({
     settingsHydrated: (_state, action: PayloadAction<Settings>) => ({
       ...action.payload,
     }),
+    /** A change by the user, kept by `changeSettings`. */
+    settingsChanged: (state, action: PayloadAction<Partial<Settings>>) => ({
+      ...state,
+      ...action.payload,
+    }),
   },
 });
 
-export const { settingsHydrated } = settingsSlice.actions;
+export const { settingsHydrated, settingsChanged } = settingsSlice.actions;
 export const settingsReducer = settingsSlice.reducer;

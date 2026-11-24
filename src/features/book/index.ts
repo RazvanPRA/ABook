@@ -9,10 +9,19 @@ export {
 } from './state/contentThunks';
 export { deleteBook } from './state/deleteBook';
 export { bookDeletionReducer } from './state/deletionSlice';
-// What the player reads of a book (M5), from one place
+export type { BookDependencies, BookRootState } from './model/dependencies';
+export { chapterTitle } from './services/chapterTitle';
+// What the player uses of a book, from one place
+export { selectImportingBookId } from '@/features/import';
 export {
+  bookRemoved,
+  bookUpserted,
+  listenedPercent,
+  progressChanged,
   selectBookById,
   selectBookProgress,
+  selectContinueListening,
+  selectProgressLoaded,
   type LibraryProgressRootState,
   type LibraryRootState,
 } from '@/features/library';

@@ -25,7 +25,7 @@ async function deleteWithRetry(
 }
 
 /**
- * Deletes a book: its import (stopped and cleaned up first), then its keys and file, then the
+ * Deletes a book: the player lets go of it, its import (stopped and cleaned up first), then its keys and file, then the
  * library entry. Returns whether it worked; a failure stays in `bookDeletion` for the screen, and
  * whatever is left of a book already out of the stored library is swept at the next boot.
  */
@@ -37,6 +37,7 @@ export const deleteBook =
     }
     dispatch(deletionStarted(id));
     try {
+      await extra.bookRelease.release(id, 'deleted');
       await dispatch(cancelImportOf(id));
       await deleteWithRetry(extra.bookRepository, id);
     } catch (error) {

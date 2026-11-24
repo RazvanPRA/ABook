@@ -161,6 +161,15 @@ Each step ends with a green `npm run check` and a separate commit; its section i
 - `AppState` → `background`: flush; with `backgroundPlayback` off also pause.
 - **Tests:** throttle and every flush; delete while playing leaves no key, with a write in flight too; reset while playing; `playbackRequested` from the three callers (card, book button, chapter / bookmark); boot reads no chapter.
 
+**Done** (2026-11-24). Findings:
+
+- The runtime (`state/runtime.ts`: session + progress writer + notice) is made on first use, one per store, in a `WeakMap` by `extra`.
+- The session gets its own read of the toc: the screen's `loadBookContent` is dropped when a newer one starts, so the player could have opened a book "without chapters".
+- The release handler also raises the request counter, so a book being opened when it is deleted isn't opened after.
+- A book removed behind the player's back (a cancelled import) has its progress key removed once the last write is done (`forgetBook`).
+- The open book's import that stalls changes no book, so a listener also watches `selectImportingBookId`.
+- Books queued for a resume count as stalled until their import runs.
+
 #### 9. Bookmarks from the player
 - `addBookmark` in `features/book` (excerpt of ~120 characters, id from `uuid`, refused while deleting, rollback on a failed write). The header button toggles the current sentence; a second add of the same sentence changes nothing.
 - **Tests:** add, duplicate, failure, add while a removal waits for its undo.

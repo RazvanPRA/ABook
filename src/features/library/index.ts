@@ -12,6 +12,7 @@ export type { LibraryFilterRootState } from './state/filterSlice';
 export { listenedPercent } from './services/listenedPercent';
 export {
   selectBookProgress,
+  selectContinueListening,
   selectProgressLoaded,
 } from './state/progressSelectors';
 export type { LibraryProgressRootState } from './state/progressSelectors';
