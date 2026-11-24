@@ -13,6 +13,8 @@ export interface ProgressRepository {
   /** Every given book's progress in one read; never-played and invalid ones are left out. */
   listProgress(ids: readonly BookId[]): Promise<ProgressByBook>;
   saveProgress(id: BookId, progress: Progress): Promise<void>;
+  /** The book is as if never played; its bookmarks stay. */
+  resetProgress(id: BookId): Promise<void>;
   /** `[]` when there are none or the stored list is invalid. */
   getBookmarks(id: BookId): Promise<Bookmark[]>;
   /** Replaces the whole list. */

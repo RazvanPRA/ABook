@@ -174,6 +174,13 @@ Each step ends with a green `npm run check` and a separate commit; its section i
 - Thunks for toc and bookmarks, slice keyed by book. The toc is reloaded as chapters are saved. `deriveChapterStatus` (done / current / pending), `formatBookMeta`, `chapterTitle` (an untitled chapter gets its i18n name).
 - **Tests:** no progress, mid-chapter, boundary, finished, empty toc; stale answers after switching books.
 
+**Done** (2026-11-24). Findings:
+
+- `bookContent` is keyed by book and remembers the newest read, so an older answer, or one for a deleted book, is ignored. Toc and bookmarks are read together; a failed read shows as empty.
+- `removeBookmark` writes nothing for a book deleted or being deleted: leaving the screen after a delete would otherwise leave a `bookmarks` key behind.
+- "Ascultă din nou" needs `ProgressRepository.resetProgress`, which removes the key: the book is as if never played.
+- `useByteUnits` moved from the import feature to `shared/i18n` (used twice now).
+
 #### 12. Book screen
 - `BookHero`, `PrimaryPlayButton`, `ListenProgress`, `ChapterList` / `ChapterRow`, `BookmarkList` / `BookmarkRow`, `ImportBanner`, `FailedBanner`, delete with confirmation (title + freed space, hint that it can't be undone).
 - Removing a bookmark shows a 5 s "Anulează" before it is written; leaving the screen writes it.

@@ -65,6 +65,17 @@ describe('LocalProgressRepository', () => {
     expect(warn).toHaveBeenCalledTimes(1);
   });
 
+  it('resets the progress of one book, keeping its bookmarks', async () => {
+    const { repo } = setup();
+    await repo.saveProgress(ID, progress(3));
+    await repo.saveProgress(OTHER, progress(4));
+    await repo.saveBookmarks(ID, [bookmark('a')]);
+    await repo.resetProgress(ID);
+    expect(await repo.getProgress(ID)).toBeNull();
+    expect(await repo.getProgress(OTHER)).toEqual(progress(4));
+    expect(await repo.getBookmarks(ID)).toEqual([bookmark('a')]);
+  });
+
   it('round-trips bookmarks; none stored is an empty list', async () => {
     const { repo } = setup();
     expect(await repo.getBookmarks(ID)).toEqual([]);

@@ -31,6 +31,8 @@ export const createLocalProgressRepository = ({
     await kv.setMany({ [key]: serialize(key, progressSchema.parse(progress)) });
   },
 
+  resetProgress: id => kv.removeMany([bookKey(id, 'progress')]),
+
   async getBookmarks(id) {
     return (
       (await readValue(kv, bookKey(id, 'bookmarks'), bookmarksSchema)) ?? []

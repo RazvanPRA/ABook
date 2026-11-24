@@ -17,6 +17,7 @@ export function createLibraryStore(
     listProgress,
     getProgress: async () => null,
     saveProgress: async () => undefined,
+    resetProgress: async () => undefined,
     getBookmarks: async () => [],
     saveBookmarks: async () => undefined,
   };
