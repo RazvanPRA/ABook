@@ -63,7 +63,12 @@ export async function removeImportedBook({
 }
 
 /** Failures that would come back on every retry: the file itself can't be imported. */
-const PERMANENT: readonly ImportFailure[] = ['scanned', 'password', 'corrupt'];
+const PERMANENT = ['scanned', 'password', 'corrupt'] as const;
+
+const isPermanent = (
+  reason: ImportFailure,
+): reason is (typeof PERMANENT)[number] =>
+  (PERMANENT as readonly ImportFailure[]).includes(reason);
 
 /**
  * A resumed book keeps what it has. A permanent failure marks it `failed`; after any other (the
@@ -74,12 +79,13 @@ async function keepResumedBook(
   reason: ImportFailure,
 ): Promise<void> {
   const { bookId } = getState().import;
-  if (bookId === null || !PERMANENT.includes(reason)) {
+  if (bookId === null || !isPermanent(reason)) {
     return;
   }
   try {
     const meta = await extra.bookRepository.updateMeta(bookId, {
       status: 'failed',
+      failure: reason,
     });
     if (meta) {
       dispatch(bookUpserted(meta));

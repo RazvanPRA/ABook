@@ -1,12 +1,19 @@
 export {
+  BOOK_FAILURES,
   BOOK_LANGUAGES,
   BOOK_STATUSES,
+  bookFailureSchema,
   bookLanguageSchema,
   bookMetaSchema,
   bookOrderSchema,
   bookStatusSchema,
 } from './bookMeta';
-export type { BookLanguage, BookMeta, BookStatus } from './bookMeta';
+export type {
+  BookFailure,
+  BookLanguage,
+  BookMeta,
+  BookStatus,
+} from './bookMeta';
 export { chapterSchema, tocSchema } from './chapter';
 export type { Chapter } from './chapter';
 export {

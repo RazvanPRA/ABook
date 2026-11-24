@@ -74,6 +74,12 @@ Each step ends with a green `npm run check` and a separate commit; its section i
 - `isRetryableFailure(failure)`: only `null` (unknown reason), and only when the PDF still exists. `BookRepository` gains a check for the file.
 - **Tests:** migration (twice, corrupt values), both writers, schema.
 
+**Done** (2026-11-24). Findings:
+
+- 002 and 003 do the same thing (a missing meta field becomes `null`), so both use `addNullMetaField`.
+- `isRetryableFailure(book)` is pure and lives in `shared/domain` (the import and book features both need it); the file check is `BookRepository.hasPdf(book)`.
+- `failure` is cleared where the import continues (step 4). Earlier migration tests now run only their own slice of `MIGRATIONS`.
+
 #### 3. Progress in the store
 - `ProgressRepository.listProgress(ids)` with one `getMany`; invalid values are logged and skipped. `libraryProgress` slice, hydration thunk after boot, removal on `bookRemoved`.
 - Pure services: `listenedPercent`, `bookListStatus`, `pickContinueListening`, `sortByLastPlayed`; memoized selectors.

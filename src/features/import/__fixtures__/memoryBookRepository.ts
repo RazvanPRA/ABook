@@ -109,6 +109,10 @@ export class MemoryBookRepository implements BookRepository {
     return this.metas.get(id) ?? null;
   }
 
+  async hasPdf({ fileUri }: Pick<BookMeta, 'fileUri'>) {
+    return this.files.has(fileUri);
+  }
+
   async getToc(id: BookId) {
     return this.tocs.get(id)?.slice() ?? null;
   }

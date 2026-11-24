@@ -78,8 +78,8 @@ describe('bootstrap', () => {
       [B, 'failed'],
       [A, 'ready'],
     ]);
-    expect(JSON.parse(kv.snapshot()[bookKey(B, 'meta')] ?? '{}').status).toBe(
-      'failed',
+    expect(JSON.parse(kv.snapshot()[bookKey(B, 'meta')] ?? '{}')).toMatchObject(
+      { status: 'failed', failure: 'missing-file' },
     );
   });
 

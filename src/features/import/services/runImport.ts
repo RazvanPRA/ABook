@@ -107,6 +107,7 @@ async function createProcessingBook(
     importedAt: context.now().toISOString(),
     coverColor: pickCoverColor(bookId),
     fingerprint: stored.fingerprint,
+    failure: null,
   };
   await context.bookRepository.createBook(meta);
   context.dispatch(bookUpserted(meta));

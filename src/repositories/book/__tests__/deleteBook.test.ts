@@ -70,6 +70,14 @@ describe('LocalBookRepository – deleteBook', () => {
     expect(await setup.files.exists(setup.files.bookPdfPath(ID))).toBe(false);
   });
 
+  it('reports whether the PDF of a book is still there', async () => {
+    const { repo } = await twoBooks();
+    const book = { fileUri: `/documents/books/${ID}.pdf` };
+    expect(await repo.hasPdf(book)).toBe(true);
+    await repo.deleteBook(ID);
+    expect(await repo.hasPdf(book)).toBe(false);
+  });
+
   it('is a no-op for an unknown book', async () => {
     const setup = await twoBooks();
     const before = setup.kv.snapshot();

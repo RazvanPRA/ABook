@@ -40,6 +40,8 @@ export interface BookRepository {
   /** Books in library order; ids without a valid meta are skipped. */
   listBooks(): Promise<BookMeta[]>;
   getMeta(id: BookId): Promise<BookMeta | null>;
+  /** Whether the app's copy of the PDF is still there (needed to continue an import). */
+  hasPdf(book: Pick<BookMeta, 'fileUri'>): Promise<boolean>;
   getToc(id: BookId): Promise<Chapter[] | null>;
   /** The whole chapter, joined from its parts; `null` when missing or any part is invalid. */
   getChapter(id: BookId, index: ChapterIndex): Promise<ChapterChunk | null>;

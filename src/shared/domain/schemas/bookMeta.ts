@@ -2,9 +2,17 @@ import { z } from 'zod';
 import { bookIdSchema, countSchema, isoDateSchema } from './primitives';
 
 export const BOOK_STATUSES = ['processing', 'ready', 'failed'] as const;
+/** Why a book is `failed`: the file itself can't be imported, or the app's copy is gone. */
+export const BOOK_FAILURES = [
+  'scanned',
+  'password',
+  'corrupt',
+  'missing-file',
+] as const;
 export const BOOK_LANGUAGES = ['ro-RO', 'en-US'] as const;
 
 export const bookStatusSchema = z.enum(BOOK_STATUSES);
+export const bookFailureSchema = z.enum(BOOK_FAILURES);
 export const bookLanguageSchema = z.enum(BOOK_LANGUAGES);
 
 /** `abk:book:{id}:meta`. `pageCount` may be 0 while the PDF hasn't been opened yet. */
@@ -28,6 +36,11 @@ export const bookMetaSchema = z
      * books imported before schema 2 (migration 002), which are never reported as duplicates.
      */
     fingerprint: z.string().min(1).nullable(),
+    /**
+     * Set with `failed`, cleared when the import continues; `null` for a book that isn't failed, or
+     * that failed before schema 3 (migration 003), when the reason wasn't stored.
+     */
+    failure: bookFailureSchema.nullable(),
   })
   .refine(meta => meta.processedPages <= meta.pageCount, {
     message: 'processedPages exceeds pageCount',
@@ -42,5 +55,6 @@ export const bookOrderSchema = z
   });
 
 export type BookStatus = z.infer<typeof bookStatusSchema>;
+export type BookFailure = z.infer<typeof bookFailureSchema>;
 export type BookLanguage = z.infer<typeof bookLanguageSchema>;
 export type BookMeta = z.infer<typeof bookMetaSchema>;

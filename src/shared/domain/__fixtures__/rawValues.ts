@@ -17,6 +17,7 @@ export const rawMeta = (overrides: Record<string, unknown> = {}) => ({
   importedAt: NOW,
   coverColor: 'cover-sample',
   fingerprint: null,
+  failure: null,
   ...overrides,
 });
 

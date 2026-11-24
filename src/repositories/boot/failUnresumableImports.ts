@@ -15,7 +15,11 @@ export const failUnresumableImports = async (
   const next = await Promise.all(
     books.map(async book =>
       book.status === 'processing' && !(await files.exists(book.fileUri))
-        ? { ...book, status: 'failed' as const }
+        ? {
+            ...book,
+            status: 'failed' as const,
+            failure: 'missing-file' as const,
+          }
         : book,
     ),
   );

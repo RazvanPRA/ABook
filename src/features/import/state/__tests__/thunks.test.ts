@@ -267,6 +267,9 @@ describe('resumeImports', () => {
         reason,
       });
       expect(repo.metas.get(meta.id)?.status).toBe(status);
+      expect(repo.metas.get(meta.id)?.failure).toBe(
+        status === 'failed' ? reason : null,
+      );
       expect(selectBooksInOrder(store.getState())[0]?.status).toBe(status);
       expect(repo.files.size).toBe(1);
     },
