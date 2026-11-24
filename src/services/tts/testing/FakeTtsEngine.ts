@@ -36,6 +36,7 @@ export class FakeTtsEngine implements TtsEngine {
   readonly utterances: FakeUtterance[] = [];
   stops = 0;
   settingsOpened = 0;
+  private listeners: (() => void)[] = [];
   private current: FakeUtterance | null = null;
 
   get spoken(): string[] {
@@ -70,6 +71,17 @@ export class FakeTtsEngine implements TtsEngine {
 
   async isSpeaking(): Promise<boolean> {
     return this.current !== null;
+  }
+
+  onInterruption(listener: () => void): () => void {
+    this.listeners.push(listener);
+    return () => {
+      this.listeners = this.listeners.filter(known => known !== listener);
+    };
+  }
+
+  interrupt(): void {
+    this.listeners.forEach(listener => listener());
   }
 
   async openSettings(): Promise<void> {

@@ -1,15 +1,24 @@
-import type { Spec, UtteranceEvent } from '../../../../specs/NativeAbookTts';
+import type {
+  PlaybackCommandEvent,
+  Spec,
+  UtteranceEvent,
+} from '../../../../specs/NativeAbookTts';
 import { createNativeTtsEngine } from '../createNativeTtsEngine';
 import { TtsError } from '../types';
 
 function setup() {
   let emit: (event: UtteranceEvent) => void = () => {};
+  let emitCommand: (event: PlaybackCommandEvent) => void = () => {};
   const native = {
     getVoices: jest.fn<ReturnType<Spec['getVoices']>, []>(async () => []),
     speak: jest.fn<void, Parameters<Spec['speak']>>(),
     stop: jest.fn(async () => {}),
     isSpeaking: jest.fn(async () => true),
     openSettings: jest.fn(async () => {}),
+    onPlaybackCommand: ((handler: (event: PlaybackCommandEvent) => void) => {
+      emitCommand = handler;
+      return { remove: () => {} };
+    }) as Spec['onPlaybackCommand'],
     onUtterance: ((handler: (event: UtteranceEvent) => void) => {
       emit = handler;
       return { remove: () => {} };
@@ -32,6 +41,7 @@ function setup() {
     native,
     engine,
     speak,
+    command: (type: string) => emitCommand({ type }),
     emit: (id: string, type: string, code = '') => emit({ id, type, code }),
   };
 }
@@ -143,6 +153,16 @@ describe('voices', () => {
     native.getVoices.mockRejectedValue(new Error('No speech engine'));
     await expect(engine.listVoices()).rejects.toEqual(new TtsError('engine'));
   });
+});
+
+it('reports interruptions, not the other playback commands', () => {
+  const { engine, command } = setup();
+  const listener = jest.fn();
+  engine.onInterruption(listener);
+  command('pause');
+  expect(listener).not.toHaveBeenCalled();
+  command('interruption');
+  expect(listener).toHaveBeenCalledTimes(1);
 });
 
 it('passes isSpeaking and openSettings through', async () => {

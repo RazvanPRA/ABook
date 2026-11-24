@@ -52,9 +52,33 @@ describe('Android manifests', () => {
     );
   });
 
+  it.each([
+    'FOREGROUND_SERVICE',
+    'FOREGROUND_SERVICE_MEDIA_PLAYBACK',
+    'POST_NOTIFICATIONS',
+    'WAKE_LOCK',
+  ])('main requests %s for the playback service', permission => {
+    expect(main).toContain(`android.permission.${permission}"`);
+  });
+
+  it('declares the playback service, private and told when the app is swiped away', () => {
+    const service = main.match(/<service[^>]*PlaybackService"[^>]*>/)?.[0];
+    expect(service).toContain('android:exported="false"');
+    expect(service).toContain('android:foregroundServiceType="mediaPlayback"');
+    expect(service).toContain('android:stopWithTask="false"');
+  });
+
   it('debug keeps INTERNET for Metro', () => {
     expect(debug).toContain('android.permission.INTERNET');
   });
+});
+
+it('the Xcode project compiles the iOS voice module', () => {
+  const project = read('ios/ABook.xcodeproj/project.pbxproj');
+  expect(project).toContain('AbookTts.mm in Sources */,');
+  expect(read('ios/ABook/Tts/AbookTts.mm')).toContain(
+    'RCT_EXPORT_MODULE(AbookTts)',
+  );
 });
 
 describe('iOS Info.plist', () => {

@@ -34,6 +34,22 @@ export interface UtteranceEvent {
   code: string;
 }
 
+export interface PlaybackNotice {
+  title: string;
+  text: string;
+  playing: boolean;
+  actionLabel: string;
+  channelName: string;
+}
+
+export interface PlaybackCommandEvent {
+  /**
+   * `interruption`: something else is heard (a call, another player) or the headphones are gone.
+   * `play` | `pause`: the notification's button. `stop`: the app was swiped away.
+   */
+  type: string;
+}
+
 /** The system voice: Android `TextToSpeech`, iOS `AVSpeechSynthesizer`. One utterance at a time. */
 export interface Spec extends TurboModule {
   getVoices(): Promise<Array<NativeVoice>>;
@@ -43,7 +59,11 @@ export interface Spec extends TurboModule {
   isSpeaking(): Promise<boolean>;
   /** Opens the system's voice settings; rejects when there are none. */
   openSettings(): Promise<void>;
+  /** Android: starts the foreground service, or changes its notification. iOS: nothing. */
+  showPlayback(info: PlaybackNotice): void;
+  hidePlayback(): void;
   readonly onUtterance: CodegenTypes.EventEmitter<UtteranceEvent>;
+  readonly onPlaybackCommand: CodegenTypes.EventEmitter<PlaybackCommandEvent>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('AbookTts');

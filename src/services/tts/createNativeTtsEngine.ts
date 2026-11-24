@@ -44,7 +44,10 @@ function deliver({ options }: Utterance, { type, code }: UtteranceEvent): void {
   }
 }
 
-type NativeTts = Omit<Spec, keyof TurboModule>;
+type NativeTts = Omit<
+  Spec,
+  keyof TurboModule | 'showPlayback' | 'hidePlayback'
+>;
 
 /** The current utterance; late native events, matched by id, are dropped. */
 function trackUtterance(native: Pick<NativeTts, 'onUtterance'>) {
@@ -100,6 +103,14 @@ export function createNativeTtsEngine(
       await native.stop();
     },
     isSpeaking: () => native.isSpeaking(),
+    onInterruption(listener) {
+      const subscription = native.onPlaybackCommand(({ type }) => {
+        if (type === 'interruption') {
+          listener();
+        }
+      });
+      return () => subscription.remove();
+    },
     openSettings: () => native.openSettings(),
   };
 }

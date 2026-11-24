@@ -14,7 +14,12 @@ import {
   type WebViewTransport,
 } from '@/services/pdf';
 import { createDocumentsPdfPicker, type PdfPicker } from '@/services/picker';
-import { createNativeTtsEngine, type TtsEngine } from '@/services/tts';
+import {
+  createNativePlaybackNotifier,
+  createNativeTtsEngine,
+  type PlaybackNotifier,
+  type TtsEngine,
+} from '@/services/tts';
 import {
   createAsyncStorageKeyValueStore,
   createReactNativeFsFileStore,
@@ -29,6 +34,7 @@ export interface FeatureDependencies extends AppDependencies {
   pdfExtractor: PdfTextExtractor;
   pdfPicker: PdfPicker;
   ttsEngine: TtsEngine;
+  playbackNotifier: PlaybackNotifier;
 }
 
 /** Everything the app wires: what features get plus what only `app/` uses. */
@@ -60,6 +66,7 @@ export const createAppServices = (
     }),
     pdfPicker: createDocumentsPdfPicker(),
     ttsEngine: createNativeTtsEngine(),
+    playbackNotifier: createNativePlaybackNotifier(),
     stores,
     pdfTransport,
   };
@@ -81,6 +88,7 @@ export const featureDependencies = ({
   pdfExtractor,
   pdfPicker,
   ttsEngine,
+  playbackNotifier,
 }: AppServices): FeatureDependencies => ({
   bookRepository,
   progressRepository,
@@ -88,4 +96,5 @@ export const featureDependencies = ({
   pdfExtractor,
   pdfPicker,
   ttsEngine,
+  playbackNotifier,
 });

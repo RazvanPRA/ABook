@@ -10,6 +10,11 @@ import com.facebook.react.bridge.ReadableMap
 /** The Codegen module: translates between JS and `SpeechEngine`. */
 class AbookTtsModule(reactContext: ReactApplicationContext) : NativeAbookTtsSpec(reactContext) {
   private val engine = SpeechEngine(reactContext.applicationContext, Events())
+  private val focus = SpeechFocus(reactContext.applicationContext) { emitCommand(INTERRUPTION) }
+
+  init {
+    PlaybackService.listener = ::emitCommand
+  }
 
   override fun getName() = NAME
 
@@ -22,18 +27,26 @@ class AbookTtsModule(reactContext: ReactApplicationContext) : NativeAbookTtsSpec
         }
       }
 
-  override fun speak(request: ReadableMap) =
-      engine.speak(
-          Utterance(
-              id = request.getString("id").orEmpty(),
-              text = request.getString("text").orEmpty(),
-              voiceId = if (request.isNull("voiceId")) null else request.getString("voiceId"),
-              language = request.getString("language").orEmpty(),
-              rate = request.getDouble("rate").toFloat(),
-              pitch = request.getDouble("pitch").toFloat(),
-          ))
+  override fun speak(request: ReadableMap) {
+    if (!focus.request()) {
+      emitCommand(INTERRUPTION)
+      return
+    }
+    engine.speak(
+        Utterance(
+            id = request.getString("id").orEmpty(),
+            text = request.getString("text").orEmpty(),
+            voiceId = if (request.isNull("voiceId")) null else request.getString("voiceId"),
+            language = request.getString("language").orEmpty(),
+            rate = request.getDouble("rate").toFloat(),
+            pitch = request.getDouble("pitch").toFloat(),
+        ))
+  }
 
-  override fun stop(promise: Promise) = engine.stop { promise.resolve(null) }
+  override fun stop(promise: Promise) {
+    focus.abandon()
+    engine.stop { promise.resolve(null) }
+  }
 
   override fun isSpeaking(promise: Promise) = engine.isSpeaking { promise.resolve(it) }
 
@@ -44,9 +57,30 @@ class AbookTtsModule(reactContext: ReactApplicationContext) : NativeAbookTtsSpec
         .onFailure { promise.reject("settings", it) }
   }
 
+  override fun showPlayback(info: ReadableMap) =
+      PlaybackService.show(
+          reactApplicationContext.applicationContext,
+          PlaybackInfo(
+              title = info.getString("title").orEmpty(),
+              text = info.getString("text").orEmpty(),
+              playing = info.getBoolean("playing"),
+              actionLabel = info.getString("actionLabel").orEmpty(),
+              channelName = info.getString("channelName").orEmpty(),
+          ))
+
+  override fun hidePlayback() = PlaybackService.hide()
+
   override fun invalidate() {
+    PlaybackService.listener = null
+    PlaybackService.hide()
+    focus.abandon()
     engine.shutdown()
     super.invalidate()
+  }
+
+  private fun emitCommand(type: String) {
+    if (!reactApplicationContext.hasActiveReactInstance()) return
+    emitOnPlaybackCommand(Arguments.createMap().apply { putString("type", type) })
   }
 
   private inner class Events : SpeechEngine.Listener {
@@ -70,6 +104,7 @@ class AbookTtsModule(reactContext: ReactApplicationContext) : NativeAbookTtsSpec
 
   companion object {
     const val NAME = "AbookTts"
+    private const val INTERRUPTION = "interruption"
     private const val ACTION_TTS_SETTINGS = "com.android.settings.TTS_SETTINGS"
   }
 }

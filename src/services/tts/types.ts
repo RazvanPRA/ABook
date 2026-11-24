@@ -43,6 +43,8 @@ export interface TtsEngine {
   speak(text: string, options: SpeakOptions): void;
   stop(): Promise<void>;
   isSpeaking(): Promise<boolean>;
+  /** The voice was, or would be, interrupted: a call, another player, headphones unplugged. */
+  onInterruption(listener: () => void): () => void;
   /** The system's voice settings; rejects where there are none. */
   openSettings(): Promise<void>;
 }

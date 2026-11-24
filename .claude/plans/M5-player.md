@@ -114,10 +114,23 @@ Each step ends with a green `npm run check` and a separate commit; its section i
 - `AVSpeechSynthesizer`, `AVAudioSession` `playback`, interruption and route-change notifications; rate mapped to the AVSpeech scale.
 - Can't be compiled on this PC: written and reviewed, **verified in M7**.
 
+**Done** (2026-11-24). Findings:
+
+- Objective-C++ only (`AbookTts.h` / `.mm`), because the generated base class with the event emitters can't be subclassed from Swift. Checked against the generated iOS header (`generate-codegen-artifacts.js -t ios`); **not compiled**.
+- iOS has no link to the voice settings: `openSettings` rejects there. Voices are always offline. Rates above 1 are compressed (2.0 → 0.65), to be tuned by ear in M7.
+
 #### 5. Audio focus and foreground service
 - `SpeechFocus` (focus request, `ACTION_AUDIO_BECOMING_NOISY`) → `onInterruption`. `PlaybackService`: started on play from the foreground, kept while paused, stopped on idle, end or delete; notification texts come from JS (`ro.json`). Its action arrives as an event, so the session stays the only owner of the state.
 - Permissions `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK`, `POST_NOTIFICATIONS` (asked once, on first play; playback works if refused). Only with `backgroundPlayback` on. Release still has no network permission.
 - **Tests:** manifest guards; the engine's interruption events. **Emulator:** screen off for 10 min; pause from the notification; swiped-away app stops.
+
+**Done** (2026-11-24). Findings:
+
+- **Done before step 4**, so the iOS module is written once, over the final spec.
+- Focus loss and unplugged headphones are `TtsEngine.onInterruption`; being asked to duck (a notification sound) is ignored. The notification is a separate port, `PlaybackNotifier` (`show` / `hide` / `onCommand`): features own the texts and decide when, the service only passes commands on. Both come over one native event.
+- The service holds a partial wake lock while playing (plan B in the risks), since sentences start from JS.
+- It is not sticky: without JS there is nothing to play.
+- The 10-minute and notification checks need the player, so they are in step 15.
 
 ### M5b – Session
 

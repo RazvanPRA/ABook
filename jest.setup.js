@@ -150,7 +150,10 @@ jest.mock('./specs/NativeAbookTts', () => ({
     stop: jest.fn(async () => {}),
     isSpeaking: jest.fn(async () => false),
     openSettings: jest.fn(async () => {}),
+    showPlayback: jest.fn(),
+    hidePlayback: jest.fn(),
     onUtterance: jest.fn(() => ({ remove: () => {} })),
+    onPlaybackCommand: jest.fn(() => ({ remove: () => {} })),
   },
 }));
 
