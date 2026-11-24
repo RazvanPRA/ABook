@@ -99,3 +99,15 @@ Branches: `main` ← `dev` ← `m<N>-<name>` (for example `m0-fundatie`, `m0-sch
 - **Boot:** `useBootstrap` runs migrations → one `getMany` snapshot → order repair → interrupted imports without their PDF `failed` (the others resume after hydration, `resumeImports`, since M3) → orphan sweep, and the navigator mounts only after it (so `BootSplash.hide` waits). A deep link that arrives **during** bootstrap is lost (a cold start with the link works); see the risk in `PLAN.md`.
 - **Storage inspector:** `abook://dev/storage` (`__DEV__` only): real keys and files next to the store, seed and delete all. To seed a PDF too: `adb shell run-as com.abook sh -c 'head -c 50000 /dev/urandom > files/seed.pdf'`. App files: `adb shell run-as com.abook ls files/books`.
 - **adb from Git Bash:** prefix with `MSYS_NO_PATHCONV=1`, otherwise `/sdcard/…` becomes `C:/Program Files/Git/sdcard/…`. If `npm run emu` exits with 6 because another app is in the foreground, close that app and rerun the script.
+
+## Pitfalls found in M3
+
+- **Dev-only reload on the first import:** while the system picker is open, the HMR socket can drop ("Fast Refresh disconnected"). The next dynamic `import()` (the 2.4 MB WebView page) then reloads the JS (`HMRClient.js`: "Bundle Splitting – Metro disconnected"). The boot resume finishes the import, but form edits are lost and the screen closes. On the emulator, test the import screen from the second import of a session on.
+- **LogBox toast:** in dev, after any `logger.warn`, "Open debugger to view warnings" covers the bottom button and takes its taps.
+- **Fast Refresh and `dependencies.ts`:** `App` pins its services and store on the first render. Don't read `getAppServices()` elsewhere at render time, or the PDF host and the extractor end up on different transports ("WebView did not start").
+- **Hermes `Intl`:** plural rules give `other` for every Romanian count. Use `romanianPlural` and explicit keys (`….one/few/other`), not i18next `count` plurals; `String.prototype.normalize` is avoided too.
+- **Regex cost in Hermes:** on chapter-sized text, `/\S*$/` searches and `slice` per match are quadratic (650 ms per chapter). Walk from the index, or use sticky regexes.
+- **Import storage order:** chunk → toc → `processedPages` (plus the form) per chapter, `ready` last. The resume relies on it. The pipeline runs only through `guarded` (`state/pipelineRunner.ts`), which queues and cleans up.
+- **pdf.js 6.5** is ESM only: page and worker are inlined at build time, with a CSP that blocks the network. `react-native-webview` 14 needs `WebView<object>` under strict TS.
+- **`@react-native-documents/picker`:** the `content://` URI is copied directly by RNFS `copyFile`; no `keepLocalCopy`.
+- **Emulator automation:** `uiautomator dump` fails ("could not get idle state") or takes seconds while an import runs; tap by coordinates then.

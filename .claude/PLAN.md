@@ -79,7 +79,7 @@ Results, deviations and pitfalls are in `.claude/plans/M2-storage.md` and in `CL
 **Tests:** with in-memory `KeyValueStore` and `FileStore`: write order on import, resume after crash, deletion without orphan keys, corrupt values, oversized chapters, each migration.
 **Done when:** bootstrap hydrates the store from a fake storage in tests and from a real one on the emulator.
 
-## M3 – Text and PDF import  *(steps 4–5, `pdf-import-pipeline` skill)*
+## M3 – Text and PDF import  *(steps 4–5, `pdf-import-pipeline` skill)* — ✅ done 2026-11-24
 
 Steps, decisions and findings: `.claude/plans/M3-import.md` (branch `m3-import`).
 
@@ -102,7 +102,7 @@ Steps, decisions and findings: `.claude/plans/M3-import.md` (branch `m3-import`)
 - Boot resumes `processing` books from `processedPages` (replaces M2's "mark `failed`", except for books that can't be resumed).
 
 **Tests:** the state machine with a fake `PdfTextExtractor`, for every failure case.
-**Done when:** a real 300+ page PDF (`Microservices_Patterns.pdf`, 522 p., from `C:\ModDeInvatare\Book-PDF`; see "Sample PDFs" in the M3 plan) imports on the emulator without the UI freezing.
+**Done when:** a real 300+ page PDF (`Microservices-Patterns.pdf`, 522 p., from `C:\ModDeInvatare\Book-PDF`; see "Sample PDFs" in the M3 plan) imports on the emulator without the UI freezing.
 
 ## M4 – Library and book details  *(steps 6–7)*
 
@@ -125,7 +125,7 @@ Steps, decisions and findings: `.claude/plans/M3-import.md` (branch `m3-import`)
 - The mini-player above the tab bar, on Library and Settings.
 
 **Tests:** with `FakeTtsEngine` and fake timers: the sentence chain, moving to the next chapter, end of book, rapid presses, speed change, sleep, error and voice fallback.
-**On the emulator:** the `en-US` sample books (`The.Clean.Coder…pdf`, `Microservices_Patterns.pdf`) and the Romanian `Clean_Architecture_Notite.pdf` for `ro-RO` (sample PDFs: M3 plan).
+**On the emulator:** the `en-US` sample books (`The.Clean.Coder…pdf`, `Microservices-Patterns.pdf`; sample PDFs: M3 plan) and the generated Romanian `ion-320.pdf` for `ro-RO`.
 **Done when:** after the app is killed, playback resumes at the same sentence.
 
 ## M6 – Settings, storage and backup  *(step 9)*
@@ -154,7 +154,7 @@ Steps, decisions and findings: `.claude/plans/M3-import.md` (branch `m3-import`)
 | --- | --- | --- |
 | Legacy pdf.js + locally inlined worker in a WebView on Android (pdfjs-dist 6.5 ships only ESM `.mjs`) | **Solved in the M3 spike (step 7):** pdf.js and its worker embedded as base64 and loaded with `import()` from blob URLs; the worker runs as pdf.js's "fake worker" on the WebView thread, because a page from an HTML string has an opaque origin and Chromium refuses blob Workers there. 320 pages in 2.2 s on the emulator | a `baseUrl` for a real origin and a real Worker |
 | Header/footer detection needs all pages, but import saves chapter by chapter | M3 step 2 | statistics on a sample window (first ~20 pages), recomputed the same way on resume |
-| Licence watermarks and running footers read aloud on every page (`Microservices_Patterns.pdf` has one on 521/522 pages, y ≈ 0.97) | M3 step 11, on the real sample | match the watermark signature over the whole book, not only the sample window |
+| Licence watermarks and running footers read aloud on every page (`Microservices-Patterns.pdf` has one on 521/522 pages, y ≈ 0.97) | M3 step 11, on the real sample | match the watermark signature over the whole book, not only the sample window |
 | AsyncStorage limit on Android | **Solved in M0:** v3.1.1 uses Room/SQLite, without the 6 MB limit | we keep values under ~256 KB (the 2 MB `CursorWindow` read limit) |
 | A deep link that arrives **during** bootstrap is lost (the `NavigationContainer` mounts after hydration; a cold start with the link works) | **Found in M2** (emulator); to be solved in M4, when real links matter | mount the container from the start and gate only its content, or keep the URL until it's ready |
 | `react-native-tts` | **Confirmed in M0:** doesn't compile with Gradle 9 (`jcenter()`), so it was removed | **M5: custom TurboModule** `AbookTts` (Android `TextToSpeech`, iOS `AVSpeechSynthesizer`) behind `TtsEngine` |

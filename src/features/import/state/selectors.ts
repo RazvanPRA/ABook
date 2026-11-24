@@ -1,7 +1,7 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { deriveSteps, isActivePhase } from '../model/steps';
 import type { ImportFailure, ImportPhase, ImportStep } from '../model/types';
-import type { ImportState } from './importSlice';
+import type { ImportState } from './importState';
 
 /** The part of the root state this feature reads; the app's store must mount it at `import`. */
 export interface ImportRootState {

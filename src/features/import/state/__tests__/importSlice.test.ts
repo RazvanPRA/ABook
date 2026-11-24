@@ -17,12 +17,11 @@ import {
   importResumed,
   importStarted,
   importSubmitted,
-  initialImportState,
   languageChanged,
   pagesExtracted,
   savingStarted,
-  type ImportState,
 } from '../importSlice';
+import { initialImportState, type ImportState } from '../importState';
 
 const [BOOK, OTHER] = BOOK_IDS as [BookId, BookId];
 const FILE = {

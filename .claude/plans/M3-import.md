@@ -510,12 +510,22 @@ Each step ends with a green `npm run check` and a separate commit; the step's se
 #### 19. Closing
 - `modular-architecture` §10 checklist, the summary (new / reused units / `arch-exception`), `PLAN.md` (M3 ✅) and `CLAUDE.md` (M3 pitfalls).
 
+**Done** (2026-11-24). `modular-architecture` §10 checklist:
+- **Limits:** two files were over and are now split: `importSlice.ts` (278 lines; the state moved to `importState.ts`) and the dev screen `PdfDebugScreen.tsx` (184; `ProbeResultSection.tsx`). The slice stays a declarative list of reducers above 200 lines with comments; its limit isn't one of §2's units. `createRequestHandler.ts` is under 200 without comments, as lint counts. **0 `arch-exception`.** One `eslint-disable` is new: `exhaustive-deps` in `useImportScreen`, for the reset that runs only when the screen opens.
+- **Layers:** enforced by `boundaries`. The import feature reaches the library only through its `index.ts`, and `services/pdf`, `services/text` and `services/picker` know neither Redux nor the UI.
+- **No duplication:** the field box (`field.styles.ts`), the fake PDF, the in-memory repository and `guarded` are each shared.
+- **Hard-coded values:** no text in the import feature outside `ro.json`, no unused `import.*` key, no hex outside the theme. The dev screens stay untranslated, as in M1–M2.
+- **Tests:** 1048 in 96 suites (M2 closed at 449 in 52). The import screen's components and hooks are tested through `ImportScreen.test.tsx`, not one by one; `pipelineRunner`, `chapterWriter`, `copyPdf` and `extractChapters` through the thunk and pipeline tests.
+- **Not done in M3:** iOS wasn't run; stalls weren't measured in a release build (M7); a long title in `TextField` shows its end.
+
+**Summary of units.** New: `services/text` (cleanup, segmentation, chapters), `services/pdf` (bridge, WebView page, extractor, transport, fakes), `services/picker`, `features/import` (state machine, pipeline, resume, screen), `PdfExtractorHost`, `TextField`, `Select`, `pdfFingerprint`, `romanianPlural`, migration 002, `app/dev/pdf`. Extended: `FileStore.readBase64`, `ScreenHeader` (`large` + `back`), `BookMeta.fingerprint`, the boot repository. Reused: `Button`, `Card`, `AppText`, `Icon`, `ProgressBar`, `formatBytes`, the M2 repositories and fakes.
+
 ## Definition of done – M3
 
-- [ ] Every `services/text` function is pure, in its own file, with table-driven Romanian tests; 100% coverage for the folder.
-- [ ] Parsing stays in the WebView; messages are zod-validated on both sides; the PDF is sent in 512 KB chunks; the WebView has no network access.
-- [ ] The import state machine and pipeline are tested with a fake `PdfTextExtractor`, including every failure case.
-- [ ] A 300+ page text PDF imports on the emulator without blocking the UI, and the first chapter can be read before the end.
-- [ ] A killed import resumes from `processedPages`.
-- [ ] A scanned, a protected and a corrupt PDF give clear messages and leave no keys or files.
-- [ ] `npm run check` green; one commit per step.
+- [x] Every `services/text` function is pure, in its own file, with table-driven Romanian tests; 100% coverage for the folder.
+- [x] Parsing stays in the WebView; messages are zod-validated on both sides; the PDF is sent in 512 KB chunks; the WebView has no network access.
+- [x] The import state machine and pipeline are tested with a fake `PdfTextExtractor`, including every failure case.
+- [x] A 300+ page text PDF imports on the emulator without blocking the UI (extraction: no JS stall over 100 ms in a debug build; the first import of a session has one of 1.0–1.5 s in dev, not measured in release), and the first chapter can be read before the end.
+- [x] A killed import resumes from `processedPages`.
+- [x] A scanned, a protected and a corrupt PDF give clear messages and leave no keys or files.
+- [x] `npm run check` green (1048 tests, 96 suites); one commit per step.

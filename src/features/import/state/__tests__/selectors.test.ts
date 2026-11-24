@@ -12,10 +12,10 @@ import {
   importReducer,
   importStarted,
   importSubmitted,
-  initialImportState,
   pagesExtracted,
   savingStarted,
 } from '../importSlice';
+import { initialImportState } from '../importState';
 import {
   selectCanListen,
   selectCanSubmit,

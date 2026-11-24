@@ -6,7 +6,7 @@ export {
   keepDuplicate,
   resumeImports,
 } from './state/thunks';
-export type { ImportState } from './state/importSlice';
+export type { ImportState } from './state/importState';
 export {
   selectCanListen,
   selectImportPhase,
