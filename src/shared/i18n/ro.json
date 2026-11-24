@@ -94,7 +94,12 @@
     }
   },
   "book": {
-    "title": "Detalii carte"
+    "title": "Detalii carte",
+    "missing": {
+      "title": "Cartea nu mai există",
+      "detail": "Poate a fost ștearsă de pe dispozitiv sau linkul e greșit.",
+      "action": "Înapoi la bibliotecă"
+    }
   },
   "format": {
     "bytes": {

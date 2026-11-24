@@ -5,7 +5,9 @@ import {
   getStateFromPath,
   NavigationContainer,
 } from '@react-navigation/native';
-import { toBookId } from '@/shared/domain';
+import { bookUpserted } from '@/features/library';
+import { toBookId, type BookId } from '@/shared/domain';
+import { BOOK_IDS, makeMeta } from '@/shared/domain/__fixtures__/books';
 import { fakeServices } from '../../__fixtures__/fakeServices';
 import { featureDependencies } from '../../dependencies';
 import { I18nProvider } from '../../providers/I18nProvider';
@@ -27,7 +29,7 @@ async function renderNavigator() {
       </I18nProvider>
     </StoreProvider>,
   );
-  return ref;
+  return Object.assign(ref, { store });
 }
 
 describe('RootNavigator', () => {
@@ -43,9 +45,26 @@ describe('RootNavigator', () => {
 
   it('opens the Book screen with its id', async () => {
     const ref = await renderNavigator();
-    await act(async () => ref.navigate('Book', { id: toBookId('book-42') }));
+    const id = BOOK_IDS[0] as BookId;
+    await act(async () => {
+      ref.store.dispatch(bookUpserted(makeMeta(id)));
+      ref.navigate('Book', { id });
+    });
     expect(await screen.findByTestId('screen-book')).toBeOnTheScreen();
-    expect(screen.getByText('book-42')).toBeOnTheScreen();
+    expect(screen.getAllByText(makeMeta(id).title).length).toBeGreaterThan(0);
+  });
+
+  it.each([
+    ['malformed', toBookId('book-42')],
+    ['unknown', BOOK_IDS[1] as BookId],
+  ])('shows a %s book id as missing, with a way back', async (_case, id) => {
+    const ref = await renderNavigator();
+    await act(async () => ref.navigate('Book', { id }));
+    expect(await screen.findByText('Cartea nu mai există')).toBeOnTheScreen();
+    await fireEvent.press(
+      screen.getByRole('button', { name: 'Înapoi la bibliotecă' }),
+    );
+    expect(ref.getCurrentRoute()?.name).toBe('Library');
   });
 
   it('opens the dev UI catalog with every section (dev builds)', async () => {
@@ -77,7 +96,12 @@ describe('RootNavigator', () => {
 
 describe('linking', () => {
   const route = (path: string) =>
-    getStateFromPath(path, linking.config)?.routes[0];
+    getStateFromPath(path, linking.config)?.routes.at(-1);
+
+  it('puts the tabs under a root screen, so back leads to the Library', () => {
+    const state = getStateFromPath('book/abc', linking.config);
+    expect(state?.routes.map(r => r.name)).toEqual(['Tabs', 'Book']);
+  });
 
   it('maps book/:id to the Book screen', () => {
     expect(route('book/abc')).toMatchObject({

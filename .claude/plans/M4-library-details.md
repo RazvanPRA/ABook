@@ -129,6 +129,13 @@ Each step ends with a green `npm run check` and a separate commit; its section i
 - A link that arrives during bootstrap isn't lost (risk in `PLAN.md`). `abook://book/<id>` is validated; a bad id reaches the missing state.
 - **Tests:** link during bootstrap, cold start, bad id. **Emulator:** `adb shell am start` while booting.
 
+**Done** (2026-11-24). Findings:
+
+- **Two windows, two fixes.** After JS starts, `usePendingLink` keeps the last link and hands it over as the initial URL (also released on `onReady`). Before JS starts nobody can listen, and `getInitialURL` read the activity's first intent; found on the emulator. `MainActivity.onNewIntent` now calls `setIntent`.
+- `initialRouteName: 'Tabs'` puts the tabs under a linked root screen, so back leads to the Library.
+- A malformed or unknown id shows `MissingBook` ("Cartea nu mai există"), built here already.
+- Emulator: links sent 0.2, 0.8, 1.2, 2, 2.6, 3.2 and 4 s after launch all open their screen; a cold start with a bad id shows the missing state.
+
 #### 8. Dev seed
 - `abook://dev/storage`: seed ready books with toc, progress and bookmarks; finished, failed and stalled variants; 200 books.
 

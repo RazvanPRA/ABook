@@ -12,6 +12,8 @@ const devScreens = __DEV__
 export const linking: LinkingOptions<RootStackParamList> = {
   prefixes: [`${URL_SCHEME}://`],
   config: {
+    // A link to a root screen opens it over the tabs, so back leads to the Library
+    initialRouteName: 'Tabs',
     screens: {
       Tabs: {
         screens: { Library: 'library', Player: 'player', Settings: 'settings' },
