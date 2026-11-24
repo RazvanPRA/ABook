@@ -8,6 +8,7 @@ import { ImportScreen } from '@/features/import';
 import { bookIdSchema } from '@/shared/domain';
 import { PdfDebugScreen } from '../dev/pdf/PdfDebugScreen';
 import { StorageDebugScreen } from '../dev/storage/StorageDebugScreen';
+import { TtsDebugScreen } from '../dev/tts/TtsDebugScreen';
 import { UiCatalogScreen } from '../dev/UiCatalogScreen';
 import { TabsNavigator } from './TabsNavigator';
 import type { RootStackParamList } from './types';
@@ -62,6 +63,7 @@ export function RootNavigator() {
           <Stack.Screen name="DevUi" component={UiCatalogScreen} />
           <Stack.Screen name="DevStorage" component={StorageDebugScreen} />
           <Stack.Screen name="DevPdf" component={PdfDebugScreen} />
+          <Stack.Screen name="DevTts" component={TtsDebugScreen} />
         </>
       ) : null}
     </Stack.Navigator>

@@ -14,6 +14,7 @@ import {
   type WebViewTransport,
 } from '@/services/pdf';
 import { createDocumentsPdfPicker, type PdfPicker } from '@/services/picker';
+import { createNativeTtsEngine, type TtsEngine } from '@/services/tts';
 import {
   createAsyncStorageKeyValueStore,
   createReactNativeFsFileStore,
@@ -27,6 +28,7 @@ import {
 export interface FeatureDependencies extends AppDependencies {
   pdfExtractor: PdfTextExtractor;
   pdfPicker: PdfPicker;
+  ttsEngine: TtsEngine;
 }
 
 /** Everything the app wires: what features get plus what only `app/` uses. */
@@ -57,6 +59,7 @@ export const createAppServices = (
         stores.files.readBase64(path, offset, length),
     }),
     pdfPicker: createDocumentsPdfPicker(),
+    ttsEngine: createNativeTtsEngine(),
     stores,
     pdfTransport,
   };
@@ -77,10 +80,12 @@ export const featureDependencies = ({
   settingsRepository,
   pdfExtractor,
   pdfPicker,
+  ttsEngine,
 }: AppServices): FeatureDependencies => ({
   bookRepository,
   progressRepository,
   settingsRepository,
   pdfExtractor,
   pdfPicker,
+  ttsEngine,
 });
