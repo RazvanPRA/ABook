@@ -160,6 +160,14 @@ Each step ends with a green `npm run check` and a separate commit; its section i
 - A row is one accessible element: "Amintiri din copilărie, Ion Creangă, 41% ascultat".
 - **Tests:** each state in the table, and a list of 200 books. **Emulator:** FlashList early, with books imported from Book-PDF; smooth scrolling of 200 books isn't verified on a device (M7).
 
+**Done** (2026-11-24). Findings:
+
+- FlashList 2 needs `@shopify/flash-list/jestSetup` (it measures its items). It runs on the emulator without changes; seen with the 8 books imported there.
+- The search box is above the list, not in its header, so it keeps the focus while the list changes.
+- `playbackRequested` is in `shared/domain`, dispatched by the card's play button. The settings button is hidden in the empty library, as in the mockup.
+- `uiautomator dump` also lists views hidden from TalkBack (`no-hide-descendants`), so a cover's label under a row isn't a defect.
+- Not verified on a device: the continue card and the listening states (no progress before M5), 200 books.
+
 ### M4d – Book
 
 #### 11. Book data and services

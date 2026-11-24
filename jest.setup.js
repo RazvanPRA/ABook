@@ -1,5 +1,7 @@
 // Official mocks of native modules, so component tests run without a device.
 require('react-native-gesture-handler/jestSetup');
+// FlashList measures its items; the mock gives it a 400×900 window and 100×100 items.
+require('@shopify/flash-list/jestSetup');
 
 // Reanimated 4.7's official mock is unusable: it imports src/index, where initializers.native.ts calls
 // setCSSEventHandler on JSReanimated (chosen when IS_JEST), which throws. Minimal manual mock instead;

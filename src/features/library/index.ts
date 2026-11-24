@@ -1,4 +1,5 @@
 export { LibraryScreen } from './screens/LibraryScreen';
+export type { LibraryScreenProps } from './screens/LibraryScreen';
 export {
   bookRemoved,
   bookUpserted,

@@ -5,7 +5,45 @@
     "settings": "Setări"
   },
   "library": {
-    "title": "Biblioteca mea"
+    "title": "Biblioteca mea",
+    "settings": "Setări",
+    "import": "Importă PDF",
+    "loading": "Se încarcă biblioteca",
+    "unknownAuthor": "Autor necunoscut",
+    "search": {
+      "label": "Caută titlu sau autor",
+      "clear": "Șterge căutarea"
+    },
+    "filter": {
+      "label": "Filtru",
+      "all": "Toate",
+      "reading": "În curs",
+      "finished": "Terminate"
+    },
+    "continue": {
+      "title": "Continuă ascultarea",
+      "detail": "Pagina {{page}} · {{percent}}% ascultat",
+      "play": "Continuă să asculți {{title}}"
+    },
+    "status": {
+      "preparing": "Se pregătește",
+      "importing": "Se importă, pagina {{page}} din {{total}}",
+      "failed": "Import eșuat",
+      "unstarted": "Neînceput",
+      "listened": "{{percent}}% ascultat",
+      "finished": "Terminat"
+    },
+    "empty": {
+      "title": "Încă nu ai nicio carte",
+      "detail": "Alege un PDF de pe telefon. Îl copiem în memoria aplicației, extragem textul și ți-l citim cu voce tare — totul offline, nimic nu pleacă de pe dispozitiv.",
+      "action": "Importă primul PDF",
+      "note": "Funcționează cu PDF-uri cu text. Cele scanate (doar imagini) nu pot fi citite."
+    },
+    "noResults": {
+      "search": "Nicio carte nu se potrivește cu „{{query}}”.",
+      "reading": "Nu ai nicio carte în curs.",
+      "finished": "Nu ai terminat încă nicio carte."
+    }
   },
   "player": {
     "title": "Ascultă"

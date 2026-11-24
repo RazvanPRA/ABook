@@ -1,16 +1,35 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   createBottomTabNavigator,
   type BottomTabBarProps,
+  type BottomTabScreenProps,
 } from '@react-navigation/bottom-tabs';
+import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { LibraryScreen } from '@/features/library';
+import { LibraryScreen, type LibraryScreenProps } from '@/features/library';
 import { PlayerScreen } from '@/features/player';
 import { SettingsScreen } from '@/features/settings';
 import { TabBarAdapter } from './TabBarAdapter';
 import type { TabsParamList } from './types';
 
 const Tab = createBottomTabNavigator<TabsParamList>();
+
+/** Features get navigation as callbacks, not as navigation types. */
+function LibraryRoute({
+  navigation,
+}: BottomTabScreenProps<TabsParamList, 'Library'>) {
+  const root = useNavigation();
+  const actions = useMemo<LibraryScreenProps>(
+    () => ({
+      onImport: () => root.navigate('Import'),
+      onSettings: () => navigation.navigate('Settings'),
+      onOpenBook: id => root.navigate('Book', { id }),
+      onPlay: () => navigation.navigate('Player'),
+    }),
+    [navigation, root],
+  );
+  return <LibraryScreen {...actions} />;
+}
 
 const renderTabBar = (props: BottomTabBarProps) => <TabBarAdapter {...props} />;
 
@@ -20,7 +39,7 @@ export function TabsNavigator() {
     <Tab.Navigator screenOptions={{ headerShown: false }} tabBar={renderTabBar}>
       <Tab.Screen
         name="Library"
-        component={LibraryScreen}
+        component={LibraryRoute}
         options={{ title: t('tabs.library') }}
       />
       <Tab.Screen
