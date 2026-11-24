@@ -106,6 +106,8 @@ Steps, decisions and findings: `.claude/plans/M3-import.md` (branch `m3-import`)
 
 ## M4 – Library and book details  *(steps 6–7)*
 
+Steps, decisions and findings: `.claude/plans/M4-library-details.md` (branch `m4-library-details`).
+
 - `features/library`: `FlashList` list, search, chips Toate / În curs / Terminate (All / In progress / Finished), "Continuă ascultarea" (Continue listening) card, "Importă PDF" FAB. States: skeleton, empty (the separate "Bibliotecă goală" / empty library screen), no results, book being processed with an import bar.
 - `features/book`: large cover, metadata chips, "Continuă de la pagina N" (Continue from page N), table of contents with per-chapter status, bookmarks, deletion with confirmation. States: book being processed, failed book (retry). Exposes the public selectors used by the player.
 
