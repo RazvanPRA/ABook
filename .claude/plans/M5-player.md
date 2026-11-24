@@ -138,6 +138,11 @@ Each step ends with a green `npm run check` and a separate commit; its section i
 - `nextPosition` / `previousPosition`, `positionOfPage`, `clampPosition`, `createChapterCache` (LRU 3, one read per chapter in flight, prefetch at 80%, `clear`), `remainingTime` (moving average over 20 sentences; on a rate change the speed is scaled, not forgotten), `sleepTimer`, `groupParagraphs` (page change, dialogue dash, ~600 characters; a sentence is never split).
 - **Tests:** table-driven; empty chapters, page gaps, one long sentence, first and last positions, failed read retried.
 
+**Done** (2026-11-24). Findings:
+
+- The measured speed is `createSpeechMeter` (characters per second brought to 1×), apart from `remainingCharacters`.
+- Fixtures: `features/player/__fixtures__/chapters.ts` (`makeToc`, `makeText`, `position`). A page that several chapters share belongs to the first that reaches it.
+
 #### 7. Playback session
 - The controller with the rules above, split by concern (transport, navigation, speech, errors) under 200 lines per file.
 - **Tests** (`FakeTtsEngine`, fake clock): chain, chapter rollover, end of book, ten quick taps, seek while loading, pause > 5 min, rate mid-sentence, sleep (each option), error → retry → `error` → retry, voice fallback and none, waiting for an import, incomplete book, missing chapter, another book while playing, **no JS timers running**.
