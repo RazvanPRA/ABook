@@ -80,5 +80,18 @@
   },
   "engines": {
     "node": ">= 22.11.0"
+  },
+  "codegenConfig": {
+    "name": "AbookSpecs",
+    "type": "modules",
+    "jsSrcsDir": "specs",
+    "android": {
+      "javaPackageName": "com.abook.specs"
+    },
+    "ios": {
+      "modulesProvider": {
+        "AbookTts": "AbookTts"
+      }
+    }
   }
 }

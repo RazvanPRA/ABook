@@ -141,6 +141,19 @@ jest.mock('react-native-webview', () => {
   return { __esModule: true, WebView, default: WebView };
 });
 
+// The app's own TurboModule: silent in Jest. Tests of speech use services/tts/testing.
+jest.mock('./specs/NativeAbookTts', () => ({
+  __esModule: true,
+  default: {
+    getVoices: jest.fn(async () => []),
+    speak: jest.fn(),
+    stop: jest.fn(async () => {}),
+    isSpeaking: jest.fn(async () => false),
+    openSettings: jest.fn(async () => {}),
+    onUtterance: jest.fn(() => ({ remove: () => {} })),
+  },
+}));
+
 jest.mock('react-native-bootsplash', () => ({
   hide: jest.fn(() => Promise.resolve()),
   isVisible: jest.fn(() => false),

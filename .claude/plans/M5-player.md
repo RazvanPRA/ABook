@@ -93,9 +93,22 @@ Each step ends with a green `npm run check` and a separate commit; its section i
 - Manifest `<queries>`; `__tests__/native` guards it.
 - **Emulator:** a dev screen `abook://dev/tts` lists voices and speaks a sentence in `ro-RO` and `en-US`. Record which voices the image has.
 
+**Done** (2026-11-24). Findings:
+
+- Codegen in the app itself works: `codegenConfig` (`AbookSpecs`, `specs/`) generates `com.abook.specs.NativeAbookTtsSpec`; the event type is `CodegenTypes.EventEmitter` from `react-native`.
+- `TextToSpeech` is wrapped in `SpeechEngine`, on its own `HandlerThread`, because its calls cross processes; a dead engine is dropped and created again by the next call.
+- The emulator image has Google TTS with 16 offline voices, all English. **`ro-RO` without a voice doesn't fail:** the engine reports start and done. So the session never speaks without a picked voice.
+- The dev screen uses `TtsEngine`, so it was committed with step 3.
+
 #### 3. `services/tts`
 - `TtsEngine`, `createNativeTtsEngine` (routes events by id; late ones are dropped), `FakeTtsEngine` (completes on demand, can fail), `pickVoice` (saved → first of the language → none). Jest mock of the module in `jest.setup.js`; wired in `dependencies.ts`, `FeatureDependencies` and `fakeServices`.
 - **Tests:** event routing, stop, late events, error mapping, a voice that is missing / in another language / absent.
+
+**Done** (2026-11-24). Findings:
+
+- `listVoices()` returns every offline voice, not one language's: `pickVoice` has to tell "the saved voice is gone" (notice) from "it speaks another language" (silent).
+- `speak` also takes the book's `language` *(addition to the contract of `PROMPT.md` §6)*.
+- Emulator: start / done arrive once per sentence; nothing arrives after `stop`.
 
 #### 4. iOS module
 - `AVSpeechSynthesizer`, `AVAudioSession` `playback`, interruption and route-change notifications; rate mapped to the AVSpeech scale.

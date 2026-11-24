@@ -46,6 +46,12 @@ describe('Android manifests', () => {
     },
   );
 
+  it('main sees the speech engines (Android 11+ hides them otherwise)', () => {
+    expect(main).toMatch(
+      /<queries>[\s\S]*android\.intent\.action\.TTS_SERVICE[\s\S]*<\/queries>/,
+    );
+  });
+
   it('debug keeps INTERNET for Metro', () => {
     expect(debug).toContain('android.permission.INTERNET');
   });
