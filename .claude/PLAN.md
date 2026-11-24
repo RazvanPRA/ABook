@@ -116,6 +116,8 @@ Steps, decisions and findings: `.claude/plans/M4-library-details.md` (branch `m4
 
 ## M5 – Voice and player  *(step 8, `tts-playback-engine` skill)*
 
+Steps, decisions and findings: `.claude/plans/M5-player.md` (branch `m5-player`).
+
 - `services/tts`: `TtsEngine`, `NativeTtsEngine` (over the custom `AbookTts` TurboModule, with a Codegen spec in `specs/NativeAbookTts.ts`) and `FakeTtsEngine` for tests.
 - `features/player`:
   - the playback session with states `idle | loading | playing | paused | ended | error`;
@@ -127,7 +129,7 @@ Steps, decisions and findings: `.claude/plans/M4-library-details.md` (branch `m4
 - The mini-player above the tab bar, on Library and Settings.
 
 **Tests:** with `FakeTtsEngine` and fake timers: the sentence chain, moving to the next chapter, end of book, rapid presses, speed change, sleep, error and voice fallback.
-**On the emulator:** the `en-US` sample books (`The.Clean.Coder…pdf`, `Microservices-Patterns.pdf`; sample PDFs: M3 plan) and the generated Romanian `ion-320.pdf` for `ro-RO`.
+**On the emulator:** only the PDFs from `C:ModDeInvatareBook-PDF` (sample PDFs: M3 plan); `ro-RO` by importing one of them with the voice language set to Romanian.
 **Done when:** after the app is killed, playback resumes at the same sentence.
 
 ## M6 – Settings, storage and backup  *(step 9)*
@@ -167,5 +169,8 @@ Steps, decisions and findings: `.claude/plans/M4-library-details.md` (branch `m4
 | WKWebView: `import()` from blob URLs and the fake worker on iOS | M7, on a device | `baseUrl` + a real Worker, or a classic-script build of pdf.js |
 | Missing `ro-RO` voices on the emulator | M5 | testing with `en-US` + the "no voice" state |
 | Mockups: 5 of 6 screens are in `.claude/design/` (the Library with books is missing) | before M4 | ask for the missing mockup or derive it from existing components (card, `ProgressBar`, `BookCover`) |
-| Native `Slider` (`@react-native-community/slider`): on Android the node is ≈ 18 dp tall (below the 44 pt target), and the empty track is barely visible | **Found in M1** (emulator); to be solved in M6 | custom slider with Gesture Handler + Reanimated, with the same API as `shared/ui/Slider` |
+| Native `Slider` (`@react-native-community/slider`): on Android the node is ≈ 18 dp tall (below the 44 pt target), and the empty track is barely visible | **Found in M1** (emulator); moved to M5 (step 12), where the page slider needs it | custom slider with Gesture Handler + Reanimated, with the same API as `shared/ui/Slider` |
+| JS timers stop in the background on Android (`JavaTimerManager.onHostPause`) | M5 | the sleep timer and the progress throttle compare an injected clock at sentence boundaries |
+| Rounded, animated sentence highlight in nested `Text` (Fabric, Android) | M5 step 10 (spike) | overlay from `onTextLayout`, or no transition |
+| Foreground service refused (Android 12+), or events lost with the screen off | M5 steps 5, 15 | start only from the foreground; partial wake lock |
 | Tab labels in the mockups: Bibliotecă / **Ascultă** / Setări (not "Player") | M0 (`ro.json`) | — |
