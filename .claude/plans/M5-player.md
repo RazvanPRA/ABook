@@ -185,6 +185,18 @@ Each step ends with a green `npm run check` and a separate commit; its section i
 #### 10. Highlight spike (emulator)
 - Compare: (a) nested Reanimated text; (b) an overlay from `onTextLayout`; (c) plain styles without a transition. Choose with numbers on a chapter of `Microservices-Patterns.pdf`; (c) is the fallback, reported as a deviation.
 
+**Done** (2026-11-24). Findings:
+
+Emulator, the largest chapter of `Microservices-Patterns.pdf` (922 sentences), the active sentence moving every 300 ms, debug build, `dumpsys gfxinfo` over 10 s:
+
+| Variant | Frames | 50th | 90th | 99th |
+| --- | --- | --- | --- | --- |
+| (a) nested `Animated.Text` | 104 | 57 ms | 101 ms | 150 ms |
+| (c) plain styles | 32 | 17 ms | 18 ms | 34 ms |
+
+- (b) can't be built: `onTextLayout` gives whole lines, so the x where a sentence starts inside a line isn't known.
+- **Chosen: (c), no 150 ms transition and square corners** *(deviation from the skill and mockup, accepted as the plan's fallback)*. Every frame of (a) lays the whole paragraph out again.
+
 #### 11. Text card
 - `PlayerText` (FlashList, one item per paragraph), `ParagraphItem` (`React.memo`, re-rendered only when the active sentence enters, leaves or moves in it), `SentenceSpan`; tap = seek, long press = bookmark; bottom fade; `fontScale` 0/1/2; `highlightSentence` off.
 - `useAutoScroll`: top third, suspended by a manual drag (not by its own scrolls), "Înapoi la fraza curentă".
