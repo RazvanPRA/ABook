@@ -33,6 +33,9 @@ export const defaultFontScale: Record<TypeVariant, number | undefined> = {
   title: size.maxFontScaleHeader,
   body: undefined,
   bodyStrong: undefined,
+  readerSm: undefined,
+  readerMd: undefined,
+  readerLg: undefined,
   caption: undefined,
   overline: undefined,
 };

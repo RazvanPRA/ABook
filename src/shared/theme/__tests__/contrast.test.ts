@@ -1,4 +1,5 @@
 import { color } from '../colors';
+import { opacity } from '../motion';
 import { contrastRatio, relativeLuminance } from '../contrast';
 
 const AA = 4.5;
@@ -30,11 +31,24 @@ describe('contrastRatio', () => {
   });
 });
 
+it('highlight is the accent at its opacity over the surface', () => {
+  const channels = (hex: string) =>
+    [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+  const under = channels(color.surface);
+  const blended = channels(color.accent).map((own, i) =>
+    Math.floor(
+      own * opacity.highlight + (under[i] ?? 0) * (1 - opacity.highlight),
+    ),
+  );
+  expect(channels(color.highlight)).toEqual(blended);
+});
+
 describe('palette contrast (PROMPT §8: text ≥ 4.5:1)', () => {
   const foregrounds = [
     'text',
     'textMuted',
     'textRead',
+    'textUpcoming',
     'danger',
     'success',
     'accent',
@@ -50,6 +64,7 @@ describe('palette contrast (PROMPT §8: text ≥ 4.5:1)', () => {
 
   it.each([
     ['onAccent', 'accent'],
+    ['text', 'highlight'],
     ['text', 'surfaceRaised'],
     ['textMuted', 'surfaceRaised'],
     ['success', 'successBg'],

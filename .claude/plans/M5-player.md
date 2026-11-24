@@ -203,6 +203,12 @@ Emulator, the largest chapter of `Microservices-Patterns.pdf` (922 sentences), t
 - Accessibility: a paragraph is one element with actions (read from here, add bookmark); nothing is announced by itself.
 - **Tests:** render counts, tap, long press, suspended and restored scroll, contrast of the new text tokens on the highlight.
 
+**Done** (2026-11-24). Findings:
+
+- The text is not in the store: `useChapterText` reads it from the session when the chapter is loaded. `useActiveSentence` gives each paragraph its own view of the active sentence, so the list itself is never rendered by a new one; a change renders only the spans it touches.
+- A tap on a sentence also lets the text follow again.
+- New tokens: `textUpcoming`, `highlight` (the 18% blend, tested against its parts), `readerSm/Md/Lg`.
+
 #### 12. Controls and slider
 - `Slider` rebuilt with Gesture Handler + Reanimated, same API, 44 pt, `increment` / `decrement` actions, plus a track-only form for the page slider; the old dependency is removed. While dragging, only the label moves; the seek is on release.
 - `PlayerHeader`, `PageSlider` ("Pagina 34", "~ 1 h 52 min rămase", "82"), `TransportControls` (page ←, sentence ←, 76 pt, sentence →, page →), `PlayerOptions` (speed, sleep, Aa) over `MenuSheet`; the sleep button shows what is active.

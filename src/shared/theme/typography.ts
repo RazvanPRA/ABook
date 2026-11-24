@@ -33,6 +33,25 @@ export const type = {
     lineHeight: 22,
     letterSpacing: 0,
   },
+  /** The player's text, in its three sizes (`Settings.fontScale`). */
+  readerSm: {
+    fontFamily: fontFamily.body,
+    fontSize: 16,
+    lineHeight: 26,
+    letterSpacing: 0,
+  },
+  readerMd: {
+    fontFamily: fontFamily.body,
+    fontSize: 19,
+    lineHeight: 31,
+    letterSpacing: 0,
+  },
+  readerLg: {
+    fontFamily: fontFamily.body,
+    fontSize: 23,
+    lineHeight: 37,
+    letterSpacing: 0,
+  },
   /** Metadata. */
   caption: {
     fontFamily: fontFamily.body,

@@ -49,7 +49,99 @@
     "title": "Ascultă",
     "play": "Redă",
     "pause": "Pauză",
-    "notification": "Redare"
+    "notification": "Redare",
+    "close": "Închide playerul",
+    "bookmark": {
+      "add": "Adaugă semn de carte",
+      "remove": "Șterge semnul de carte",
+      "added": "Semn de carte adăugat",
+      "removed": "Semn de carte șters",
+      "failed": "Semnul de carte nu a putut fi salvat"
+    },
+    "text": {
+      "read": "Citește de aici",
+      "bookmark": "Adaugă semn de carte",
+      "back": "Înapoi la fraza curentă",
+      "loading": "Se încarcă textul"
+    },
+    "page": {
+      "label": "Pagina",
+      "current": "Pagina {{page}}",
+      "remaining": "~ {{time}} rămase",
+      "previous": "Pagina anterioară",
+      "next": "Pagina următoare"
+    },
+    "sentence": {
+      "previous": "Fraza anterioară",
+      "next": "Fraza următoare"
+    },
+    "options": {
+      "close": "Închide",
+      "rate": "Viteză",
+      "rateLabel": "Viteză: {{rate}}",
+      "sleep": "Somn",
+      "sleepLabel": "Oprire automată: {{value}}",
+      "sleepTitle": "Oprire automată",
+      "sleepOff": "Oprită",
+      "sleepChapter": "Sfârșitul capitolului",
+      "sleepChapterShort": "Capitol",
+      "sleepMinutes": {
+        "one": "un minut",
+        "few": "{{count}} minute",
+        "other": "{{count}} de minute"
+      },
+      "sleepShort": "{{count}} min",
+      "font": "Aa",
+      "fontTitle": "Mărimea textului",
+      "fontLabel": "Mărimea textului: {{value}}",
+      "fonts": {
+        "small": "Mică",
+        "medium": "Medie",
+        "large": "Mare"
+      }
+    },
+    "empty": {
+      "title": "Nicio carte aleasă",
+      "detail": "Alege o carte din bibliotecă și o citim cu voce tare.",
+      "action": "Mergi la bibliotecă"
+    },
+    "waiting": {
+      "title": "Se pregătește capitolul următor",
+      "detail": "Importul cărții continuă. Redarea pornește singură când e gata."
+    },
+    "ended": {
+      "title": "Ai terminat cartea",
+      "detail": "Poți să o asculți din nou, de la început.",
+      "action": "Ascultă din nou"
+    },
+    "incomplete": {
+      "title": "Aici se termină textul importat",
+      "detail": "Importul cărții s-a oprit înainte de sfârșit.",
+      "action": "Vezi cartea"
+    },
+    "error": {
+      "retry": "Încearcă din nou",
+      "speech": {
+        "title": "Vocea nu a pornit",
+        "detail": "Sinteza vocală a telefonului nu a răspuns."
+      },
+      "voice": {
+        "title": "Nicio voce pentru limba cărții",
+        "ro-RO": "Instalează o voce în română din setările de voce ale telefonului, apoi încearcă din nou.",
+        "en-US": "Instalează o voce în engleză din setările de voce ale telefonului, apoi încearcă din nou.",
+        "action": "Deschide setările de voce"
+      },
+      "text": {
+        "title": "Capitolul nu poate fi citit",
+        "detail": "Textul lui lipsește sau este deteriorat.",
+        "action": "Sari la capitolul următor"
+      }
+    },
+    "voiceReplaced": "Vocea aleasă nu mai e pe telefon. Citește altă voce.",
+    "mini": {
+      "open": "Deschide playerul: {{title}}",
+      "progress": "Progres ascultare"
+    }
   },
   "settings": {
     "title": "Setări"

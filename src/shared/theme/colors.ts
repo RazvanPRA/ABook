@@ -21,6 +21,10 @@ export const color = {
   textMuted: '#A3A9B3',
   /** Sentences already read. */
   textRead: '#8A9099',
+  /** Sentences not read yet, next to the active one in `text`. */
+  textUpcoming: '#CDCAC4',
+  /** Behind the active sentence: `accent` at `opacity.highlight` over `surface`. */
+  highlight: '#413827',
   /** Main action, progress, active element. */
   accent: '#F0B13C',
   /** Content on top of `accent`. */
