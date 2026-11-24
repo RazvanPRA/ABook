@@ -39,6 +39,9 @@ function MenuRow({ item, onClose }: { item: MenuItem; onClose: () => void }) {
     <Pressable
       accessibilityRole="menuitem"
       accessibilityLabel={item.label}
+      accessibilityState={
+        item.selected === undefined ? undefined : { selected: item.selected }
+      }
       onPress={() => {
         onClose();
         item.onPress();
@@ -49,6 +52,7 @@ function MenuRow({ item, onClose }: { item: MenuItem; onClose: () => void }) {
       <AppText color={tint} style={sheet.rowLabel}>
         {item.label}
       </AppText>
+      {item.selected ? <Icon name="check" color="accent" /> : null}
     </Pressable>
   );
 }

@@ -1,5 +1,7 @@
 // Official mocks of native modules, so component tests run without a device.
 require('react-native-gesture-handler/jestSetup');
+// Components with gestures are rendered alone, without the app's GestureHandlerRootView.
+require('react-native-gesture-handler/jest-setup/disableRootViewCheck.js');
 // FlashList measures its items; the mock gives it a 400×900 window and 100×100 items.
 require('@shopify/flash-list/jestSetup');
 
@@ -7,6 +9,7 @@ require('@shopify/flash-list/jestSetup');
 // setCSSEventHandler on JSReanimated (chosen when IS_JEST), which throws. Minimal manual mock instead;
 // extend it when a new Reanimated API is used. Animations resolve instantly to their target value.
 jest.mock('react-native-reanimated', () => {
+  const React = require('react');
   const RN = require('react-native');
   const instant = value => value;
   const Animated = {
@@ -20,7 +23,10 @@ jest.mock('react-native-reanimated', () => {
     __esModule: true,
     default: Animated,
     ...Animated,
-    useSharedValue: initial => ({ value: initial }),
+    useSharedValue: initial => React.useRef({ value: initial }).current,
+    // Gesture Handler's detectors look for these
+    useEvent: () => () => {},
+    setGestureState: () => {},
     useAnimatedStyle: factory => factory(),
     useDerivedValue: factory => ({ value: factory() }),
     withTiming: instant,

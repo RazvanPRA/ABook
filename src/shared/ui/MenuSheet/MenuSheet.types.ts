@@ -8,6 +8,8 @@ export interface MenuItem {
   icon?: IconName;
   /** `danger` for destructive actions. */
   tone?: 'default' | 'danger';
+  /** Set in a menu that chooses a value: the current one has a check mark. */
+  selected?: boolean;
   onPress: () => void;
 }
 

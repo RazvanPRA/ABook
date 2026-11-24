@@ -53,6 +53,25 @@ describe('MenuSheet', () => {
     expect(onDelete).not.toHaveBeenCalled();
   });
 
+  it('says which value is chosen', async () => {
+    await render(
+      <MenuSheet
+        visible
+        title="Viteză"
+        closeLabel="Închide"
+        onClose={jest.fn()}
+        items={[1, 2].map(rate => ({
+          key: String(rate),
+          label: `${rate}×`,
+          selected: rate === 2,
+          onPress: jest.fn(),
+        }))}
+      />,
+    );
+    expect(row('2×')).toBeSelected();
+    expect(row('1×')).not.toBeSelected();
+  });
+
   it('renders nothing while hidden', async () => {
     await show(false);
     expect(screen.queryByRole('menuitem')).toBeNull();

@@ -14,6 +14,7 @@ export const size = {
   /** Text field and select height (grows with the font scale). */
   input: 52,
   progressBar: 4,
+  slider: { track: 8, thumb: 18 },
   /** Bottom of the player's text, where it fades out. */
   readerFade: 64,
   /** Status circle of an import step. */

@@ -214,6 +214,13 @@ Emulator, the largest chapter of `Microservices-Patterns.pdf` (922 sentences), t
 - `PlayerHeader`, `PageSlider` ("Pagina 34", "~ 1 h 52 min rămase", "82"), `TransportControls` (page ←, sentence ←, 76 pt, sentence →, page →), `PlayerOptions` (speed, sleep, Aa) over `MenuSheet`; the sleep button shows what is active.
 - **Tests:** each control and its accessibility state, disabled edges (first and last page).
 
+**Done** (2026-11-24). Findings:
+
+- `Slider` is now the label row over `SliderTrack` (Gesture Handler + Reanimated, 44 pt, `adjustable` with increment / decrement). The drag callbacks run on the JS thread (`runOnJS(true)`), because each step is snapped and reported there.
+- `MenuItem.selected` (check mark) was added for the three menus; `OptionButton` is a player component, since `Button` has no equal-width variant.
+- Jest: Gesture Handler 3 needs `disableRootViewCheck`, and the Reanimated mock `useEvent` and `setGestureState`.
+- The screen-level tests of the controls are with step 13.
+
 #### 13. Screen, states and tab bar
 - `PlayerScreen` with every row of the states table; the voice-fallback notice in a `Snackbar`. Route adapter in `TabsNavigator`; `TabBarAdapter` hides the bar on a player with a book; the chevron and Android back return to the previous tab, also after a cold `abook://player`.
 - **Tests:** every state over the real repositories (`app/__tests__`, `fakeApp`).

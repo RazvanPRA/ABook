@@ -1,20 +1,16 @@
 import React from 'react';
 import { View } from 'react-native';
-import NativeSlider from '@react-native-community/slider';
-import { color } from '@/shared/theme';
 import { AppText } from '../AppText';
 import { styles } from './Slider.styles';
 import type { SliderProps } from './Slider.types';
+import { SliderTrack } from './SliderTrack';
 
-/** Labelled slider row (Settings: speed, pitch; Player: page). Colors come from tokens. */
+/** Labelled slider row (Settings: speed, pitch). */
 export function Slider({
   label,
   valueLabel,
   valueTone = 'accent',
-  value,
-  range,
-  onChange,
-  onComplete,
+  ...track
 }: SliderProps) {
   return (
     <View style={styles.root}>
@@ -27,19 +23,10 @@ export function Slider({
           {valueLabel}
         </AppText>
       </View>
-      <NativeSlider
+      <SliderTrack
         accessibilityLabel={label}
-        accessibilityValue={{ text: valueLabel }}
-        value={value}
-        minimumValue={range.min}
-        maximumValue={range.max}
-        step={range.step ?? 0}
-        onValueChange={onChange}
-        onSlidingComplete={onComplete}
-        minimumTrackTintColor={color.accent}
-        maximumTrackTintColor={color.border}
-        thumbTintColor={color.accent}
-        style={styles.slider}
+        valueText={valueLabel}
+        {...track}
       />
     </View>
   );
