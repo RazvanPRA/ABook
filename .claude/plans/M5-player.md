@@ -147,6 +147,13 @@ Each step ends with a green `npm run check` and a separate commit; its section i
 - The controller with the rules above, split by concern (transport, navigation, speech, errors) under 200 lines per file.
 - **Tests** (`FakeTtsEngine`, fake clock): chain, chapter rollover, end of book, ten quick taps, seek while loading, pause > 5 min, rate mid-sentence, sleep (each option), error → retry → `error` → retry, voice fallback and none, waiting for an import, incomplete book, missing chapter, another book while playing, **no JS timers running**.
 
+**Done** (2026-11-24). Findings:
+
+- The session is a set of functions over a shared `SessionCore` (`core`, `speech`, `navigation`, `transport`); `createPlaybackSession` is its only entry.
+- Once the voice is picked, a move to a chapter in memory speaks synchronously, so quick taps can't interleave. While a chapter loads, the position is already the one asked for, so the next tap counts from it.
+- Opening a book paused (cold start) stores nothing; the position is stored when something moves.
+- `play` picks the voice again, so one installed from the settings is found.
+
 #### 8. Store, progress and lifecycle
 - `playerSlice`, selectors, thunks, `playerListeners`, `createProgressWriter` (serial, latest wins, `drain`). A failed write is logged and retried at the next sentence.
 - `settings`: `settingsChanged` and a 500 ms debounced save, flushed on background (used by speed and text size; M6 reuses it).

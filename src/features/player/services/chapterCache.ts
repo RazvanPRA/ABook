@@ -4,7 +4,7 @@ import type { ChapterChunk, ChapterIndex } from '@/shared/domain';
 export const CACHED_CHAPTERS = 3;
 
 export interface ChapterCache {
-  /** `null`: missing or invalid. Rejects when storage fails. Neither is kept, so both can be retried. */
+  /** `null`: missing or invalid. Rejects when storage fails. Only text is kept; the rest is retried. */
   get(chapter: ChapterIndex): Promise<ChapterChunk | null>;
   /** The chapter, if it is in memory. */
   peek(chapter: ChapterIndex): ChapterChunk | null;
@@ -44,7 +44,7 @@ export function createChapterCache(
     try {
       const chunk = await read(chapter);
       // After a clear, this read is nobody's any more
-      if (chunk !== null && reading.has(chapter)) {
+      if (chunk && chunk.sentences.length > 0 && reading.has(chapter)) {
         recent.use(chapter, chunk);
       }
       return chunk;
