@@ -1,5 +1,11 @@
 import type { BookId } from '@/shared/domain';
-import { BOOKS_DIR_NAME, PDF_EXTENSION, type FileStore } from '../FileStore';
+import { bytesToBase64 } from '@/shared/utils';
+import {
+  BOOKS_DIR_NAME,
+  PDF_EXTENSION,
+  assertByteRange,
+  type FileStore,
+} from '../FileStore';
 
 export type FileOperation = 'ensureDir' | 'copy' | 'remove';
 
@@ -14,18 +20,21 @@ const isUnder = (path: string, dir: string): boolean =>
   path.startsWith(`${dir}/`);
 
 /**
- * Test double for `FileStore`: files are sizes in a map. Records writes (for write-order checks
- * across both stores) and can fail the next write of an operation, to simulate a crash.
+ * Test double for `FileStore`: files are byte arrays in a map. Records writes (for write-order
+ * checks across both stores) and can fail the next write of an operation, to simulate a crash.
  */
 export class InMemoryFileStore implements FileStore {
   readonly calls: FileCall[] = [];
-  private readonly files = new Map<string, number>();
+  private readonly files = new Map<string, Uint8Array>();
   private readonly dirs = new Set<string>([ROOT]);
   private readonly pendingFailures = new Set<FileOperation>();
 
-  /** Seeds a file, e.g. the picked PDF the import copies from. */
-  addFile(path: string, size: number): void {
-    this.files.set(path, size);
+  /** Seeds a file, e.g. the picked PDF the import copies from: its bytes, or a size (zero bytes). */
+  addFile(path: string, content: number | Uint8Array): void {
+    this.files.set(
+      path,
+      typeof content === 'number' ? new Uint8Array(content) : content,
+    );
   }
 
   failNext(operation: FileOperation): void {
@@ -54,11 +63,11 @@ export class InMemoryFileStore implements FileStore {
 
   async copy(from: string, to: string) {
     this.record('copy', to);
-    const size = this.files.get(from);
-    if (size === undefined || !this.dirs.has(parentOf(to))) {
-      throw new Error(`ENOENT: ${size === undefined ? from : parentOf(to)}`);
+    const content = this.files.get(from);
+    if (content === undefined || !this.dirs.has(parentOf(to))) {
+      throw new Error(`ENOENT: ${content === undefined ? from : parentOf(to)}`);
     }
-    this.files.set(to, size);
+    this.files.set(to, content);
   }
 
   async exists(path: string) {
@@ -66,7 +75,7 @@ export class InMemoryFileStore implements FileStore {
   }
 
   async size(path: string) {
-    return this.files.get(path) ?? null;
+    return this.files.get(path)?.length ?? null;
   }
 
   async list(dir: string) {
@@ -85,6 +94,15 @@ export class InMemoryFileStore implements FileStore {
     [...this.dirs]
       .filter(dir => dir === path || isUnder(dir, path))
       .forEach(dir => this.dirs.delete(dir));
+  }
+
+  async readBase64(path: string, offset: number, length: number) {
+    assertByteRange(offset, length);
+    const content = this.files.get(path);
+    if (content === undefined) {
+      throw new Error(`ENOENT: ${path}`);
+    }
+    return bytesToBase64(content.subarray(offset, offset + length));
   }
 
   private record(operation: FileOperation, path: string): void {

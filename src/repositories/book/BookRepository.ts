@@ -10,6 +10,8 @@ export interface StoredPdf {
   /** Absolute path of the app's copy, to store as `BookMeta.fileUri`. */
   path: string;
   sizeBytes: number;
+  /** `pdfFingerprint` of the copy, for the duplicate check. */
+  fingerprint: string;
 }
 
 /** Everything in `BookMeta` except its identity can change after import. */
@@ -17,11 +19,12 @@ export type BookMetaPatch = Partial<Omit<BookMeta, 'id'>>;
 
 /**
  * A book's file, metadata, table of contents and chapter text. The import writes in this order:
- * `storePdf` → `createBook` (`processing`) → `saveChapter`… → `saveToc` → `updateMeta` (`ready`),
- * so a crash at any point leaves a `processing` book whose saved chapters are readable.
+ * `storePdf` → `createBook` (`processing`) → per chapter: `saveChapter`, `saveToc` (the chapters so
+ * far), `updateMeta` (`processedPages`) → `updateMeta` (`ready`), so a crash at any point leaves a
+ * `processing` book whose saved chapters are readable and listed, and the import can resume.
  */
 export interface BookRepository {
-  /** Copies the picked file to `books/{id}.pdf`. */
+  /** Copies the picked file to `books/{id}.pdf` and fingerprints the copy. */
   storePdf(id: BookId, sourceUri: string): Promise<StoredPdf>;
   /** Writes the `processing` meta and puts the book first in the library, in one batch. */
   createBook(meta: BookMeta): Promise<void>;

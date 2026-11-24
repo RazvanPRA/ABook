@@ -79,26 +79,30 @@ Results, deviations and pitfalls are in `.claude/plans/M2-storage.md` and in `CL
 **Tests:** with in-memory `KeyValueStore` and `FileStore`: write order on import, resume after crash, deletion without orphan keys, corrupt values, oversized chapters, each migration.
 **Done when:** bootstrap hydrates the store from a fake storage in tests and from a real one on the emulator.
 
-## M3 – Text and PDF import  *(steps 4–5, `pdf-import-pipeline` skill)*
+## M3 – Text and PDF import  *(steps 4–5, `pdf-import-pipeline` skill)* — ✅ done 2026-11-24
+
+Steps, decisions and findings: `.claude/plans/M3-import.md` (branch `m3-import`).
 
 **M3a – `services/text`** (pure functions, one per file): `stripRepeatedHeaders`, `stripPageNumbers`, `joinHyphenatedWords`, `normalizeDiacritics`, `segmentSentences`, `splitLongSentence`, `detectChapters`.
 **Tests:** table-driven with Romanian samples: dialogue, abbreviations, hyphens, cedillas, sentences > 400 characters, empty text. Target: 100% coverage.
 
 **M3b – `services/pdf`**
 - `PdfTextExtractor` (interface) and `WebViewPdfExtractor`.
-- `services/pdf/webview/`: HTML + legacy `pdfjs-dist` with the worker inlined, as a local asset.
+- `services/pdf/webview/`: HTML + legacy `pdfjs-dist` with the worker inlined, as a local asset. pdfjs-dist 6.5 is ESM only (`pdf.mjs`, `pdf.worker.mjs`), so a build step produces the self-contained HTML (decided by the spike).
 - The `{ type, requestId, payload }` protocol, zod-validated on both sides, with base64 in 512 KB chunks, batches of 5 pages, timeout and cancellation.
-- `PdfExtractorHost`, mounted once and hidden, with no network access.
+- The extractor gets a `readChunk` function (over a new `FileStore.readBase64`, bound in `dependencies.ts`), so `services/pdf` never touches the file system.
+- `PdfExtractorHost`, hidden, mounted on demand (first `open`) and unmounted after `close`, with no network access (CSP).
 
 **M3c – `features/import`**
 - State machine `idle | copying | opening | extracting | saving | ready | failed | cancelled`.
 - Picker with a 100 MB limit, fingerprint for duplicates (`@noble/hashes`), resume from `processedPages`.
 - Edge cases: scanned PDF, password-protected, corrupt, cancellation.
-- Import screen: file card, steps with status, title/author/language form.
+- Import screen: file card, steps with status, title/author/language form. Needs the new `TextField` and `Select` primitives in `shared/ui`.
 - The book becomes playable after the first chapter.
+- Boot resumes `processing` books from `processedPages` (replaces M2's "mark `failed`", except for books that can't be resumed).
 
 **Tests:** the state machine with a fake `PdfTextExtractor`, for every failure case.
-**Done when:** a real 300+ page PDF imports on the emulator without the UI freezing.
+**Done when:** a real 300+ page PDF (`Microservices-Patterns.pdf`, 522 p., from `C:\ModDeInvatare\Book-PDF`; see "Sample PDFs" in the M3 plan) imports on the emulator without the UI freezing.
 
 ## M4 – Library and book details  *(steps 6–7)*
 
@@ -121,6 +125,7 @@ Results, deviations and pitfalls are in `.claude/plans/M2-storage.md` and in `CL
 - The mini-player above the tab bar, on Library and Settings.
 
 **Tests:** with `FakeTtsEngine` and fake timers: the sentence chain, moving to the next chapter, end of book, rapid presses, speed change, sleep, error and voice fallback.
+**On the emulator:** the `en-US` sample books (`The.Clean.Coder…pdf`, `Microservices-Patterns.pdf`; sample PDFs: M3 plan) and the generated Romanian `ion-320.pdf` for `ro-RO`.
 **Done when:** after the app is killed, playback resumes at the same sentence.
 
 ## M6 – Settings, storage and backup  *(step 9)*
@@ -135,7 +140,7 @@ Results, deviations and pitfalls are in `.claude/plans/M2-storage.md` and in `CL
 
 ## M7 – Performance, accessibility and polish  *(step 10)*
 
-- Measurements in a release build on a mid-range Android: startup < 1.5 s, 60 fps while scrolling, JS thread free during import, memory (at most 3 chapters, PDF never fully in JS).
+- Measurements in a release build on a mid-range Android: startup < 1.5 s, 60 fps while scrolling, JS thread free during import (measured on the 522-page `Microservices_Patterns.pdf`), memory (at most 3 chapters, PDF never fully in JS).
 - Checks with TalkBack/VoiceOver, contrast, enlarged font.
 - Background playback on iOS on a real device; the `AbookTts` TurboModule configures the audio session for background playback.
 - Comparison with the mockups, for all 6 screens and all states.
@@ -147,12 +152,15 @@ Results, deviations and pitfalls are in `.claude/plans/M2-storage.md` and in `CL
 
 | Risk | When it's checked | Plan B |
 | --- | --- | --- |
-| Legacy pdf.js + locally inlined worker in a WebView on Android | spike at the start of M3b | separate worker build, loaded as a blob |
+| Legacy pdf.js + locally inlined worker in a WebView on Android (pdfjs-dist 6.5 ships only ESM `.mjs`) | **Solved in the M3 spike (step 7):** pdf.js and its worker embedded as base64 and loaded with `import()` from blob URLs; the worker runs as pdf.js's "fake worker" on the WebView thread, because a page from an HTML string has an opaque origin and Chromium refuses blob Workers there. 320 pages in 2.2 s on the emulator | a `baseUrl` for a real origin and a real Worker |
+| Header/footer detection needs all pages, but import saves chapter by chapter | M3 step 2 | statistics on a sample window (first ~20 pages), recomputed the same way on resume |
+| Licence watermarks and running footers read aloud on every page (`Microservices-Patterns.pdf` has one on 521/522 pages, y ≈ 0.97) | M3 step 11, on the real sample | match the watermark signature over the whole book, not only the sample window |
 | AsyncStorage limit on Android | **Solved in M0:** v3.1.1 uses Room/SQLite, without the 6 MB limit | we keep values under ~256 KB (the 2 MB `CursorWindow` read limit) |
 | A deep link that arrives **during** bootstrap is lost (the `NavigationContainer` mounts after hydration; a cold start with the link works) | **Found in M2** (emulator); to be solved in M4, when real links matter | mount the container from the start and gate only its content, or keep the URL until it's ready |
 | `react-native-tts` | **Confirmed in M0:** doesn't compile with Gradle 9 (`jcenter()`), so it was removed | **M5: custom TurboModule** `AbookTts` (Android `TextToSpeech`, iOS `AVSpeechSynthesizer`) behind `TtsEngine` |
 | Playback with the screen locked (iOS) | M5/M7, on a device | `AVAudioSession` with the `playback` category in the TurboModule |
-| pdf.js as a local asset in RN CLI (no Expo asset bundler) | spike at the start of M3b | HTML in `android/app/src/main/assets` + iOS bundle, or inline HTML generated at build time |
+| pdf.js as a local asset in RN CLI (no Expo asset bundler) | **Solved in the M3 spike (step 7):** inline HTML generated at build time (2.38 MB), passed as `source={{ html }}`, the same on both platforms; the WebView is mounted on demand, not at startup | HTML in `android/app/src/main/assets` + iOS bundle |
+| WKWebView: `import()` from blob URLs and the fake worker on iOS | M7, on a device | `baseUrl` + a real Worker, or a classic-script build of pdf.js |
 | Missing `ro-RO` voices on the emulator | M5 | testing with `en-US` + the "no voice" state |
 | Mockups: 5 of 6 screens are in `.claude/design/` (the Library with books is missing) | before M4 | ask for the missing mockup or derive it from existing components (card, `ProgressBar`, `BookCover`) |
 | Native `Slider` (`@react-native-community/slider`): on Android the node is ≈ 18 dp tall (below the 44 pt target), and the empty track is barely visible | **Found in M1** (emulator); to be solved in M6 | custom slider with Gesture Handler + Reanimated, with the same API as `shared/ui/Slider` |

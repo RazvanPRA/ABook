@@ -14,7 +14,84 @@
     "title": "Setări"
   },
   "import": {
-    "title": "Importă PDF"
+    "title": "Importă PDF",
+    "back": "Înapoi",
+    "pick": {
+      "title": "Alege un fișier PDF",
+      "detail": "Textul se extrage pe telefon, fără internet. Cel mult 100 MB.",
+      "action": "Alege PDF"
+    },
+    "file": {
+      "badge": "PDF",
+      "pages": {
+        "one": "o pagină",
+        "few": "{{count}} pagini",
+        "other": "{{count}} de pagini"
+      },
+      "change": "Schimbă"
+    },
+    "steps": {
+      "title": "Procesare locală",
+      "copy": "Copiere în aplicație",
+      "copyDone": "Fișier copiat în aplicație",
+      "copyDetail": "documentDirectory/books/",
+      "extract": "Extragere text",
+      "split": "Împărțire în capitole și fraze",
+      "save": "Salvare în AsyncStorage",
+      "page": "pagina {{page}} / {{total}}",
+      "pageLabel": "pagina {{page}} din {{total}}",
+      "progressLabel": "Progres extragere text",
+      "status": {
+        "done": "gata",
+        "active": "în curs",
+        "waiting": "în așteptare",
+        "error": "eroare"
+      }
+    },
+    "form": {
+      "title": "Detalii carte",
+      "bookTitle": "Titlu",
+      "author": "Autor",
+      "authorPlaceholder": "Necunoscut",
+      "language": "Limba vocii",
+      "titleRequired": "Cartea are nevoie de un titlu.",
+      "close": "Închide"
+    },
+    "languages": {
+      "ro-RO": "Română (ro-RO)",
+      "en-US": "Engleză (en-US)"
+    },
+    "submit": "Adaugă în bibliotecă",
+    "note": "Poți începe să asculți înainte să se termine procesarea.",
+    "cancel": "Anulează importul",
+    "failed": {
+      "title": "Importul nu a reușit",
+      "nothingLeft": "Nu a rămas nimic salvat pe telefon.",
+      "chaptersKept": "Capitolele salvate până acum au rămas în bibliotecă.",
+      "retry": "Alege alt PDF",
+      "reasons": {
+        "too-large": "Fișierul are peste 100 MB. Alege un PDF mai mic.",
+        "copy": "Fișierul nu a putut fi copiat în aplicație.",
+        "scanned": "PDF-ul pare scanat: paginile lui nu conțin text. Aplicația poate citi doar PDF-uri cu text.",
+        "password": "PDF-ul este protejat cu parolă. Deschide-l, salvează-l fără parolă și încearcă din nou.",
+        "corrupt": "Fișierul este deteriorat sau nu este un PDF.",
+        "timeout": "Procesarea a durat prea mult. Încearcă din nou.",
+        "storage": "Cartea nu a putut fi salvată pe telefon. Verifică spațiul liber.",
+        "unknown": "A apărut o eroare neașteptată."
+      }
+    },
+    "scanned": {
+      "title": "PDF scanat"
+    },
+    "cancelled": {
+      "title": "Import anulat"
+    },
+    "duplicate": {
+      "title": "Cartea e deja în bibliotecă",
+      "detail": "„{{title}}” are același fișier.",
+      "keep": "Importă încă o dată",
+      "discard": "Renunță"
+    }
   },
   "book": {
     "title": "Detalii carte"

@@ -4,6 +4,7 @@ import {
   type BookId,
   type Chapter,
 } from '@/shared/domain';
+import { FINGERPRINT_HEAD_BYTES, pdfFingerprint } from '@/shared/utils';
 import { bookKey, chapterKey, rootKey } from '@/storage';
 import {
   BOOK_IDS,
@@ -41,14 +42,33 @@ const runImport = async (setup: ReturnType<typeof setupRepository>) => {
 };
 
 describe('LocalBookRepository – import flow', () => {
-  it('copies the PDF into books/{id}.pdf and reports its size', async () => {
+  it('copies the PDF into books/{id}.pdf and reports its size and fingerprint', async () => {
     const { repo, files } = setupRepository();
     const stored = await repo.storePdf(ID, SOURCE_URI);
+    const head = new Uint8Array(Math.min(SOURCE_SIZE, FINGERPRINT_HEAD_BYTES));
     expect(stored).toEqual({
       path: files.bookPdfPath(ID),
       sizeBytes: SOURCE_SIZE,
+      fingerprint: pdfFingerprint(SOURCE_SIZE, head),
     });
     await expect(repo.storePdf(OTHER, '/cache/missing.pdf')).rejects.toThrow();
+  });
+
+  it('fingerprints the same file the same way, and a different head differently', async () => {
+    const { repo, files } = setupRepository();
+    const content = Uint8Array.from({ length: 70_000 }, (_, i) => i % 256);
+    files.addFile('/cache/a.pdf', content);
+    files.addFile('/cache/b.pdf', content);
+    const changed = content.slice();
+    changed[100] = 7;
+    files.addFile('/cache/c.pdf', changed);
+    const [a, b, c] = await Promise.all(
+      ['a', 'b', 'c'].map((name, i) =>
+        repo.storePdf(BOOK_IDS[i] as BookId, `/cache/${name}.pdf`),
+      ),
+    );
+    expect(a?.fingerprint).toBe(b?.fingerprint);
+    expect(c?.fingerprint).not.toBe(a?.fingerprint);
   });
 
   it('writes file → meta (processing) → chunks → toc → meta (ready)', async () => {

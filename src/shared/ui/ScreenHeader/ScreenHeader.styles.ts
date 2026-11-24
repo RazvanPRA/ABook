@@ -8,6 +8,10 @@ export const styles = StyleSheet.create({
     paddingHorizontal: space.screenPadding,
     paddingBottom: space.md,
   },
+  /** Back button and title side by side (Import PDF). */
+  largeRoot: {
+    gap: space.sm,
+  },
   largeTitle: {
     flex: 1,
   },

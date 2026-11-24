@@ -31,8 +31,11 @@ export interface BootRepository {
    * `createBook` would replace the unreadable order with the new book alone, orphaning the others.
    */
   repairOrder(snapshot: BootSnapshot): Promise<void>;
-  /** Marks books left `processing` by a killed import as `failed` (one batch); returns the books. */
-  failInterruptedImports(books: readonly BookMeta[]): Promise<BookMeta[]>;
+  /**
+   * Marks `failed` the books a killed import left `processing` whose PDF is gone (one batch); the
+   * others stay `processing`, to be resumed. Returns the books.
+   */
+  failUnresumableImports(books: readonly BookMeta[]): Promise<BookMeta[]>;
   /** Removes keys and PDFs of books that are not in the library (an interrupted delete or import). */
   sweepOrphans(snapshot: BootSnapshot): Promise<OrphanSweep>;
 }

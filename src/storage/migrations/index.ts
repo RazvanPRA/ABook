@@ -1,8 +1,12 @@
 import { initialMigration } from './001-initial';
+import { fingerprintMigration } from './002-fingerprint';
 import type { Migration } from './types';
 
 /** Every migration, in order. A new schema change appends `00N-<name>.ts` here, with its test. */
-export const MIGRATIONS: readonly Migration[] = [initialMigration];
+export const MIGRATIONS: readonly Migration[] = [
+  initialMigration,
+  fingerprintMigration,
+];
 
 export const CURRENT_SCHEMA_VERSION = MIGRATIONS.length;
 

@@ -27,7 +27,13 @@ npm run emu            # emulator + Metro + build only on native changes + launc
 npm run emu -- -SkipBuild | -EmulatorOnly | -ForceBuild | -ResetCache
 npm run emu:rebuild    # forced build + cleared Metro cache
 npx react-native-asset # after adding a font to assets/fonts
+npm run pdf:webview    # regenerate the PDF WebView page (also on postinstall and in check)
+npm run dev:pdfs -- --push [--samples]  # test PDFs → .dev-pdfs/ → the app's files/dev-pdfs (abook://dev/pdf)
 ```
+
+The PDF WebView page (`src/services/pdf/webview/generated/`, 2.4 MB, gitignored) is generated from `src/services/pdf/webview/page` + `pdfjs-dist` by `scripts/build-pdf-webview.js`. Metro, tsc and Jest need it; a test fails when it is stale.
+
+**Sample PDFs** for manual testing live outside the repo, in `C:\ModDeInvatare\Book-PDF`: _The Clean Coder_ (244 p.) and _Microservices Patterns_ (522 p., the real 300+ page PDF), both English (`en-US`). What each one exercises is in `.claude/plans/M3-import.md` → "Sample PDFs". Push one with `MSYS_NO_PATHCONV=1 adb push "C:/ModDeInvatare/Book-PDF/<file>" /sdcard/Download/`. Never copy them, or text from them, into the repo: both are copyrighted and one carries personal data in a watermark.
 
 `npm run emu` runs `.claude/scripts/run-android.ps1`. Logs are in `android/build/run-android/`. Exit codes: 1 SDK/AVD/JDK, 2 emulator died, 3 boot timeout, 4 Metro, 5 build, 6 app not in foreground.
 
@@ -90,6 +96,18 @@ Branches: `main` ← `dev` ← `m<N>-<name>` (for example `m0-fundatie`, `m0-sch
 - **Redux in Jest:** `immer`, `reselect`, `redux`, `redux-thunk` and `react-redux` are in `ESM_PACKAGES`, because Jest resolves them to their ESM builds.
 - **zod in Metro:** zod 4's ESM build uses `export * as x from`, so `babel.config.js` needs `@babel/plugin-transform-export-namespace-from` (before the worklets plugin, which stays last). Jest loads zod's CJS build and **doesn't** catch this: a new dependency in the bundle must be checked on the emulator. After any Babel change, run `npm run emu -- -SkipBuild -ResetCache`. The first `npm run check` after it can fail with `EPERM` on the Jest transform cache (parallel workers on Windows); rerun it.
 - **`crypto.getRandomValues`:** Hermes lacks it, so `react-native-get-random-values` is the first import in `index.js` (needed by `uuid`).
-- **Boot:** `useBootstrap` runs migrations → one `getMany` snapshot → order repair → interrupted imports `failed` → orphan sweep, and the navigator mounts only after it (so `BootSplash.hide` waits). A deep link that arrives **during** bootstrap is lost (a cold start with the link works); see the risk in `PLAN.md`.
+- **Boot:** `useBootstrap` runs migrations → one `getMany` snapshot → order repair → interrupted imports without their PDF `failed` (the others resume after hydration, `resumeImports`, since M3) → orphan sweep, and the navigator mounts only after it (so `BootSplash.hide` waits). A deep link that arrives **during** bootstrap is lost (a cold start with the link works); see the risk in `PLAN.md`.
 - **Storage inspector:** `abook://dev/storage` (`__DEV__` only): real keys and files next to the store, seed and delete all. To seed a PDF too: `adb shell run-as com.abook sh -c 'head -c 50000 /dev/urandom > files/seed.pdf'`. App files: `adb shell run-as com.abook ls files/books`.
 - **adb from Git Bash:** prefix with `MSYS_NO_PATHCONV=1`, otherwise `/sdcard/…` becomes `C:/Program Files/Git/sdcard/…`. If `npm run emu` exits with 6 because another app is in the foreground, close that app and rerun the script.
+
+## Pitfalls found in M3
+
+- **Dev-only reload on the first import:** while the system picker is open, the HMR socket can drop ("Fast Refresh disconnected"). The next dynamic `import()` (the 2.4 MB WebView page) then reloads the JS (`HMRClient.js`: "Bundle Splitting – Metro disconnected"). The boot resume finishes the import, but form edits are lost and the screen closes. On the emulator, test the import screen from the second import of a session on.
+- **LogBox toast:** in dev, after any `logger.warn`, "Open debugger to view warnings" covers the bottom button and takes its taps.
+- **Fast Refresh and `dependencies.ts`:** `App` pins its services and store on the first render. Don't read `getAppServices()` elsewhere at render time, or the PDF host and the extractor end up on different transports ("WebView did not start").
+- **Hermes `Intl`:** plural rules give `other` for every Romanian count. Use `romanianPlural` and explicit keys (`….one/few/other`), not i18next `count` plurals; `String.prototype.normalize` is avoided too.
+- **Regex cost in Hermes:** on chapter-sized text, `/\S*$/` searches and `slice` per match are quadratic (650 ms per chapter). Walk from the index, or use sticky regexes.
+- **Import storage order:** chunk → toc → `processedPages` (plus the form) per chapter, `ready` last. The resume relies on it. The pipeline runs only through `guarded` (`state/pipelineRunner.ts`), which queues and cleans up.
+- **pdf.js 6.5** is ESM only: page and worker are inlined at build time, with a CSP that blocks the network. `react-native-webview` 14 needs `WebView<object>` under strict TS.
+- **`@react-native-documents/picker`:** the `content://` URI is copied directly by RNFS `copyFile`; no `keepLocalCopy`.
+- **Emulator automation:** `uiautomator dump` fails ("could not get idle state") or takes seconds while an import runs; tap by coordinates then.

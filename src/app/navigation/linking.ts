@@ -3,9 +3,9 @@ import type { RootStackParamList } from './types';
 
 export const URL_SCHEME = 'abook';
 
-/** abook://dev/ui (primitives catalog) and abook://dev/storage (storage inspector): __DEV__ builds only. */
+/** abook://dev/ui (primitives catalog), abook://dev/storage (storage inspector), abook://dev/pdf (extractor check): __DEV__ builds only. */
 const devScreens = __DEV__
-  ? { DevUi: 'dev/ui', DevStorage: 'dev/storage' }
+  ? { DevUi: 'dev/ui', DevStorage: 'dev/storage', DevPdf: 'dev/pdf' }
   : {};
 
 /** Deep links: abook://library, abook://player, abook://settings, abook://import, abook://book/<id> */

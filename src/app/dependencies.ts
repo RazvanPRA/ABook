@@ -8,15 +8,34 @@ import {
   type BootRepository,
 } from '@/repositories';
 import {
+  createWebViewPdfExtractor,
+  createWebViewTransport,
+  type PdfTextExtractor,
+  type WebViewTransport,
+} from '@/services/pdf';
+import { createDocumentsPdfPicker, type PdfPicker } from '@/services/picker';
+import {
   createAsyncStorageKeyValueStore,
   createReactNativeFsFileStore,
 } from '@/storage';
 
-/** Everything the app wires: what features get (`AppDependencies`) plus what only `app/` uses. */
-export interface AppServices extends AppDependencies {
+/**
+ * What thunks get as `extra`: the repositories plus the services that need wiring. Repositories
+ * can't see services, so the PDF extractor is added here, not in `AppDependencies`; a feature
+ * declares the part it uses (e.g. `AppDependencies & { pdfExtractor }`).
+ */
+export interface FeatureDependencies extends AppDependencies {
+  pdfExtractor: PdfTextExtractor;
+  pdfPicker: PdfPicker;
+}
+
+/** Everything the app wires: what features get plus what only `app/` uses. */
+export interface AppServices extends FeatureDependencies {
   bootRepository: BootRepository;
   /** The raw stores, for dev tools in `app/dev` only (abook://dev/storage). */
   stores: BookStores;
+  /** The extractor's WebView side, rendered by `PdfExtractorHost`. */
+  pdfTransport: WebViewTransport;
 }
 
 /** The only place where implementations are bound to interfaces (PROMPT §3). */
@@ -25,13 +44,23 @@ export const createAppServices = (
     kv: createAsyncStorageKeyValueStore(),
     files: createReactNativeFsFileStore(),
   },
-): AppServices => ({
-  bookRepository: createLocalBookRepository(stores),
-  progressRepository: createLocalProgressRepository(stores),
-  settingsRepository: createLocalSettingsRepository(stores),
-  bootRepository: createLocalBootRepository(stores),
-  stores,
-});
+): AppServices => {
+  const pdfTransport = createWebViewTransport();
+  return {
+    bookRepository: createLocalBookRepository(stores),
+    progressRepository: createLocalProgressRepository(stores),
+    settingsRepository: createLocalSettingsRepository(stores),
+    bootRepository: createLocalBootRepository(stores),
+    pdfExtractor: createWebViewPdfExtractor({
+      transport: pdfTransport,
+      readChunk: (path, offset, length) =>
+        stores.files.readBase64(path, offset, length),
+    }),
+    pdfPicker: createDocumentsPdfPicker(),
+    stores,
+    pdfTransport,
+  };
+};
 
 let appServices: AppServices | undefined;
 
@@ -41,13 +70,17 @@ export const getAppServices = (): AppServices => {
   return appServices;
 };
 
-/** Features see only the repository interfaces; the boot repository stays in `app/`. */
+/** Features see only the interfaces; the boot repository and the raw stores stay in `app/`. */
 export const featureDependencies = ({
   bookRepository,
   progressRepository,
   settingsRepository,
-}: AppServices): AppDependencies => ({
+  pdfExtractor,
+  pdfPicker,
+}: AppServices): FeatureDependencies => ({
   bookRepository,
   progressRepository,
   settingsRepository,
+  pdfExtractor,
+  pdfPicker,
 });

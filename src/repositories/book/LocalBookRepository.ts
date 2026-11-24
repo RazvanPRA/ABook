@@ -1,4 +1,9 @@
 import { tocSchema, type BookId } from '@/shared/domain';
+import {
+  FINGERPRINT_HEAD_BYTES,
+  base64ToBytes,
+  pdfFingerprint,
+} from '@/shared/utils';
 import { bookKey, type FileStore, type KeyValueStore } from '@/storage';
 import { readValue } from '../readValue';
 import { serialize } from '../serialize';
@@ -25,7 +30,12 @@ const storePdf = async (
   if (sizeBytes === null) {
     throw new Error(`Copied PDF is missing: ${path}`);
   }
-  return { path, sizeBytes };
+  const head = await files.readBase64(path, 0, FINGERPRINT_HEAD_BYTES);
+  return {
+    path,
+    sizeBytes,
+    fingerprint: pdfFingerprint(sizeBytes, base64ToBytes(head)),
+  };
 };
 
 /** `BookRepository` over AsyncStorage (metadata, text) and the file system (the PDF). */

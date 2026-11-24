@@ -5,6 +5,7 @@ import {
 } from '@react-navigation/native-stack';
 import { BookScreen } from '@/features/book';
 import { ImportScreen } from '@/features/import';
+import { PdfDebugScreen } from '../dev/pdf/PdfDebugScreen';
 import { StorageDebugScreen } from '../dev/storage/StorageDebugScreen';
 import { UiCatalogScreen } from '../dev/UiCatalogScreen';
 import { TabsNavigator } from './TabsNavigator';
@@ -19,13 +20,19 @@ function BookRoute({
   return <BookScreen bookId={route.params.id} />;
 }
 
+function ImportRoute({
+  navigation,
+}: NativeStackScreenProps<RootStackParamList, 'Import'>) {
+  return <ImportScreen onClose={navigation.goBack} />;
+}
+
 export function RootNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Tabs" component={TabsNavigator} />
       <Stack.Screen
         name="Import"
-        component={ImportScreen}
+        component={ImportRoute}
         options={{ presentation: 'modal' }}
       />
       <Stack.Screen name="Book" component={BookRoute} />
@@ -33,6 +40,7 @@ export function RootNavigator() {
         <>
           <Stack.Screen name="DevUi" component={UiCatalogScreen} />
           <Stack.Screen name="DevStorage" component={StorageDebugScreen} />
+          <Stack.Screen name="DevPdf" component={PdfDebugScreen} />
         </>
       ) : null}
     </Stack.Navigator>

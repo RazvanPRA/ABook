@@ -6,19 +6,26 @@ import {
   NavigationContainer,
 } from '@react-navigation/native';
 import { toBookId } from '@/shared/domain';
+import { fakeServices } from '../../__fixtures__/fakeServices';
+import { featureDependencies } from '../../dependencies';
 import { I18nProvider } from '../../providers/I18nProvider';
+import { StoreProvider } from '../../providers/StoreProvider';
+import { createAppStore } from '../../store';
 import { RootNavigator } from '../RootNavigator';
 import { linking } from '../linking';
 import type { RootStackParamList } from '../types';
 
 async function renderNavigator() {
   const ref = createNavigationContainerRef<RootStackParamList>();
+  const store = createAppStore(featureDependencies(fakeServices().services));
   await render(
-    <I18nProvider>
-      <NavigationContainer ref={ref}>
-        <RootNavigator />
-      </NavigationContainer>
-    </I18nProvider>,
+    <StoreProvider store={store}>
+      <I18nProvider>
+        <NavigationContainer ref={ref}>
+          <RootNavigator />
+        </NavigationContainer>
+      </I18nProvider>
+    </StoreProvider>,
   );
   return ref;
 }
@@ -62,6 +69,8 @@ describe('RootNavigator', () => {
     const ref = await renderNavigator();
     await act(async () => ref.navigate('Import'));
     expect(await screen.findByTestId('screen-import')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Înapoi' }));
+    expect(ref.getCurrentRoute()?.name).not.toBe('Import');
   });
 });
 

@@ -24,6 +24,23 @@ describe('ScreenHeader', () => {
     expect(onSettings).toHaveBeenCalledTimes(1);
   });
 
+  it('large: back button before the title when given', async () => {
+    const onBack = jest.fn();
+    await render(
+      <ScreenHeader
+        title="Importă PDF"
+        back={{
+          icon: 'chevron-left',
+          accessibilityLabel: 'Înapoi',
+          onPress: onBack,
+        }}
+      />,
+    );
+    expect(screen.getByRole('header', { name: 'Importă PDF' })).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Înapoi' }));
+    expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
   it('compact: back button, overline and centered title', async () => {
     const onBack = jest.fn();
     await render(

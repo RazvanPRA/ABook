@@ -1,16 +1,18 @@
 import { configureStore } from '@reduxjs/toolkit';
+import { importReducer } from '@/features/import';
 import { libraryReducer } from '@/features/library';
 import { settingsReducer } from '@/features/settings';
-import type { AppDependencies } from '@/repositories';
+import type { FeatureDependencies } from '../dependencies';
 
 /**
  * The single store. Slices are owned by features and mounted at the key their selectors expect
- * (`LibraryRootState`, `SettingsRootState`). Thunks receive the repositories as `extra`.
+ * (`LibraryRootState`, `SettingsRootState`, `ImportRootState`). Thunks receive `FeatureDependencies` as `extra`.
  */
-export const createAppStore = (dependencies: AppDependencies) =>
+export const createAppStore = (dependencies: FeatureDependencies) =>
   configureStore({
     reducer: {
       library: libraryReducer,
+      import: importReducer,
       settings: settingsReducer,
     },
     middleware: getDefaultMiddleware =>
