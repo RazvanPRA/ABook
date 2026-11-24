@@ -111,3 +111,11 @@ Branches: `main` ← `dev` ← `m<N>-<name>` (for example `m0-fundatie`, `m0-sch
 - **pdf.js 6.5** is ESM only: page and worker are inlined at build time, with a CSP that blocks the network. `react-native-webview` 14 needs `WebView<object>` under strict TS.
 - **`@react-native-documents/picker`:** the `content://` URI is copied directly by RNFS `copyFile`; no `keepLocalCopy`.
 - **Emulator automation:** `uiautomator dump` fails ("could not get idle state") or takes seconds while an import runs; tap by coordinates then.
+
+## Pitfalls found in M4
+
+- **Deep links while JS is loading** reach nobody, and `getInitialURL` reads the activity's intent: `MainActivity.onNewIntent` must keep calling `setIntent`. After JS starts, `usePendingLink` keeps the last link until the navigator mounts.
+- **Deleting a book:** only through `deleteBook` (`features/book`), which first awaits `cancelImportOf`. That marks the book (`discardedBooks.ts`), so no queued import of it starts; nothing may write a book's keys after that (see `removeBookmark`).
+- **Clipped labels on Android (RN 0.88):** a one-line text next to an icon can lose its last word from the second time it is shown. `Button` adds a no-break space; check other such rows by opening the screen twice.
+- **FlashList 2 in Jest** needs `@shopify/flash-list/jestSetup` (in `jest.setup.js`). Screen tests over the real repositories live in `app/__tests__` with `fakeApp`.
+- **`uiautomator dump`** also lists views hidden from TalkBack.

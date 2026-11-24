@@ -104,7 +104,7 @@ Steps, decisions and findings: `.claude/plans/M3-import.md` (branch `m3-import`)
 **Tests:** the state machine with a fake `PdfTextExtractor`, for every failure case.
 **Done when:** a real 300+ page PDF (`Microservices-Patterns.pdf`, 522 p., from `C:\ModDeInvatare\Book-PDF`; see "Sample PDFs" in the M3 plan) imports on the emulator without the UI freezing.
 
-## M4 – Library and book details  *(steps 6–7)*
+## M4 – Library and book details  *(steps 6–7)* — ✅ done 2026-11-24
 
 Steps, decisions and findings: `.claude/plans/M4-library-details.md` (branch `m4-library-details`).
 
@@ -158,7 +158,9 @@ Steps, decisions and findings: `.claude/plans/M4-library-details.md` (branch `m4
 | Header/footer detection needs all pages, but import saves chapter by chapter | M3 step 2 | statistics on a sample window (first ~20 pages), recomputed the same way on resume |
 | Licence watermarks and running footers read aloud on every page (`Microservices-Patterns.pdf` has one on 521/522 pages, y ≈ 0.97) | M3 step 11, on the real sample | match the watermark signature over the whole book, not only the sample window |
 | AsyncStorage limit on Android | **Solved in M0:** v3.1.1 uses Room/SQLite, without the 6 MB limit | we keep values under ~256 KB (the 2 MB `CursorWindow` read limit) |
-| A deep link that arrives **during** bootstrap is lost (the `NavigationContainer` mounts after hydration; a cold start with the link works) | **Found in M2** (emulator); to be solved in M4, when real links matter | mount the container from the start and gate only its content, or keep the URL until it's ready |
+| A deep link that arrives **during** bootstrap is lost | **Solved in M4 (step 7):** `usePendingLink` hands it to the navigator, and `MainActivity.onNewIntent` keeps one that arrives before JS runs | — |
+| A button label shown twice loses its last word on Android (RN 0.88 text measuring) | **Found in M4** (emulator): `Button` adds a no-break space. Other one-line texts next to an icon may need the same | recheck after an RN upgrade |
+| 200 books scrolling, two interrupted imports, "Reia importul" and the failure reasons were not seen on a device (only Book-PDF is used there) | M7 | covered in Jest (M4) |
 | `react-native-tts` | **Confirmed in M0:** doesn't compile with Gradle 9 (`jcenter()`), so it was removed | **M5: custom TurboModule** `AbookTts` (Android `TextToSpeech`, iOS `AVSpeechSynthesizer`) behind `TtsEngine` |
 | Playback with the screen locked (iOS) | M5/M7, on a device | `AVAudioSession` with the `playback` category in the TurboModule |
 | pdf.js as a local asset in RN CLI (no Expo asset bundler) | **Solved in the M3 spike (step 7):** inline HTML generated at build time (2.38 MB), passed as `source={{ html }}`, the same on both platforms; the WebView is mounted on demand, not at startup | HTML in `android/app/src/main/assets` + iOS bundle |
