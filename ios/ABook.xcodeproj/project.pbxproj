@@ -11,6 +11,7 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		761780EF2CA45674006654EF /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EE2CA45674006654EF /* SceneDelegate.swift */; };
+		AB00C7752F00000000000003 /* AbookTts.mm in Sources */ = {isa = PBXBuildFile; fileRef = AB00C7752F00000000000002 /* AbookTts.mm */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		40F41048D8EE4BB38DC9193B /* Inter-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5C029E1AA5C94471AD172070 /* Inter-Regular.ttf */; };
 		830581F7ACF146C29019BA3B /* Inter-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C01ECC01F7924AB88C65DE2B /* Inter-SemiBold.ttf */; };
@@ -30,6 +31,8 @@
 		5DCACB8F33CDC322A6C60F78 /* libPods-ABook.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ABook.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = ABook/AppDelegate.swift; sourceTree = "<group>"; };
 		761780EE2CA45674006654EF /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SceneDelegate.swift; path = ABook/SceneDelegate.swift; sourceTree = "<group>"; };
+		AB00C7752F00000000000001 /* AbookTts.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AbookTts.h; path = ABook/Tts/AbookTts.h; sourceTree = "<group>"; };
+		AB00C7752F00000000000002 /* AbookTts.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = AbookTts.mm; path = ABook/Tts/AbookTts.mm; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = ABook/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		5C029E1AA5C94471AD172070 /* Inter-Regular.ttf */ = {isa = PBXFileReference; name = "Inter-Regular.ttf"; path = "../assets/fonts/Inter-Regular.ttf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
@@ -58,6 +61,8 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				761780EC2CA45674006654EE /* AppDelegate.swift */,
 				761780EE2CA45674006654EF /* SceneDelegate.swift */,
+				AB00C7752F00000000000001 /* AbookTts.h */,
+				AB00C7752F00000000000002 /* AbookTts.mm */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
@@ -282,6 +287,7 @@
 			files = (
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
 				761780EF2CA45674006654EF /* SceneDelegate.swift in Sources */,
+				AB00C7752F00000000000003 /* AbookTts.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
