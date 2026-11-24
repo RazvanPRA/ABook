@@ -16,9 +16,10 @@ Confirmed by the owner (2026-11-24):
 2. **The populated Library has no mockup:** it is derived from `PROMPT.md` §7 and the existing primitives, unless `.claude/design/00-biblioteca.png` appears.
 3. **"Continuă" opens the Ascultă tab** until M5.
 4. **Percent listened = `page / pageCount`**, the same in the list and in the details (34 of 82 = 41%, as in the mockup). `finished` is 100%; `pageCount` 0 gives 0. Sentences would be more exact, but need every book's toc.
-5. **A stalled import can be continued in the session.** After a transient resume failure the book stays `processing` with nothing running; it gets its own state and "Reia importul" (steps 4, 8, 12, 13).
+5. **A stalled import can be continued in the session.** After a transient resume failure the book stays `processing` with nothing running; it gets its own state and "Reia importul" (steps 4, 12, 13).
 6. **Cancelling an import to delete its book doesn't stop the other resumes.** A cancel by the user on the Import screen still does, as in M3 (steps 4, 5, 13).
 7. **Language:** code, identifiers, comments, tests, docs and commit messages in English; UI copy in Romanian, through `ro.json`.
+8. **On the emulator, only the PDFs from `C:\ModDeInvatare\Book-PDF` are used** (decided at step 8): no made-up books, no PDFs generated in `.dev-pdfs/`. What they can't cover (200 books, the failure reasons, progress and bookmarks before M5) is tested in Jest only and noted as not verified on a device.
 
 Design assumptions (reported if they change):
 
@@ -136,8 +137,12 @@ Each step ends with a green `npm run check` and a separate commit; its section i
 - A malformed or unknown id shows `MissingBook` ("Cartea nu mai există"), built here already.
 - Emulator: links sent 0.2, 0.8, 1.2, 2, 2.6, 3.2 and 4 s after launch all open their screen; a cold start with a bad id shows the missing state.
 
-#### 8. Dev seed
-- `abook://dev/storage`: seed ready books with toc, progress and bookmarks; finished, failed and stalled variants; 200 books.
+#### 8. No made-up data
+- Planned as a dev seed (ready, finished, failed and stalled books, 200 books); dropped by the owner (decision 8). The M2 seed goes too: `abook://dev/storage` only shows what is stored, and deletes it.
+
+**Done** (2026-11-24). Findings:
+
+- `seedSampleBook` and "Adaugă carte de test" are gone; the inspector's tests store their book through the repositories.
 
 ### M4c – Library
 
@@ -148,7 +153,7 @@ Each step ends with a green `npm run check` and a separate commit; its section i
 #### 10. Library screen
 - `LibraryHeader`, `LibrarySearch`, `ContinueListeningCard`, `LibraryFilterChips`, `BookList` / `BookListItem` (first use of FlashList in `src`, memoized rows), `LibraryEmpty`, `NoResults`, `Fab`. Texts in `library.*`, counts through `romanianPlural`.
 - A row is one accessible element: "Amintiri din copilărie, Ion Creangă, 41% ascultat".
-- **Tests:** each state in the table. **Emulator:** 200 books scroll smoothly; FlashList early in both Jest and the emulator.
+- **Tests:** each state in the table, and a list of 200 books. **Emulator:** FlashList early, with books imported from Book-PDF; smooth scrolling of 200 books isn't verified on a device (M7).
 
 ### M4d – Book
 
@@ -166,7 +171,7 @@ Each step ends with a green `npm run check` and a separate commit; its section i
 
 #### 13. Emulator verification
 - Delete a ready book, and one during the import of `Microservices-Patterns.pdf`: key count on `abook://dev/storage` and `adb shell run-as com.abook ls files/books` as before the import.
-- Kill mid-import, relaunch, delete a queued book. With two interrupted books, delete the one resuming: the other still resumes. Stalled → "Reia importul". A `failed` book for each reason.
+- Kill mid-import, relaunch, delete a queued book. With two interrupted books, delete the one resuming: the other still resumes. Stalled → "Reia importul". Only with the two PDFs from Book-PDF, and deleting only books imported for this check. The failure reasons, progress and bookmarks stay in Jest.
 - `uiautomator` labels and sizes, font scale 2.0, comparison with both mockups.
 
 #### 14. Closing
@@ -177,6 +182,6 @@ Each step ends with a green `npm run check` and a separate commit; its section i
 - [ ] Every state in the two tables is built and tested; both mockups match.
 - [ ] Deleting a book, during an import too, leaves no keys or files (emulator).
 - [ ] A stalled import continues from where it stopped.
-- [ ] Search and filters work with Romanian diacritics; 200 books scroll smoothly.
+- [ ] Search and filters work with Romanian diacritics; a list of 200 books renders in Jest.
 - [ ] A deep link during bootstrap isn't lost.
 - [ ] No circular or internal cross-feature imports; `npm run check` green; one commit per step.
