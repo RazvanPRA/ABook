@@ -72,7 +72,7 @@ export function usePlayerMessage(
         main: {
           icon: 'headphones',
           title: t('player.error.voice.title'),
-          description: t(`player.error.voice.${book?.language ?? 'ro-RO'}`),
+          description: t('player.error.voice.detail'),
           action: retry,
         },
         ...(Platform.OS === 'android' && {

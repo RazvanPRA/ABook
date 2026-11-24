@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { StoredPdf } from '@/repositories';
-import type { BookId, BookLanguage } from '@/shared/domain';
+import type { BookId } from '@/shared/domain';
 import { logger } from '@/shared/utils';
 import { titleFromFileName, usableMetadata } from '../model/metadata';
 import { ACTIVE_PHASES, isActivePhase, stepOfPhase } from '../model/steps';
@@ -197,9 +197,6 @@ const importSlice = createSlice({
       state.form[field] = value;
       state.edited[field] = true;
     },
-    languageChanged: (state, action: PayloadAction<BookLanguage>) => {
-      state.form.language = action.payload;
-    },
     /** "Adaugă în bibliotecă": only while the import runs or after it ended well, with a title. */
     importSubmitted: state => {
       const running = allowed(state, 'importSubmitted', [
@@ -231,7 +228,6 @@ export const {
   importFailed,
   importCancelled,
   formChanged,
-  languageChanged,
   importSubmitted,
   importReset,
 } = importSlice.actions;

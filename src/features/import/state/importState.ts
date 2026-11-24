@@ -1,5 +1,5 @@
 import type { StoredPdf } from '@/repositories';
-import type { BookId, BookLanguage } from '@/shared/domain';
+import type { BookId } from '@/shared/domain';
 import type {
   ImportForm,
   ImportFormField,
@@ -34,8 +34,6 @@ export interface ResumedImport {
   readonly metadataRead: boolean;
 }
 
-export const DEFAULT_IMPORT_LANGUAGE: BookLanguage = 'ro-RO';
-
 export const initialImportState: ImportState = {
   phase: { type: 'idle' },
   bookId: null,
@@ -43,7 +41,7 @@ export const initialImportState: ImportState = {
   stored: null,
   pageCount: 0,
   chaptersSaved: 0,
-  form: { title: '', author: '', language: DEFAULT_IMPORT_LANGUAGE },
+  form: { title: '', author: '' },
   edited: { title: false, author: false },
   submitted: false,
   resumed: false,

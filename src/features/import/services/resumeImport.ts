@@ -30,7 +30,6 @@ export async function resumeImport(
       form: {
         title: meta.title,
         author: meta.author,
-        language: meta.language,
       },
       chaptersSaved: resume.toc.length,
       metadataRead: meta.pageCount > 0,

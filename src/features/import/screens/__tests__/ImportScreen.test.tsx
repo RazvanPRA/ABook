@@ -119,15 +119,9 @@ describe('ImportScreen while importing', () => {
     });
   });
 
-  it('chooses the voice language', async () => {
-    const { store } = await renderImportScreen(extracting());
-    await fireEvent.press(
-      screen.getByRole('combobox', { name: 'Limba vocii' }),
-    );
-    await fireEvent.press(
-      screen.getByRole('radio', { name: 'Engleză (en-US)' }),
-    );
-    expect(store.getState().import.form.language).toBe('en-US');
+  it('offers no voice language: books are read in English', async () => {
+    await renderImportScreen(extracting());
+    expect(screen.queryByRole('combobox')).toBeNull();
   });
 
   it('cannot be submitted without a title, and says why', async () => {
@@ -207,7 +201,7 @@ describe('ImportScreen when the import stopped', () => {
   it('a resumed import can be submitted, and its failure says the chapters are kept', async () => {
     const setup = createScreenStore();
     const { dispatch } = setup.store;
-    const form = { title: 'Ion', author: '', language: 'ro-RO' as const };
+    const form = { title: 'Ion', author: '' };
     dispatch(
       importResumed({
         bookId: BOOK,

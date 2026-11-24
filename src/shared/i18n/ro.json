@@ -126,9 +126,8 @@
         "detail": "Sinteza vocală a telefonului nu a răspuns."
       },
       "voice": {
-        "title": "Nicio voce pentru limba cărții",
-        "ro-RO": "Instalează o voce în română din setările de voce ale telefonului, apoi încearcă din nou.",
-        "en-US": "Instalează o voce în engleză din setările de voce ale telefonului, apoi încearcă din nou.",
+        "title": "Nicio voce în engleză",
+        "detail": "Instalează o voce în engleză din setările de voce ale telefonului, apoi încearcă din nou.",
         "action": "Deschide setările de voce"
       },
       "text": {
@@ -181,13 +180,8 @@
       "bookTitle": "Titlu",
       "author": "Autor",
       "authorPlaceholder": "Necunoscut",
-      "language": "Limba vocii",
       "titleRequired": "Cartea are nevoie de un titlu.",
       "close": "Închide"
-    },
-    "languages": {
-      "ro-RO": "Română (ro-RO)",
-      "en-US": "Engleză (en-US)"
     },
     "submit": "Adaugă în bibliotecă",
     "note": "Poți începe să asculți înainte să se termine procesarea.",
@@ -230,7 +224,6 @@
     "offline": "Offline",
     "unknownAuthor": "Autor necunoscut",
     "languages": {
-      "ro-RO": "Română",
       "en-US": "Engleză"
     },
     "play": {

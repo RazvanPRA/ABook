@@ -11,6 +11,13 @@ export const BOOK_FAILURES = [
 ] as const;
 export const BOOK_LANGUAGES = ['ro-RO', 'en-US'] as const;
 
+/**
+ * Books are read only in English (owner's decision, M5). The stored `language` stays, so older
+ * `ro-RO` books need no migration; nothing is read aloud by it.
+ */
+export const READING_LANGUAGE =
+  'en-US' satisfies (typeof BOOK_LANGUAGES)[number];
+
 export const bookStatusSchema = z.enum(BOOK_STATUSES);
 export const bookFailureSchema = z.enum(BOOK_FAILURES);
 export const bookLanguageSchema = z.enum(BOOK_LANGUAGES);

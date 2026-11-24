@@ -42,7 +42,6 @@ export function TtsDebugScreen() {
 function ActionsSection({ probe }: { probe: ReturnType<typeof useTtsProbe> }) {
   return (
     <CatalogSection title="Fraze">
-      <Button label="Română" onPress={() => probe.speak('ro-RO')} />
       <Button label="Engleză" onPress={() => probe.speak('en-US')} />
       <Button label="Engleză 2×" onPress={() => probe.speak('en-US', 2)} />
       <Button label="Stop" variant="secondary" onPress={probe.stop} />

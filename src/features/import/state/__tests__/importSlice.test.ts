@@ -17,7 +17,6 @@ import {
   importResumed,
   importStarted,
   importSubmitted,
-  languageChanged,
   pagesExtracted,
   savingStarted,
 } from '../importSlice';
@@ -59,7 +58,6 @@ const toSaving: readonly Action[] = [
 const RESUMED_FORM = {
   title: 'Ion',
   author: 'Liviu Rebreanu',
-  language: 'ro-RO' as const,
 };
 const resumed = importResumed({
   bookId: OTHER,
@@ -81,7 +79,6 @@ describe('importSlice happy path', () => {
     expect(initialImportState.form).toEqual({
       title: '',
       author: '',
-      language: 'ro-RO',
     });
   });
 
@@ -162,7 +159,6 @@ describe('importSlice form', () => {
     expect(run(...toExtracting).form).toEqual({
       title: 'Ion',
       author: 'Liviu Rebreanu',
-      language: 'ro-RO',
     });
   });
 
@@ -187,10 +183,6 @@ describe('importSlice form', () => {
       opened('  ', '(anonymous)'),
     );
     expect(anonymous.form).toMatchObject({ title: 'ion-rebreanu', author: '' });
-  });
-
-  it('changes the language', () => {
-    expect(run(started, languageChanged('en-US')).form.language).toBe('en-US');
   });
 
   it('submits with a title while running or once ready', () => {

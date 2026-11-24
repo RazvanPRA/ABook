@@ -1,7 +1,7 @@
 import { BackHandler } from 'react-native';
 import { fireEvent, screen } from '@testing-library/react-native';
 import { deleteBook, selectBookContent } from '@/features/book';
-import { EN_VOICE } from '@/services/tts/testing';
+import { RO_VOICE } from '@/services/tts/testing';
 import {
   playbackRequested,
   toChapterIndex,
@@ -303,14 +303,14 @@ describe('states', () => {
     expect(app.tts.speaking).toBe(sentence(0, 0));
   });
 
-  it('no voice of the language: how to install one', async () => {
+  it('no English voice: how to install one', async () => {
     const app = await setup({}, ({ tts }) => {
-      tts.voices = [EN_VOICE];
+      tts.voices = [RO_VOICE];
     });
     expect(
-      screen.getByRole('header', { name: 'Nicio voce pentru limba cărții' }),
+      screen.getByRole('header', { name: 'Nicio voce în engleză' }),
     ).toBeOnTheScreen();
-    expect(screen.getByText(/voce în română/)).toBeOnTheScreen();
+    expect(screen.getByText(/^Instalează o voce în engleză/)).toBeOnTheScreen();
     expect(app.tts.spoken).toEqual([]);
   });
 

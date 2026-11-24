@@ -17,6 +17,8 @@ Confirmed by the owner (2026-11-24):
 3. **The Ascultă tab hides the tab bar** while it shows a book, as in the mockup. The chevron returns to the previous tab. With no book, the tab bar stays.
 4. **Paragraphs are derived when reading**, by a pure function over `ChapterChunk`. No schema change, no re-import.
 
+5. **Books are read only in `en-US`** (2026-11-24, during step 14; replaces every `ro-RO` check below). `READING_LANGUAGE` decides; the import form has no voice language any more; the stored `BookMeta.language` stays, unused, so no migration. The UI stays Romanian.
+
 Standing (M4 decisions 7 and 8): English code and docs, Romanian UI copy through `ro.json`. On the emulator **only the PDFs from `C:\ModDeInvatare\Book-PDF`**, so the generated `ion-320.pdf` named in `PLAN.md` isn't used: `ro-RO` is checked by importing one of them with the voice language set to Romanian.
 
 ## Design

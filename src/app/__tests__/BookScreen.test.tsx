@@ -167,7 +167,7 @@ describe('BookScreen: ready', () => {
     expect(
       screen.getByRole('header', { name: 'Amintiri din copilărie' }),
     ).toBeOnTheScreen();
-    for (const text of ['82 de pagini', '1,1 MB', 'Română', 'Offline']) {
+    for (const text of ['82 de pagini', '1,1 MB', 'Engleză', 'Offline']) {
       expect(screen.getByText(text)).toBeOnTheScreen();
     }
     expect(screen.queryByTestId('book-banner')).toBeNull();

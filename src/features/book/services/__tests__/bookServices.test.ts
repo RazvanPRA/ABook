@@ -43,20 +43,19 @@ describe('formatBookMeta', () => {
   const words: BookMetaWords = {
     pages: count => `${count} p`,
     bytes: { B: 'B', KB: 'KB', MB: 'MB', GB: 'GB' },
-    languages: { 'ro-RO': 'Română', 'en-US': 'Engleză' },
+    language: 'Engleză',
     offline: 'Offline',
   };
   const book = {
     pageCount: 82,
     fileSizeBytes: 1_258_291,
-    language: 'ro-RO',
   } as const;
 
   it('lists pages, size, language and offline', () => {
     expect(formatBookMeta(book, words)).toEqual([
       '82 p',
       '1,2 MB',
-      'Română',
+      'Engleză',
       'Offline',
     ]);
   });

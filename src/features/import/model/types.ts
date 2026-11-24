@@ -1,4 +1,4 @@
-import type { BookId, BookLanguage } from '@/shared/domain';
+import type { BookId } from '@/shared/domain';
 
 /** The file the user picked, as the picker describes it. */
 export interface PickedFile {
@@ -57,7 +57,6 @@ export type ImportPhaseType = ImportPhase['type'];
 export interface ImportForm {
   readonly title: string;
   readonly author: string;
-  readonly language: BookLanguage;
 }
 
 export type ImportFormField = 'title' | 'author';

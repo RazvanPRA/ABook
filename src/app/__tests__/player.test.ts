@@ -7,6 +7,7 @@ import {
   selectBookProgress,
 } from '@/features/library';
 import { changeSettings } from '@/features/settings';
+import { EN_VOICE } from '@/services/tts/testing';
 import {
   playbackRequested,
   toChapterIndex,
@@ -109,6 +110,14 @@ describe('playbackRequested', () => {
           operation === 'getMany' && keys.some(key => key.includes(':ch:')),
       );
     expect(chapterReads).toHaveLength(1);
+  });
+});
+
+it('is read in English, whatever language it was imported with', async () => {
+  const app = await playing({ meta: { language: 'ro-RO' } });
+  expect(app.tts.last?.options).toMatchObject({
+    language: 'en-US',
+    voiceId: EN_VOICE.id,
   });
 });
 

@@ -2,7 +2,7 @@ import { bookUpserted } from '@/features/library';
 import type { StoredPdf } from '@/repositories';
 import type { PdfDocument } from '@/services/pdf';
 import type { OutlineItem } from '@/services/text';
-import type { BookId, BookMeta } from '@/shared/domain';
+import { READING_LANGUAGE, type BookId, type BookMeta } from '@/shared/domain';
 import { pickCoverColor } from '@/shared/theme';
 import type { ImportContext } from '../model/dependencies';
 import type { PickedFile } from '../model/types';
@@ -91,12 +91,12 @@ async function createProcessingBook(
   context: ImportContext,
   { bookId, stored }: ImportTarget,
 ): Promise<void> {
-  const { title, language } = context.getForm();
+  const { title } = context.getForm();
   const meta: BookMeta = {
     id: bookId,
     title,
     author: '',
-    language,
+    language: READING_LANGUAGE,
     fileUri: stored.path,
     fileSizeBytes: stored.sizeBytes,
     pageCount: 0,

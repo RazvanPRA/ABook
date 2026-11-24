@@ -3,7 +3,6 @@ import type { Voice } from '@/services/tts';
 import { useAppServices } from '../../providers/ServicesProvider';
 
 export const TTS_SAMPLES = {
-  'ro-RO': 'Ana are mere, iar Ștefan își ține cățelul în brațe.',
   'en-US': 'The quick brown fox jumps over the lazy dog.',
 } as const;
 

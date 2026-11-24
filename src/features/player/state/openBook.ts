@@ -5,6 +5,7 @@ import {
   selectImportingBookId,
 } from '@/features/book';
 import {
+  READING_LANGUAGE,
   toChapterIndex,
   toSentenceIndex,
   type BookId,
@@ -46,7 +47,7 @@ function sessionBook(
 ): SessionBook {
   return {
     id: book.id,
-    language: book.language,
+    language: READING_LANGUAGE,
     completeness: completenessOf(state, book),
     toc,
   };

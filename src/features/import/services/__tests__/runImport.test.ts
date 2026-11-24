@@ -205,7 +205,7 @@ describe('runImport while it runs', () => {
     expect(await repo.getMeta(BOOK)).toMatchObject({
       title: 'Ion (ediția 2)',
       author: 'Liviu Rebreanu',
-      language: 'ro-RO',
+      language: 'en-US',
     });
   });
 

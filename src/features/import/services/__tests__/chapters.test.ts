@@ -87,12 +87,12 @@ describe('createChapterAssembler', () => {
 
 describe('formPatch', () => {
   it('trims the fields and leaves out an empty title', () => {
-    expect(
-      formPatch({ title: ' Ion ', author: ' L. R. ', language: 'en-US' }),
-    ).toEqual({ title: 'Ion', author: 'L. R.', language: 'en-US' });
-    expect(formPatch({ title: '  ', author: '', language: 'ro-RO' })).toEqual({
+    expect(formPatch({ title: ' Ion ', author: ' L. R. ' })).toEqual({
+      title: 'Ion',
+      author: 'L. R.',
+    });
+    expect(formPatch({ title: '  ', author: '' })).toEqual({
       author: '',
-      language: 'ro-RO',
     });
   });
 });
