@@ -150,6 +150,11 @@ Each step ends with a green `npm run check` and a separate commit; its section i
 - `filterBooks`: title + author, case- and diacritics-insensitive, cedilla included, without `String.normalize`. Query and filter in their own slice; 200 ms debounce.
 - **Tests:** table-driven ("sadoveanu", "amintiri", ș/ş, empty query, each filter).
 
+**Done** (2026-11-24). Findings:
+
+- Every word of the query must be in the title or the author, in any order. `foldText` reuses `normalizeDiacritics` and also drops accents Romanian doesn't use.
+- A failed book that was started counts as "În curs" (it has progress and isn't finished). Emptying the search applies at once, without the debounce.
+
 #### 10. Library screen
 - `LibraryHeader`, `LibrarySearch`, `ContinueListeningCard`, `LibraryFilterChips`, `BookList` / `BookListItem` (first use of FlashList in `src`, memoized rows), `LibraryEmpty`, `NoResults`, `Fab`. Texts in `library.*`, counts through `romanianPlural`.
 - A row is one accessible element: "Amintiri din copilărie, Ion Creangă, 41% ascultat".
